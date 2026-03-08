@@ -1,4 +1,4 @@
-package com.mobflow.auth_service;
+package com.mobflow.authservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

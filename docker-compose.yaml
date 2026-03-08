@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+
+  postgres-auth:
+    image: postgres:16
+    container_name: auth-postgres
+
+    env_file:
+      - .env
+
+    environment:
+      POSTGRES_DB: ${AUTH_DB}
+      POSTGRES_USER: ${AUTH_USER}
+      POSTGRES_PASSWORD: ${AUTH_PASSWORD}
+
+    ports:
+      - "${AUTH_PORT}:5432"
+
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+
+    networks:
+      - auth-network
+
+volumes:
+  postgres_auth_data:
+
+networks:
+  auth-network:
+    driver: bridge
