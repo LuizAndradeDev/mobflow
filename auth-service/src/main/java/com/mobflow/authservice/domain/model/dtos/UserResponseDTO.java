@@ -1,7 +1,10 @@
 package com.mobflow.authservice.domain.model.dtos;
 
-public record UserResponseDTO(
-    Long id,
-    String username,
-    String email
-){}
+import lombok.Data;
+
+@Data
+public class UserResponseDTO {
+    private Long id;
+    private String username;
+    private String email;
+}

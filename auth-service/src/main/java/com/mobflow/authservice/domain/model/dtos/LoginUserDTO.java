@@ -1,6 +1,9 @@
 package com.mobflow.authservice.domain.model.dtos;
 
-public record LoginUserDTO(
-        String login,
-        String password
-) {}
+import lombok.Data;
+
+@Data
+public class LoginUserDTO {
+    private String email;
+    private String password;
+}
