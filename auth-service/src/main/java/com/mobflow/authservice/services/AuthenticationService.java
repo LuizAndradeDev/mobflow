@@ -28,7 +28,7 @@ public class AuthenticationService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserCredential signup(RegisterUserCredentialsDTO input) {
+    public UserCredential register(RegisterUserCredentialsDTO input) {
         UserCredential user = UserCredential.builder()
                 .username(input.getUsername())
                 .email(input.getEmail())
@@ -37,7 +37,7 @@ public class AuthenticationService {
         return userRepository.save(user);
     }
 
-    public UserCredential authenticate(LoginUserDTO input) {
+    public UserCredential login(LoginUserDTO input) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         input.getEmail(),
