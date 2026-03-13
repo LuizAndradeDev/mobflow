@@ -3,6 +3,7 @@ package com.mobflow.authservice.services;
 import com.mobflow.authservice.domain.model.dtos.LoginUserDTO;
 import com.mobflow.authservice.domain.model.dtos.RegisterUserCredentialsDTO;
 import com.mobflow.authservice.domain.model.entities.UserCredential;
+import com.mobflow.authservice.domain.model.enums.Role;
 import com.mobflow.authservice.domain.repository.UserCredentialRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,6 +34,7 @@ public class AuthenticationService {
                 .username(input.getUsername())
                 .email(input.getEmail())
                 .passwordHash(passwordEncoder.encode(input.getPassword()))
+                .role(Role.ROLE_USER)
                 .build();
         return userRepository.save(user);
     }
