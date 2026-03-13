@@ -2,6 +2,14 @@ version: "3.9"
 
 services:
 
+  auth-service:
+    build: ./auth-service
+    container_name: mobflow-auth
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-auth
+
   postgres-auth:
     image: postgres:16
     container_name: auth-postgres
