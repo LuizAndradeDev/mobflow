@@ -9,6 +9,10 @@ services:
       - "8080:8080"
     depends_on:
       - postgres-auth
+    networks:
+      - auth-network
+    env_file:
+      - .env
 
   postgres-auth:
     image: postgres:16
@@ -24,7 +28,7 @@ services:
       TZ: America/Sao_Paulo
 
     ports:
-      - "${AUTH_PORT}:5432"
+      - "5432:5432"
 
     volumes:
       - postgres_auth_data:/var/lib/postgresql/data

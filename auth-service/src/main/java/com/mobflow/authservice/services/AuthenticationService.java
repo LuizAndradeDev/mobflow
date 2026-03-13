@@ -3,8 +3,10 @@ package com.mobflow.authservice.services;
 import com.mobflow.authservice.domain.model.dtos.LoginUserDTO;
 import com.mobflow.authservice.domain.model.dtos.RegisterUserCredentialsDTO;
 import com.mobflow.authservice.domain.model.entities.UserCredential;
+import com.mobflow.authservice.domain.model.enums.ErrorTP;
 import com.mobflow.authservice.domain.model.enums.Role;
 import com.mobflow.authservice.domain.repository.UserCredentialRepository;
+import com.mobflow.authservice.exceptions.GenericAplicationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +32,12 @@ public class AuthenticationService {
     }
 
     public UserCredential register(RegisterUserCredentialsDTO input) {
+        if (userRepository.findByUsername(input.getUsername()).isPresent()) {
+            throw new GenericAplicationException(ErrorTP.USERNAME_ALREADY_EXIST);
+        }
+        if (userRepository.findByEmail(input.getEmail()).isPresent()) {
+            throw new GenericAplicationException(ErrorTP.EMAIL_ALREADY_EXIST);
+        }
         UserCredential user = UserCredential.builder()
                 .username(input.getUsername())
                 .email(input.getEmail())
