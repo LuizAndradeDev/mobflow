@@ -1,50 +1,28 @@
 package com.mobflow.authservice.services;
 
-import com.mobflow.authservice.domain.model.dtos.LoginUserDTO;
-import com.mobflow.authservice.domain.model.dtos.RegisterUserCredentialsDTO;
-import com.mobflow.authservice.domain.model.entities.UserCredential;
-import com.mobflow.authservice.domain.model.enums.ErrorTP;
-import com.mobflow.authservice.domain.model.enums.Role;
-import com.mobflow.authservice.domain.repository.UserCredentialRepository;
-import com.mobflow.authservice.exceptions.GenericAplicationException;
+import com.mobflow.authservice.model.dtos.request.LoginUserDTO;
+import com.mobflow.authservice.model.dtos.request.RegisterUserCredentialsDTO;
+import com.mobflow.authservice.model.entities.UserCredential;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthenticationService {
 
-    private final UserCredentialRepository userRepository;
-
-    private final PasswordEncoder passwordEncoder;
-
+    private final UserCredentialService userCredentialService;
     private final AuthenticationManager authenticationManager;
 
     public AuthenticationService(
-            UserCredentialRepository userRepository,
             AuthenticationManager authenticationManager,
-            PasswordEncoder passwordEncoder
+            UserCredentialService userCredentialService
     ) {
         this.authenticationManager = authenticationManager;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.userCredentialService = userCredentialService;
     }
 
     public UserCredential register(RegisterUserCredentialsDTO input) {
-        if (userRepository.findByUsername(input.getUsername()).isPresent()) {
-            throw new GenericAplicationException(ErrorTP.USERNAME_ALREADY_EXIST);
-        }
-        if (userRepository.findByEmail(input.getEmail()).isPresent()) {
-            throw new GenericAplicationException(ErrorTP.EMAIL_ALREADY_EXIST);
-        }
-        UserCredential user = UserCredential.builder()
-                .username(input.getUsername())
-                .email(input.getEmail())
-                .passwordHash(passwordEncoder.encode(input.getPassword()))
-                .role(Role.ROLE_USER)
-                .build();
-        return userRepository.save(user);
+        return userCredentialService.SaveCredential(input);
     }
 
     public UserCredential login(LoginUserDTO input) {
@@ -54,8 +32,6 @@ public class AuthenticationService {
                         input.getPassword()
                 )
         );
-
-        return userRepository.findByEmail(input.getEmail())
-                .orElseThrow();
+        return userCredentialService.findUserCredentialByEmail(input.getEmail());
     }
 }
