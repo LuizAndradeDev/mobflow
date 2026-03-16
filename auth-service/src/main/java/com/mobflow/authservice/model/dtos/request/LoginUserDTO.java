@@ -1,4 +1,4 @@
-package com.mobflow.authservice.domain.model.dtos;
+package com.mobflow.authservice.model.dtos.request;
 
 import lombok.Data;
 
