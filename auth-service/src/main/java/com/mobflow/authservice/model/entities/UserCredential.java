@@ -1,7 +1,7 @@
-package com.mobflow.authservice.domain.model.entities;
+package com.mobflow.authservice.model.entities;
 
 
-import com.mobflow.authservice.domain.model.enums.Role;
+import com.mobflow.authservice.model.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -92,5 +92,14 @@ public class UserCredential implements UserDetails {
     @Override
     public boolean isCredentialsNonExpired() {
         return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    public static UserCredential createUserCredential(String username, String email, String passwordHash) {
+        return UserCredential.builder()
+                .username(username)
+                .email(email)
+                .passwordHash(passwordHash)
+                .role(Role.ROLE_USER)
+                .build();
     }
 }
