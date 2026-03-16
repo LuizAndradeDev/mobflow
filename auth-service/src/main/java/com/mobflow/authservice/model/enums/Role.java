@@ -1,4 +1,4 @@
-package com.mobflow.authservice.domain.model.enums;
+package com.mobflow.authservice.model.enums;
 
 public enum Role {
     ROLE_USER,

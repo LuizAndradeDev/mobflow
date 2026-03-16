@@ -1,6 +1,6 @@
-package com.mobflow.authservice.domain.repository;
+package com.mobflow.authservice.repository;
 
-import com.mobflow.authservice.domain.model.entities.UserCredential;
+import com.mobflow.authservice.model.entities.UserCredential;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

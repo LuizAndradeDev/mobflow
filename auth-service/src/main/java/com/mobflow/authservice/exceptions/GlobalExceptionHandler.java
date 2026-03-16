@@ -1,8 +1,7 @@
 package com.mobflow.authservice.exceptions;
 
-import com.mobflow.authservice.domain.model.dtos.ErrorResponseDTO;
-import com.mobflow.authservice.domain.model.enums.ErrorTP;
-import org.springframework.dao.DataIntegrityViolationException;
+import com.mobflow.authservice.model.dtos.response.ErrorResponseDTO;
+import com.mobflow.authservice.model.enums.ErrorTP;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -16,8 +15,6 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.nio.file.AccessDeniedException;
 import java.security.SignatureException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -39,10 +36,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(GenericAplicationException.class)
     public ResponseEntity<ErrorResponseDTO> handleUniqueViolation(GenericAplicationException e) {
         ErrorTP errorTP = ErrorTP.valueOf(e.getMessage());
-        ErrorResponseDTO error = ErrorResponseDTO.builder()
-                .errorType(errorTP)
-                .timestamp(LocalDateTime.now())
-                .build();
+        ErrorResponseDTO error = ErrorResponseDTO.createErrorResponse(errorTP, LocalDateTime.now());
         System.out.println("Error: " + errorTP);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }

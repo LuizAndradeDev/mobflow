@@ -1,7 +1,7 @@
 package com.mobflow.authservice.configs;
 
 
-import com.mobflow.authservice.domain.repository.UserCredentialRepository;
+import com.mobflow.authservice.repository.UserCredentialRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

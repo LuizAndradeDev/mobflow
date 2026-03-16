@@ -1,30 +1,34 @@
 package com.mobflow.authservice.controller;
 
-import com.mobflow.authservice.domain.model.dtos.LoginUserDTO;
-import com.mobflow.authservice.domain.model.dtos.RegisterUserCredentialsDTO;
-import com.mobflow.authservice.domain.model.dtos.UserResponseDTO;
-import com.mobflow.authservice.domain.model.entities.UserCredential;
-import com.mobflow.authservice.domain.repository.UserCredentialRepository;
-import com.mobflow.authservice.domain.responses.LoginResponse;
+import com.mobflow.authservice.model.dtos.request.LoginUserDTO;
+import com.mobflow.authservice.model.dtos.request.RegisterUserCredentialsDTO;
+import com.mobflow.authservice.model.dtos.response.LoginResponseDTO;
+import com.mobflow.authservice.model.dtos.response.UserResponseDTO;
+import com.mobflow.authservice.model.entities.UserCredential;
 import com.mobflow.authservice.services.AuthenticationService;
 import com.mobflow.authservice.services.JWTService;
+import com.mobflow.authservice.services.UserCredentialService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     private final JWTService jwtService;
-    private final UserCredentialRepository repository;
+    private final UserCredentialService userCredentialService;
     private final AuthenticationService authenticationService;
 
-    public AuthController(JWTService jwtService, AuthenticationService authenticationService, UserCredentialRepository repository) {
+    public AuthController(
+            JWTService jwtService,
+            AuthenticationService authenticationService,
+            UserCredentialService userCredentialService
+    ) {
         this.jwtService = jwtService;
         this.authenticationService = authenticationService;
-        this.repository = repository;
+        this.userCredentialService = userCredentialService;
+
     }
 
     @PostMapping("/signup")
@@ -34,21 +38,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserDTO loginUserDto) {
+    public ResponseEntity<LoginResponseDTO> authenticate(@RequestBody LoginUserDTO loginUserDto) {
         UserCredential authenticatedUser = authenticationService.login(loginUserDto);
 
-        UserResponseDTO user = UserResponseDTO.builder()
-                .email(authenticatedUser.getEmail())
-                .username(authenticatedUser.getUsername())
-                .build();
+        UserResponseDTO userResponse = UserResponseDTO.createUserResponse(authenticatedUser.getUsername(), authenticatedUser.getEmail());
 
         String jwtToken = jwtService.generateToken(authenticatedUser);
 
-        LoginResponse loginResponse = LoginResponse.builder()
-                .token(jwtToken)
-                .user(user)
-                .expiresIn(jwtService.getExpirationTime())
-                .build();
+        LoginResponseDTO loginResponse = LoginResponseDTO.createLoginResponse(jwtToken, userResponse, jwtService.getExpirationTime());
 
         return ResponseEntity.ok(loginResponse);
     }
@@ -56,15 +53,10 @@ public class AuthController {
     @GetMapping("/profile")
     public ResponseEntity<UserResponseDTO> authenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        UserCredential userEntity = repository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        UserCredential userCredential = userCredentialService.findUserCredentialByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
 
-        UserResponseDTO user = UserResponseDTO.builder()
-                .username(userEntity.getUsername())
-                .email(userEntity.getEmail())
-                .build();
+        UserResponseDTO user = UserResponseDTO.createUserResponse(userCredential.getUsername(), userCredential.getEmail());
 
         return ResponseEntity.ok(user);
     }
