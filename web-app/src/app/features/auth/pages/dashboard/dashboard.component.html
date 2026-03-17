@@ -1,22 +1,10 @@
-<div class="min-h-screen bg-gray-50 flex flex-col">
+<main class="flex flex-1 items-center justify-center px-4 mt-16">
+  <div class="text-center max-w-md w-full">
 
-  <!-- Top bar -->
-  <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-    <span class="text-xl font-bold text-blue-600 tracking-tight">Mobflow</span>
-    <button
-      (click)="logout()"
-      class="text-sm text-gray-500 hover:text-red-500 transition font-medium flex items-center gap-1">
-      Sign out
-    </button>
-  </header>
-
-  <!-- Main -->
-  <main class="flex flex-1 items-center justify-center px-4">
-    <div class="text-center max-w-md w-full">
-
+    @if (userState.user(); as user) {
       <!-- Avatar -->
       <div class="mx-auto mb-6 w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-3xl font-bold text-blue-600 select-none">
-        {{ username ? username[0].toUpperCase() : '?' }}
+        {{ user.username[0].toUpperCase() }}
       </div>
 
       <!-- Greeting -->
@@ -24,24 +12,28 @@
         {{ greeting }},
       </p>
       <h1 class="text-4xl font-bold text-gray-800 mb-2">
-        {{ username }}
+        {{ user.username }}
       </h1>
-      <p class="text-gray-400 text-sm mb-8">{{ email }}</p>
+      <p class="text-gray-400 text-sm mb-8">{{ user.email }}</p>
+    } @else {
+      <!-- Loading state -->
+      <div class="mx-auto mb-6 w-20 h-20 rounded-full bg-gray-100 animate-pulse"></div>
+      <div class="h-6 w-40 bg-gray-100 rounded animate-pulse mx-auto mb-2"></div>
+      <div class="h-4 w-56 bg-gray-100 rounded animate-pulse mx-auto mb-8"></div>
+    }
 
-      <!-- Clock -->
-      <div class="inline-block bg-white border border-gray-200 rounded-2xl px-6 py-3 shadow-sm mb-8">
-        <span class="text-2xl font-mono text-gray-700 tracking-widest">
-          {{ currentTime | date: 'HH:mm:ss' }}
-        </span>
-      </div>
-
-      <!-- Status badge -->
-      <div class="flex items-center justify-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-        <span class="text-sm text-gray-400">You're logged in</span>
-      </div>
-
+    <!-- Clock -->
+    <div class="inline-block bg-white border border-gray-200 rounded-2xl px-6 py-3 shadow-sm mb-8">
+      <span class="text-2xl font-mono text-gray-700 tracking-widest">
+        {{ currentTime | date: 'HH:mm:ss' }}
+      </span>
     </div>
-  </main>
 
-</div>
+    <!-- Status badge -->
+    <div class="flex items-center justify-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+      <span class="text-sm text-gray-400">You're logged in</span>
+    </div>
+
+  </div>
+</main>
