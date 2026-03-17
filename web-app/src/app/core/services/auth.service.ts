@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { SignupRequest, AuthResponse } from '../models/auth.model';
+import { SignupRequest, LoginRequest, AuthResponse } from '../models/auth.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -10,5 +10,9 @@ export class AuthService {
 
   register(data: SignupRequest) {
     return this.http.post<AuthResponse>(`${this.API}/signup`, data);
+  }
+
+  login(data: LoginRequest) {
+    return this.http.post<AuthResponse>(`${this.API}/login`, data);
   }
 }
