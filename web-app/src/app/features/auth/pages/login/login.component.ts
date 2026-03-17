@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LoginRequest } from '../../../../core/models/auth.model';
 
@@ -17,6 +17,7 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private router: Router,
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -27,7 +28,9 @@ export class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       const payload = this.loginForm.value as LoginRequest;
-      this.authService.login(payload).subscribe({});
+      this.authService.login(payload).subscribe({
+        next: () => this.router.navigate(['/dashboard']),
+      });
     }
   }
 }
