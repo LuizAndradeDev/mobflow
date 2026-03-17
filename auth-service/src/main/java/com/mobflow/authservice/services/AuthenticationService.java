@@ -26,12 +26,15 @@ public class AuthenticationService {
     }
 
     public UserCredential login(LoginUserDTO input) {
+        UserCredential user = userCredentialService.findUserCredentialByEmail(input.getEmail());
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        input.getEmail(),
+                        user.getUsername(),
                         input.getPassword()
                 )
         );
-        return userCredentialService.findUserCredentialByEmail(input.getEmail());
+
+        return user;
     }
 }
