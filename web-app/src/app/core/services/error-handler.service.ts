@@ -81,6 +81,9 @@ export class ErrorHandlerService {
       case ErrorTP.EMAIL_ALREADY_EXIST:
         return 'Email already registered';
 
+      case ErrorTP.INVALID_CREDENTIALS:
+        return 'Invalid credentials';
+
       default:
         return 'Registration error';
     }
