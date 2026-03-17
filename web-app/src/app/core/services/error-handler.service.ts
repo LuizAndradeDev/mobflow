@@ -31,43 +31,43 @@ export class ErrorHandlerService {
     switch (error.status) {
       case 400:
         return {
-          title: 'Requisição inválida',
-          message: 'Os dados enviados são inválidos.',
+          title: 'Invalid request',
+          message: 'The submitted data is invalid.',
           alertType: AlertType.warning,
         };
 
       case 401:
         return {
-          title: 'Não autorizado',
-          message: 'Você precisa fazer login para continuar.',
-          alertType: AlertType.success,
+          title: 'Unauthorized',
+          message: 'You need to sign in to continue.',
+          alertType: AlertType.warning,
         };
 
       case 403:
         return {
-          title: 'Acesso negado',
-          message: 'Você não tem permissão para acessar este recurso.',
+          title: 'Access denied',
+          message: 'You do not have permission to access this resource.',
           alertType: AlertType.error,
         };
 
       case 404:
         return {
-          title: 'Não encontrado',
-          message: 'O recurso solicitado não foi encontrado.',
+          title: 'Not found',
+          message: 'The requested resource was not found.',
           alertType: AlertType.warning,
         };
 
       case 500:
         return {
-          title: 'Erro interno',
-          message: 'O servidor encontrou um erro inesperado.',
+          title: 'Internal server error',
+          message: 'The server encountered an unexpected error.',
           alertType: AlertType.error,
         };
 
       default:
         return {
-          title: 'Erro',
-          message: 'Ocorreu um erro inesperado. Tente novamente mais tarde.',
+          title: 'Unexpected error',
+          message: 'An unexpected error occurred. Please try again later.',
           alertType: AlertType.error,
         };
     }
@@ -76,13 +76,13 @@ export class ErrorHandlerService {
   private getTitleByErrorType(errorType: ErrorTP): string {
     switch (errorType) {
       case ErrorTP.USERNAME_ALREADY_EXIST:
-        return 'Usuário já existe';
+        return 'Username already taken';
 
       case ErrorTP.EMAIL_ALREADY_EXIST:
-        return 'E-mail já cadastrado';
+        return 'Email already registered';
 
       default:
-        return 'Erro de cadastro';
+        return 'Registration error';
     }
   }
 }

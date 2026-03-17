@@ -13,7 +13,7 @@ export class AlertService {
     this.alertSubject.next(alert);
   }
 
-  info(message: string, title: string = 'Alerta!') {
+  info(message: string, title: string = 'Alert!') {
     this.show({
       title,
       message,
@@ -21,7 +21,7 @@ export class AlertService {
     });
   }
 
-  success(message: string, title: string = 'Sucesso!') {
+  success(message: string, title: string = 'Success!') {
     this.show({
       title,
       message,
@@ -29,7 +29,7 @@ export class AlertService {
     });
   }
 
-  warning(message: string, title: string = 'Atenção!') {
+  warning(message: string, title: string = 'Attention!') {
     this.show({
       title,
       message,
@@ -37,7 +37,7 @@ export class AlertService {
     });
   }
 
-  danger(message: string, title: string = 'Erro!') {
+  danger(message: string, title: string = 'Error!') {
     this.show({
       title,
       message,
