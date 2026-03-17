@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { AlertService } from '../../../../shared/components/alert/service/alert.service';
 import { LoginRequest } from '../../../../core/models/auth.model';
 
 @Component({
@@ -17,6 +18,7 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private alertService: AlertService,
     private router: Router,
   ) {
     this.loginForm = this.fb.group({
@@ -29,7 +31,10 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       const payload = this.loginForm.value as LoginRequest;
       this.authService.login(payload).subscribe({
-        next: () => this.router.navigate(['/dashboard']),
+        next: () => {
+          this.alertService.success('Welcome back!', 'Signed in');
+          setTimeout(() => this.router.navigate(['/dashboard']), 1000);
+        },
       });
     }
   }
