@@ -1,6 +1,7 @@
 export enum ErrorTP {
   USERNAME_ALREADY_EXIST = 'USERNAME_ALREADY_EXIST',
   EMAIL_ALREADY_EXIST = 'EMAIL_ALREADY_EXIST',
+  INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
   GENERIC_ERROR = 'GENERIC_ERROR',
 }
 
@@ -11,7 +12,8 @@ export interface ErrorResponseDTO {
 }
 
 export const ErrorMessages: Record<ErrorTP, string> = {
-  [ErrorTP.USERNAME_ALREADY_EXIST]: 'Este nome de usuário já está em uso.',
-  [ErrorTP.EMAIL_ALREADY_EXIST]: 'Este e-mail já está cadastrado em nosso sistema.',
-  [ErrorTP.GENERIC_ERROR]: 'Ocorreu um erro inesperado. Tente novamente mais tarde.',
+  [ErrorTP.USERNAME_ALREADY_EXIST]: 'This username is already in use.',
+  [ErrorTP.EMAIL_ALREADY_EXIST]: 'This email is already registered.',
+  [ErrorTP.INVALID_CREDENTIALS]: 'Invalid email or password.',
+  [ErrorTP.GENERIC_ERROR]: 'An unexpected error occurred. Please try again later.',
 };
