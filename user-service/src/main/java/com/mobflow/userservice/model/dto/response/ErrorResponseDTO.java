@@ -1,4 +1,4 @@
-package com.mobflow.userservice.dto.response;
+package com.mobflow.userservice.model.dto.response;
 
 import com.mobflow.userservice.exception.enums.ErrorType;
 import lombok.Builder;

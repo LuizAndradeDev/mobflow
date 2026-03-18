@@ -1,6 +1,6 @@
-package com.mobflow.userservice.dto.response;
+package com.mobflow.userservice.model.dto.response;
 
-import com.mobflow.userservice.domain.model.UserProfile;
+import com.mobflow.userservice.model.entities.UserProfile;
 import lombok.Builder;
 import lombok.Data;
 

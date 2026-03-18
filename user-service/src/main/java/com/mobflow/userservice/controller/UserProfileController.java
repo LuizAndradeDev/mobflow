@@ -1,9 +1,9 @@
 package com.mobflow.userservice.controller;
 
-import com.mobflow.userservice.domain.model.UserProfile;
-import com.mobflow.userservice.dto.request.UpdateUserProfileDTO;
-import com.mobflow.userservice.dto.response.UserProfileResponseDTO;
-import com.mobflow.userservice.service.UserProfileService;
+import com.mobflow.userservice.model.entities.UserProfile;
+import com.mobflow.userservice.model.dto.request.UpdateUserProfileDTO;
+import com.mobflow.userservice.model.dto.response.UserProfileResponseDTO;
+import com.mobflow.userservice.services.UserProfileService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

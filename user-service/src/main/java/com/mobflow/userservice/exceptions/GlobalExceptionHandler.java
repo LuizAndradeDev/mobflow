@@ -1,7 +1,8 @@
 package com.mobflow.userservice.exception;
 
-import com.mobflow.userservice.dto.response.ErrorResponseDTO;
+import com.mobflow.userservice.model.dto.response.ErrorResponseDTO;
 import com.mobflow.userservice.exception.enums.ErrorType;
+import com.mobflow.userservice.exceptions.UserProfileNotFoundException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
