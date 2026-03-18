@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { UserStateService } from '../../../../core/services/user-state.service';
+import { UserProfileStateService } from '../../../../core/services/user-profile-state.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
@@ -16,16 +16,10 @@ export class DashboardComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    public userState: UserStateService,
+    public userProfileState: UserProfileStateService,
   ) {}
 
   ngOnInit() {
-    if (!this.userState.user()) {
-      this.authService.getProfile().subscribe({
-        error: () => this.router.navigate(['/login']),
-      });
-    }
-
     setInterval(() => (this.currentTime = new Date()), 1000);
   }
 
@@ -34,5 +28,10 @@ export class DashboardComponent implements OnInit {
     if (hour < 12) return 'Good morning';
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }
