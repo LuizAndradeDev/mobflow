@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { tap } from 'rxjs';
 import { SignupRequest, LoginRequest, AuthResponse } from '../models/auth.model';
 import { UserStateService } from './user-state.service';
+import { UserProfileStateService } from './user-profile-state.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -11,6 +12,7 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private userState: UserStateService,
+    private userProfileState: UserProfileStateService,
   ) {}
 
   register(data: SignupRequest) {
@@ -40,5 +42,6 @@ export class AuthService {
   logout() {
     localStorage.removeItem('token');
     this.userState.clear();
+    this.userProfileState.clear();
   }
 }
