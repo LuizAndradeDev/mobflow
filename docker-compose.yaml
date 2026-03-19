@@ -70,6 +70,19 @@ services:
     env_file:
       - .env
 
+  workspace-service:
+    build: ./workspace-service
+    container_name: mobflow-workspace
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mobflow-network
+    env_file:
+      - .env
+
 volumes:
   postgres_data:
   minio_data:
