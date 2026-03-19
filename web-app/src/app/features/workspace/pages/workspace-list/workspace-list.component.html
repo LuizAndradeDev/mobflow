@@ -1,0 +1,70 @@
+<main class="max-w-4xl mx-auto px-4 py-10">
+
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">My Workspaces</h1>
+      <p class="text-sm text-gray-500 mt-1">All workspaces you are a member of</p>
+    </div>
+    <a
+      routerLink="/workspaces/new"
+      class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
+    >
+      + New workspace
+    </a>
+  </div>
+
+  @if (isLoading) {
+    <div class="grid gap-4">
+      @for (item of [1, 2, 3]; track item) {
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 animate-pulse">
+          <div class="h-5 w-48 bg-gray-100 rounded mb-3"></div>
+          <div class="h-4 w-72 bg-gray-100 rounded"></div>
+        </div>
+      }
+    </div>
+  } @else if (workspaces.length === 0) {
+    <div class="text-center py-20">
+      <div class="mx-auto mb-4 w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center">
+        <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      </div>
+      <h2 class="text-lg font-semibold text-gray-700 mb-1">No workspaces yet</h2>
+      <p class="text-sm text-gray-400 mb-6">Create your first workspace to get started</p>
+      <a
+        routerLink="/workspaces/new"
+        class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
+      >
+        Create workspace
+      </a>
+    </div>
+  } @else {
+    <div class="grid gap-4">
+      @for (workspace of workspaces; track workspace.id) {
+        <button
+          (click)="navigateTo(workspace.id)"
+          class="bg-white border border-gray-200 rounded-2xl p-6 text-left hover:shadow-md hover:border-blue-200 transition-all w-full"
+        >
+          <div class="flex items-start justify-between">
+            <div>
+              <h2 class="text-base font-semibold text-gray-800 mb-1">{{ workspace.name }}</h2>
+              @if (workspace.description) {
+                <p class="text-sm text-gray-400 line-clamp-1">{{ workspace.description }}</p>
+              } @else {
+                <p class="text-sm text-gray-300 italic">No description</p>
+              }
+            </div>
+            <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+          <p class="text-xs text-gray-300 mt-4">
+            Created {{ workspace.createdAt | date: 'mediumDate' }}
+          </p>
+        </button>
+      }
+    </div>
+  }
+
+</main>

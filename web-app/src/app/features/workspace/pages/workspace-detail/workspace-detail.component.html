@@ -1,0 +1,163 @@
+<main class="max-w-3xl mx-auto px-4 py-10">
+
+  @if (isLoading) {
+    <div class="animate-pulse space-y-4">
+      <div class="h-8 w-64 bg-gray-100 rounded"></div>
+      <div class="h-4 w-96 bg-gray-100 rounded"></div>
+    </div>
+  } @else if (workspace) {
+
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-8">
+      <div class="flex items-center gap-3">
+        <a routerLink="/workspaces" class="text-gray-400 hover:text-gray-600 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </a>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">{{ workspace.name }}</h1>
+          @if (workspace.description) {
+            <p class="text-sm text-gray-500 mt-1">{{ workspace.description }}</p>
+          }
+        </div>
+      </div>
+
+      @if (isOwnerOrAdmin) {
+        <div class="flex gap-2">
+          <button
+            (click)="showEditForm = !showEditForm"
+            class="text-sm px-3 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition"
+          >
+            Edit
+          </button>
+          @if (isOwner) {
+            <button
+              (click)="onDelete()"
+              class="text-sm px-3 py-2 border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition"
+            >
+              Delete
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Edit form -->
+    @if (showEditForm) {
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
+        <h2 class="text-base font-semibold text-gray-700 mb-4">Edit workspace</h2>
+        <form [formGroup]="editForm" (ngSubmit)="onUpdate()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input
+              formControlName="name"
+              type="text"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              formControlName="description"
+              rows="2"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+            ></textarea>
+          </div>
+          <div class="flex gap-3 justify-end">
+            <button
+              type="button"
+              (click)="showEditForm = false"
+              class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              [disabled]="editForm.invalid || isUpdating"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {{ isUpdating ? 'Saving...' : 'Save changes' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- Members section -->
+    <div class="bg-white border border-gray-200 rounded-2xl p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-semibold text-gray-700">
+          Members <span class="text-gray-400 font-normal">({{ members.length }})</span>
+        </h2>
+        @if (isOwnerOrAdmin) {
+          <button
+            (click)="showAddMember = !showAddMember"
+            class="text-sm text-blue-600 hover:text-blue-800 font-medium transition"
+          >
+            + Add member
+          </button>
+        }
+      </div>
+
+      <!-- Add member form -->
+      @if (showAddMember) {
+        <div class="bg-gray-50 rounded-xl p-4 mb-5">
+          <form [formGroup]="addMemberForm" (ngSubmit)="onAddMember()" class="flex gap-3">
+            <input
+              formControlName="authId"
+              type="text"
+              placeholder="Paste the user's Auth ID"
+              class="flex-1 p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <button
+              type="submit"
+              [disabled]="addMemberForm.invalid || isAddingMember"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {{ isAddingMember ? 'Adding...' : 'Add' }}
+            </button>
+            <button
+              type="button"
+              (click)="showAddMember = false"
+              class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 hover:bg-gray-100 transition"
+            >
+              Cancel
+            </button>
+          </form>
+        </div>
+      }
+
+      <!-- Members list -->
+      <ul class="divide-y divide-gray-100">
+        @for (member of members; track member.id) {
+          <li class="flex items-center justify-between py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm select-none">
+                {{ member.authId.substring(0, 2).toUpperCase() }}
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-700">{{ member.authId }}</p>
+                <p class="text-xs text-gray-400">Joined {{ member.joinedAt | date: 'mediumDate' }}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-medium px-2 py-1 rounded-full {{ roleBadgeClass(member.role) }}">
+                {{ roleLabel(member.role) }}
+              </span>
+              @if (isOwnerOrAdmin && member.role !== 'OWNER') {
+                <button
+                  (click)="onRemoveMember(member)"
+                  class="text-xs text-red-400 hover:text-red-600 transition"
+                >
+                  Remove
+                </button>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
+
+  }
+</main>
