@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -25,6 +25,7 @@ export class EditProfileComponent implements OnInit {
     private userProfileState: UserProfileStateService,
     private alertService: AlertService,
     private router: Router,
+    private cdr: ChangeDetectorRef,
   ) {
     this.profileForm = this.fb.group({
       displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
@@ -69,13 +70,16 @@ export class EditProfileComponent implements OnInit {
     reader.readAsDataURL(file);
 
     this.isUploadingAvatar = true;
+    this.cdr.detectChanges();
     this.userProfileService.updateAvatar(file).subscribe({
       next: () => {
         this.isUploadingAvatar = false;
+        this.cdr.detectChanges();
         this.alertService.success('Avatar updated successfully!', 'Avatar saved');
       },
       error: () => {
         this.isUploadingAvatar = false;
+        this.cdr.detectChanges();
         this.avatarPreview = this.userProfileState.profile()?.avatarUrl ?? null;
       },
     });
