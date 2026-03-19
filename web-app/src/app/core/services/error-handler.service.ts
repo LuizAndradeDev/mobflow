@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ErrorMessages, ErrorResponseDTO, ErrorTP } from '../models/error-response.model';
+import {
+  ErrorMessages,
+  ErrorResponseDTO,
+  ErrorTP,
+  UserErrorTP,
+} from '../models/error-response.model';
 import { AlertInterface } from '../../shared/components/alert/model/alert.interface';
 import { AlertType } from '../../shared/components/alert/enum/alert-type.enum';
 
@@ -18,7 +23,7 @@ export class ErrorHandlerService {
 
   private mapBackendError(error: ErrorResponseDTO): AlertInterface {
     const translatedMessage =
-      ErrorMessages[error.errorType] || ErrorMessages[ErrorTP.GENERIC_ERROR];
+      ErrorMessages[error.errorType] ?? ErrorMessages[ErrorTP.GENERIC_ERROR];
 
     return {
       title: this.getTitleByErrorType(error.errorType),
@@ -35,35 +40,30 @@ export class ErrorHandlerService {
           message: 'The submitted data is invalid.',
           alertType: AlertType.warning,
         };
-
       case 401:
         return {
           title: 'Unauthorized',
           message: 'You need to sign in to continue.',
           alertType: AlertType.warning,
         };
-
       case 403:
         return {
           title: 'Access denied',
           message: 'You do not have permission to access this resource.',
           alertType: AlertType.error,
         };
-
       case 404:
         return {
           title: 'Not found',
           message: 'The requested resource was not found.',
           alertType: AlertType.warning,
         };
-
       case 500:
         return {
           title: 'Internal server error',
           message: 'The server encountered an unexpected error.',
           alertType: AlertType.error,
         };
-
       default:
         return {
           title: 'Unexpected error',
@@ -73,19 +73,18 @@ export class ErrorHandlerService {
     }
   }
 
-  private getTitleByErrorType(errorType: ErrorTP): string {
+  private getTitleByErrorType(errorType: ErrorTP | UserErrorTP): string {
     switch (errorType) {
       case ErrorTP.USERNAME_ALREADY_EXIST:
         return 'Username already taken';
-
       case ErrorTP.EMAIL_ALREADY_EXIST:
         return 'Email already registered';
-
       case ErrorTP.INVALID_CREDENTIALS:
         return 'Invalid credentials';
-
+      case UserErrorTP.USER_PROFILE_NOT_FOUND:
+        return 'Profile not found';
       default:
-        return 'Registration error';
+        return 'Error';
     }
   }
 }
