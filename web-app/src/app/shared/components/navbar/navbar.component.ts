@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { UserStateService } from '../../../core/services/user-state.service';
@@ -15,7 +15,13 @@ export class NavbarComponent {
     public userState: UserStateService,
     private authService: AuthService,
     private router: Router,
-  ) {}
+    private cdr: ChangeDetectorRef,
+  ) {
+    effect(() => {
+      userState.user();
+      this.cdr.detectChanges();
+    });
+  }
 
   logout() {
     this.authService.logout();
