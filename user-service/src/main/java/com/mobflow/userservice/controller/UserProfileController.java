@@ -40,4 +40,12 @@ public class UserProfileController {
         UserProfile updated = userProfileService.updateProfile(authId, dto);
         return ResponseEntity.ok(UserProfileResponseDTO.fromEntity(updated));
     }
+
+    @GetMapping("/{authId}")
+    public ResponseEntity<UserProfileResponseDTO> getProfileByAuthId(
+            @PathVariable UUID authId
+    ) {
+        UserProfile profile = userProfileService.getProfileByAuthId(authId);
+        return ResponseEntity.ok(UserProfileResponseDTO.fromEntity(profile));
+    }
 }

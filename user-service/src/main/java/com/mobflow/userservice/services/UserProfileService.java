@@ -24,6 +24,11 @@ public class UserProfileService {
                 .orElseGet(() -> createProfile(authId, username));
     }
 
+    public UserProfile getProfileByAuthId(UUID authId) {
+        return userProfileRepository.findByAuthId(authId)
+                .orElseThrow(UserProfileNotFoundException::new);
+    }
+
     @Transactional
     public UserProfile updateProfile(UUID authId, UpdateUserProfileDTO dto) {
         UserProfile profile = userProfileRepository.findByAuthId(authId)
