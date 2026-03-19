@@ -16,6 +16,8 @@ import { UpdateUserProfileRequest } from '../../../../core/models/user-profile.m
 export class EditProfileComponent implements OnInit {
   profileForm: FormGroup;
   isLoading = false;
+  isUploadingAvatar = false;
+  avatarPreview: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -39,7 +41,44 @@ export class EditProfileComponent implements OnInit {
         bio: profile.bio ?? '',
         phone: profile.phone ?? '',
       });
+      this.avatarPreview = profile.avatarUrl;
     }
+  }
+
+  onAvatarSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+
+    const file = input.files[0];
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      this.alertService.danger('Only JPEG, PNG or WebP images are allowed.', 'Invalid file type');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.alertService.danger('File size must not exceed 5MB.', 'File too large');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.avatarPreview = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+
+    this.isUploadingAvatar = true;
+    this.userProfileService.updateAvatar(file).subscribe({
+      next: () => {
+        this.isUploadingAvatar = false;
+        this.alertService.success('Avatar updated successfully!', 'Avatar saved');
+      },
+      error: () => {
+        this.isUploadingAvatar = false;
+        this.avatarPreview = this.userProfileState.profile()?.avatarUrl ?? null;
+      },
+    });
   }
 
   onSubmit() {

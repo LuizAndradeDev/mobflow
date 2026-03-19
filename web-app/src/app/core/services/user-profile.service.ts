@@ -24,4 +24,17 @@ export class UserProfileService {
       tap((profile) => this.userProfileState.set(profile)),
     );
   }
+
+  updateAvatar(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.patch<UserProfile>(`${this.API}/me/avatar`, formData).pipe(
+      tap((profile) => this.userProfileState.set(profile)),
+    );
+  }
+
+  getProfileByAuthId(authId: string) {
+    return this.http.get<UserProfile>(`${this.API}/${authId}`);
+  }
 }
