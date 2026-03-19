@@ -6,6 +6,7 @@ import com.mobflow.userservice.model.dto.request.UpdateUserProfileDTO;
 import com.mobflow.userservice.exceptions.UserProfileNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -13,9 +14,14 @@ import java.util.UUID;
 public class UserProfileService {
 
     private final UserProfileRepository userProfileRepository;
+    private final StorageService storageService;
 
-    public UserProfileService(UserProfileRepository userProfileRepository) {
+    public UserProfileService(
+            UserProfileRepository userProfileRepository,
+            StorageService storageService
+    ) {
         this.userProfileRepository = userProfileRepository;
+        this.storageService = storageService;
     }
 
     @Transactional
@@ -43,6 +49,21 @@ public class UserProfileService {
         if (dto.getPhone() != null) {
             profile.setPhone(dto.getPhone());
         }
+
+        return userProfileRepository.save(profile);
+    }
+
+    @Transactional
+    public UserProfile updateAvatar(UUID authId, MultipartFile file) {
+        UserProfile profile = userProfileRepository.findByAuthId(authId)
+                .orElseThrow(UserProfileNotFoundException::new);
+
+        if (profile.getAvatarUrl() != null) {
+            storageService.deleteAvatar(profile.getAvatarUrl());
+        }
+
+        String avatarUrl = storageService.uploadAvatar(file);
+        profile.setAvatarUrl(avatarUrl);
 
         return userProfileRepository.save(profile);
     }

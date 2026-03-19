@@ -5,9 +5,11 @@ import com.mobflow.userservice.model.dto.request.UpdateUserProfileDTO;
 import com.mobflow.userservice.model.dto.response.UserProfileResponseDTO;
 import com.mobflow.userservice.services.UserProfileService;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -38,6 +40,17 @@ public class UserProfileController {
         UUID authId = (UUID) authentication.getCredentials();
 
         UserProfile updated = userProfileService.updateProfile(authId, dto);
+        return ResponseEntity.ok(UserProfileResponseDTO.fromEntity(updated));
+    }
+
+    @PatchMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserProfileResponseDTO> updateAvatar(
+            Authentication authentication,
+            @RequestParam("file") MultipartFile file
+    ) {
+        UUID authId = (UUID) authentication.getCredentials();
+
+        UserProfile updated = userProfileService.updateAvatar(authId, file);
         return ResponseEntity.ok(UserProfileResponseDTO.fromEntity(updated));
     }
 
