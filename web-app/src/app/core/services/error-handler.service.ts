@@ -5,6 +5,7 @@ import {
   ErrorResponseDTO,
   ErrorTP,
   UserErrorTP,
+  WorkspaceErrorTP,
 } from '../models/error-response.model';
 import { AlertInterface } from '../../shared/components/alert/model/alert.interface';
 import { AlertType } from '../../shared/components/alert/enum/alert-type.enum';
@@ -58,6 +59,18 @@ export class ErrorHandlerService {
           message: 'The requested resource was not found.',
           alertType: AlertType.warning,
         };
+      case 409:
+        return {
+          title: 'Conflict',
+          message: 'This action conflicts with existing data.',
+          alertType: AlertType.warning,
+        };
+      case 422:
+        return {
+          title: 'Unprocessable request',
+          message: 'The operation could not be completed.',
+          alertType: AlertType.warning,
+        };
       case 500:
         return {
           title: 'Internal server error',
@@ -73,7 +86,7 @@ export class ErrorHandlerService {
     }
   }
 
-  private getTitleByErrorType(errorType: ErrorTP | UserErrorTP): string {
+  private getTitleByErrorType(errorType: ErrorTP | UserErrorTP | WorkspaceErrorTP): string {
     switch (errorType) {
       case ErrorTP.USERNAME_ALREADY_EXIST:
         return 'Username already taken';
@@ -83,6 +96,16 @@ export class ErrorHandlerService {
         return 'Invalid credentials';
       case UserErrorTP.USER_PROFILE_NOT_FOUND:
         return 'Profile not found';
+      case WorkspaceErrorTP.WORKSPACE_NOT_FOUND:
+        return 'Workspace not found';
+      case WorkspaceErrorTP.MEMBER_ALREADY_EXISTS:
+        return 'Member already exists';
+      case WorkspaceErrorTP.MEMBER_NOT_FOUND:
+        return 'Member not found';
+      case WorkspaceErrorTP.UNAUTHORIZED_ACTION:
+        return 'Permission denied';
+      case WorkspaceErrorTP.CANNOT_REMOVE_OWNER:
+        return 'Cannot remove owner';
       default:
         return 'Error';
     }
