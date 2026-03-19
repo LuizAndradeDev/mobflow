@@ -21,8 +21,8 @@ public class StorageService {
     @Value("${minio.bucket}")
     private String bucket;
 
-    @Value("${minio.endpoint}")
-    private String endpoint;
+    @Value("${minio.public-url}")
+    private String publicUrl;
 
     public StorageService(MinioClient minioClient) {
         this.minioClient = minioClient;
@@ -47,7 +47,7 @@ public class StorageService {
             throw new RuntimeException("Failed to upload file to storage", e);
         }
 
-        return endpoint + "/" + bucket + "/" + objectName;
+        return publicUrl + "/" + bucket + "/" + objectName;
     }
 
     public void deleteAvatar(String avatarUrl) {
