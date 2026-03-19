@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { UserStateService } from '../../../core/services/user-state.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { UserProfileStateService } from '../../../core/services/user-profile-state.service';
 
 @Component({
   selector: 'app-navbar',
@@ -15,11 +16,13 @@ export class NavbarComponent {
     public userState: UserStateService,
     private authService: AuthService,
     private router: Router,
+    public userProfileState: UserProfileStateService,
     private cdr: ChangeDetectorRef,
   ) {
     effect(() => {
-      userState.user();
-      this.cdr.detectChanges();
+      this.userState.user();
+      this.userProfileState.profile();
+      cdr.detectChanges();
     });
   }
 

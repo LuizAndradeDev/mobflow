@@ -3,14 +3,34 @@
 
   @if (userState.isLoggedIn()) {
     <div class="flex items-center gap-4">
+
       @if (userState.user(); as user) {
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-600 select-none">
-            {{ user.username[0].toUpperCase() }}
+
+          <div class="w-8 h-8 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-600 select-none">
+
+            @if (userProfileState.profile()?.avatarUrl) {
+              <img
+                [src]="userProfileState.profile()?.avatarUrl"
+                [alt]="user.username"
+                class="w-full h-full object-cover" />
+            } @else {
+              {{ user.username[0].toUpperCase() }}
+            }
+
           </div>
-          <span class="text-sm font-medium text-gray-700">{{ user.username }}</span>
+
+          <span class="text-sm font-medium text-gray-700">
+            {{ user.username }}
+          </span>
+        </div>
+      } @else {
+        <div class="flex items-center gap-3 animate-pulse">
+          <div class="w-8 h-8 rounded-full bg-gray-100"></div>
+          <div class="h-4 w-20 bg-gray-100 rounded"></div>
         </div>
       }
+
       <button
         (click)="logout()"
         class="text-sm text-gray-500 hover:text-red-500 transition font-medium">
