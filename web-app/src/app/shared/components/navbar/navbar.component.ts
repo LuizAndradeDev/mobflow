@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { UserStateService } from '../../../core/services/user-state.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserProfileStateService } from '../../../core/services/user-profile-state.service';
@@ -8,7 +8,7 @@ import { UserProfileStateService } from '../../../core/services/user-profile-sta
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './navbar.component.html',
 })
 export class NavbarComponent {

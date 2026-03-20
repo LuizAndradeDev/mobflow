@@ -7,7 +7,6 @@ export enum ErrorTP {
 
 export enum UserErrorTP {
   USER_PROFILE_NOT_FOUND = 'USER_PROFILE_NOT_FOUND',
-  GENERIC_ERROR = 'GENERIC_ERROR',
 }
 
 export enum WorkspaceErrorTP {
@@ -16,7 +15,6 @@ export enum WorkspaceErrorTP {
   MEMBER_NOT_FOUND = 'MEMBER_NOT_FOUND',
   UNAUTHORIZED_ACTION = 'UNAUTHORIZED_ACTION',
   CANNOT_REMOVE_OWNER = 'CANNOT_REMOVE_OWNER',
-  GENERIC_ERROR = 'GENERIC_ERROR',
 }
 
 export interface ErrorResponseDTO {
@@ -36,5 +34,4 @@ export const ErrorMessages: Record<ErrorTP | UserErrorTP | WorkspaceErrorTP, str
   [WorkspaceErrorTP.MEMBER_NOT_FOUND]: 'Member not found in this workspace.',
   [WorkspaceErrorTP.UNAUTHORIZED_ACTION]: 'You do not have permission to perform this action.',
   [WorkspaceErrorTP.CANNOT_REMOVE_OWNER]: 'The workspace owner cannot be removed.',
-  [WorkspaceErrorTP.GENERIC_ERROR]: 'An unexpected error occurred. Please try again later.',
 };
