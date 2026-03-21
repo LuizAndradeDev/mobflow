@@ -2,6 +2,7 @@ export type WorkspaceRole = 'OWNER' | 'ADMIN' | 'MEMBER';
 
 export interface Workspace {
   id: string;
+  publicCode: string;
   name: string;
   description: string | null;
   ownerAuthId: string;
@@ -15,6 +16,8 @@ export interface WorkspaceMember {
   authId: string;
   role: WorkspaceRole;
   joinedAt: string;
+  displayName: string;
+  avatarUrl: string | null;
 }
 
 export interface CreateWorkspaceRequest {
@@ -28,7 +31,7 @@ export interface UpdateWorkspaceRequest {
 }
 
 export interface AddMemberRequest {
-  authId: string;
+  username: string;
 }
 
 export interface UpdateMemberRoleRequest {
