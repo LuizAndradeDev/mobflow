@@ -1,10 +1,11 @@
 package com.mobflow.workspaceservice.controller;
 
-import com.mobflow.workspaceservice.model.dto.request.AddMemberDTO;
+import com.mobflow.workspaceservice.model.dto.request.AddMemberByUsernameDTO;
 import com.mobflow.workspaceservice.model.dto.request.CreateWorkspaceDTO;
 import com.mobflow.workspaceservice.model.dto.request.UpdateMemberRoleDTO;
 import com.mobflow.workspaceservice.model.dto.request.UpdateWorkspaceDTO;
 import com.mobflow.workspaceservice.model.dto.response.WorkspaceMemberResponseDTO;
+import com.mobflow.workspaceservice.model.dto.response.WorkspaceMemberWithProfileDTO;
 import com.mobflow.workspaceservice.model.dto.response.WorkspaceResponseDTO;
 import com.mobflow.workspaceservice.model.entities.Workspace;
 import com.mobflow.workspaceservice.model.entities.WorkspaceMember;
@@ -33,29 +34,34 @@ public class WorkspaceController {
             Authentication authentication,
             @Valid @RequestBody CreateWorkspaceDTO dto
     ) {
-        UUID authId = extractAuthId(authentication);
-        Workspace workspace = workspaceService.createWorkspace(dto, authId);
+        Workspace workspace = workspaceService.createWorkspace(dto, extractAuthId(authentication));
         return ResponseEntity.status(HttpStatus.CREATED).body(WorkspaceResponseDTO.fromEntity(workspace));
     }
 
     @GetMapping
     public ResponseEntity<List<WorkspaceResponseDTO>> listMine(Authentication authentication) {
-        UUID authId = extractAuthId(authentication);
-        List<WorkspaceResponseDTO> workspaces = workspaceService.listMyWorkspaces(authId)
-                .stream()
-                .map(WorkspaceResponseDTO::fromEntity)
-                .toList();
-        return ResponseEntity.ok(workspaces);
+        return ResponseEntity.ok(
+                workspaceService.listMyWorkspaces(extractAuthId(authentication))
+                        .stream().map(WorkspaceResponseDTO::fromEntity).toList()
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<WorkspaceResponseDTO> getById(
-            Authentication authentication,
-            @PathVariable UUID id
-    ) {
-        UUID authId = extractAuthId(authentication);
-        Workspace workspace = workspaceService.getWorkspaceById(id, authId);
-        return ResponseEntity.ok(WorkspaceResponseDTO.fromEntity(workspace));
+    public ResponseEntity<WorkspaceResponseDTO> getById(Authentication authentication, @PathVariable UUID id) {
+        return ResponseEntity.ok(
+                WorkspaceResponseDTO.fromEntity(workspaceService.getWorkspaceById(id, extractAuthId(authentication)))
+        );
+    }
+
+    @GetMapping("/join/{code}")
+    public ResponseEntity<WorkspaceResponseDTO> previewByCode(@PathVariable String code) {
+        return ResponseEntity.ok(WorkspaceResponseDTO.fromEntity(workspaceService.getWorkspaceByCode(code)));
+    }
+
+    @PostMapping("/join/{code}")
+    public ResponseEntity<WorkspaceMemberResponseDTO> joinByCode(Authentication authentication, @PathVariable String code) {
+        WorkspaceMember member = workspaceService.joinByCode(code, extractAuthId(authentication));
+        return ResponseEntity.status(HttpStatus.CREATED).body(WorkspaceMemberResponseDTO.fromEntity(member));
     }
 
     @PutMapping("/{id}")
@@ -64,43 +70,40 @@ public class WorkspaceController {
             @PathVariable UUID id,
             @Valid @RequestBody UpdateWorkspaceDTO dto
     ) {
-        UUID authId = extractAuthId(authentication);
-        Workspace workspace = workspaceService.updateWorkspace(id, dto, authId);
-        return ResponseEntity.ok(WorkspaceResponseDTO.fromEntity(workspace));
+        return ResponseEntity.ok(
+                WorkspaceResponseDTO.fromEntity(workspaceService.updateWorkspace(id, dto, extractAuthId(authentication)))
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            Authentication authentication,
-            @PathVariable UUID id
-    ) {
-        UUID authId = extractAuthId(authentication);
-        workspaceService.deleteWorkspace(id, authId);
+    public ResponseEntity<Void> delete(Authentication authentication, @PathVariable UUID id) {
+        workspaceService.deleteWorkspace(id, extractAuthId(authentication));
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}/leave")
+    public ResponseEntity<Void> leave(Authentication authentication, @PathVariable UUID id) {
+        workspaceService.leaveWorkspace(id, extractAuthId(authentication));
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/members")
-    public ResponseEntity<WorkspaceMemberResponseDTO> addMember(
+    public ResponseEntity<WorkspaceMemberWithProfileDTO> addMember(
             Authentication authentication,
             @PathVariable UUID id,
-            @Valid @RequestBody AddMemberDTO dto
+            @Valid @RequestBody AddMemberByUsernameDTO dto
     ) {
-        UUID authId = extractAuthId(authentication);
-        WorkspaceMember member = workspaceService.addMember(id, dto, authId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(WorkspaceMemberResponseDTO.fromEntity(member));
+        WorkspaceMember member = workspaceService.addMemberByUsername(id, dto, extractAuthId(authentication));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(WorkspaceMemberWithProfileDTO.fromMember(member));
     }
 
     @GetMapping("/{id}/members")
-    public ResponseEntity<List<WorkspaceMemberResponseDTO>> listMembers(
+    public ResponseEntity<List<WorkspaceMemberWithProfileDTO>> listMembers(
             Authentication authentication,
             @PathVariable UUID id
     ) {
-        UUID authId = extractAuthId(authentication);
-        List<WorkspaceMemberResponseDTO> members = workspaceService.listMembers(id, authId)
-                .stream()
-                .map(WorkspaceMemberResponseDTO::fromEntity)
-                .toList();
-        return ResponseEntity.ok(members);
+        return ResponseEntity.ok(workspaceService.listMembersWithProfiles(id, extractAuthId(authentication)));
     }
 
     @DeleteMapping("/{id}/members/{memberAuthId}")
@@ -109,8 +112,7 @@ public class WorkspaceController {
             @PathVariable UUID id,
             @PathVariable UUID memberAuthId
     ) {
-        UUID authId = extractAuthId(authentication);
-        workspaceService.removeMember(id, memberAuthId, authId);
+        workspaceService.removeMember(id, memberAuthId, extractAuthId(authentication));
         return ResponseEntity.noContent().build();
     }
 
@@ -121,8 +123,7 @@ public class WorkspaceController {
             @PathVariable UUID memberAuthId,
             @Valid @RequestBody UpdateMemberRoleDTO dto
     ) {
-        UUID authId = extractAuthId(authentication);
-        WorkspaceMember member = workspaceService.updateMemberRole(id, memberAuthId, dto, authId);
+        WorkspaceMember member = workspaceService.updateMemberRole(id, memberAuthId, dto, extractAuthId(authentication));
         return ResponseEntity.ok(WorkspaceMemberResponseDTO.fromEntity(member));
     }
 
