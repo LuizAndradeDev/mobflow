@@ -10,7 +10,7 @@ import { UserProfileStateService } from '../../core/services/user-profile-state.
   template: `
     <div class="p-8 max-w-5xl mx-auto">
 
-      <!-- Header -->
+
       <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
           Welcome back, {{ profile?.displayName || 'there' }} 👋
@@ -18,7 +18,6 @@ import { UserProfileStateService } from '../../core/services/user-profile-state.
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Here's what's happening across your teams</p>
       </div>
 
-      <!-- Quick stats -->
       <div class="grid grid-cols-4 gap-4 mb-8">
         @for (stat of stats; track stat.label) {
           <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -29,10 +28,10 @@ import { UserProfileStateService } from '../../core/services/user-profile-state.
         }
       </div>
 
-      <!-- Recent activity + My teams -->
+
       <div class="grid grid-cols-3 gap-6">
 
-        <!-- Recent tasks placeholder -->
+
         <div class="col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
           <div class="flex items-center justify-between mb-5">
             <h2 class="font-semibold text-gray-800 dark:text-gray-100">Recent Tasks</h2>
@@ -52,7 +51,7 @@ import { UserProfileStateService } from '../../core/services/user-profile-state.
           </div>
         </div>
 
-        <!-- My teams shortcut -->
+
         <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
           <h2 class="font-semibold text-gray-800 dark:text-gray-100 mb-5">My Teams</h2>
           <div class="space-y-3">
