@@ -1,51 +1,59 @@
-import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Injectable, signal } from '@angular/core';
 import { AlertInterface } from '../model/alert.interface';
 import { AlertType } from '../enum/alert-type.enum';
 
+export interface AlertState extends AlertInterface {
+  leaving: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AlertService {
-  private alertSubject = new Subject<AlertInterface | null>();
-  alert$ = this.alertSubject.asObservable();
+  private readonly MAX_ALERTS = 3;
+  private readonly AUTO_CLOSE_MS = 5000;
+  private readonly LEAVE_MS = 300;
 
-  show(alert: AlertInterface) {
-    this.alertSubject.next(null);
-    this.alertSubject.next(alert);
+  alerts = signal<AlertState[]>([]);
+
+  show(alert: Omit<AlertInterface, 'id'>) {
+    const id = crypto.randomUUID();
+    const newAlert: AlertState = { ...alert, id, leaving: false };
+
+    this.alerts.update((current) => {
+      const updated = [newAlert, ...current];
+      return updated.slice(0, this.MAX_ALERTS);
+    });
+
+    setTimeout(() => this.dismiss(id), this.AUTO_CLOSE_MS);
   }
 
-  info(message: string, title: string = 'Alert!') {
-    this.show({
-      title,
-      message,
-      alertType: AlertType.info,
-    });
+  dismiss(id: string) {
+    // mark as leaving first — triggers CSS animation
+    this.alerts.update((current) =>
+      current.map((a) => (a.id === id ? { ...a, leaving: true } : a)),
+    );
+    // remove after animation completes
+    setTimeout(() => {
+      this.alerts.update((current) => current.filter((a) => a.id !== id));
+    }, this.LEAVE_MS);
   }
 
-  success(message: string, title: string = 'Success!') {
-    this.show({
-      title,
-      message,
-      alertType: AlertType.success,
-    });
+  info(message: string, title = 'Info') {
+    this.show({ title, message, alertType: AlertType.info });
   }
 
-  warning(message: string, title: string = 'Attention!') {
-    this.show({
-      title,
-      message,
-      alertType: AlertType.warning,
-    });
+  success(message: string, title = 'Success!') {
+    this.show({ title, message, alertType: AlertType.success });
   }
 
-  danger(message: string, title: string = 'Error!') {
-    this.show({
-      title,
-      message,
-      alertType: AlertType.error,
-    });
+  warning(message: string, title = 'Warning') {
+    this.show({ title, message, alertType: AlertType.warning });
+  }
+
+  danger(message: string, title = 'Error!') {
+    this.show({ title, message, alertType: AlertType.error });
   }
 
   clear() {
-    this.alertSubject.next(null);
+    this.alerts.set([]);
   }
 }
