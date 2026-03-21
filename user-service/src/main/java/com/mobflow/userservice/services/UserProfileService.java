@@ -3,8 +3,11 @@ package com.mobflow.userservice.services;
 import com.mobflow.userservice.model.dto.request.UpdateUserProfileDTO;
 import com.mobflow.userservice.model.dto.response.UserProfileResponseDTO;
 import com.mobflow.userservice.model.entities.UserProfile;
-import com.mobflow.userservice.repository.UserProfileRepository;
 import com.mobflow.userservice.exceptions.UserProfileNotFoundException;
+import com.mobflow.userservice.repository.UserProfileRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,16 +28,19 @@ public class UserProfileService {
         this.storageService = storageService;
     }
 
+
     @Transactional
     public UserProfile findOrCreateProfile(UUID authId, String username) {
         return userProfileRepository.findByAuthId(authId)
                 .orElseGet(() -> createProfile(authId, username));
     }
 
+    @Cacheable(value = "user-profiles", key = "#authId")
     public UserProfile getProfileByAuthId(UUID authId) {
         return userProfileRepository.findByAuthId(authId)
                 .orElseThrow(UserProfileNotFoundException::new);
     }
+
 
     public UserProfileResponseDTO getProfileByUsername(String username) {
         UserProfile profile = userProfileRepository.findByDisplayName(username)
@@ -43,24 +49,20 @@ public class UserProfileService {
     }
 
     @Transactional
+    @CacheEvict(value = "user-profiles", key = "#authId")
     public UserProfile updateProfile(UUID authId, UpdateUserProfileDTO dto) {
         UserProfile profile = userProfileRepository.findByAuthId(authId)
                 .orElseThrow(UserProfileNotFoundException::new);
 
-        if (dto.getDisplayName() != null) {
-            profile.setDisplayName(dto.getDisplayName());
-        }
-        if (dto.getBio() != null) {
-            profile.setBio(dto.getBio());
-        }
-        if (dto.getPhone() != null) {
-            profile.setPhone(dto.getPhone());
-        }
+        if (dto.getDisplayName() != null) profile.setDisplayName(dto.getDisplayName());
+        if (dto.getBio() != null) profile.setBio(dto.getBio());
+        if (dto.getPhone() != null) profile.setPhone(dto.getPhone());
 
         return userProfileRepository.save(profile);
     }
 
     @Transactional
+    @CacheEvict(value = "user-profiles", key = "#authId")
     public UserProfile updateAvatar(UUID authId, MultipartFile file) {
         UserProfile profile = userProfileRepository.findByAuthId(authId)
                 .orElseThrow(UserProfileNotFoundException::new);
