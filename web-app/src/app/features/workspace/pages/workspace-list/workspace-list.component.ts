@@ -56,6 +56,13 @@ export class WorkspaceListComponent implements OnInit {
     return workspace.ownerAuthId === this.currentAuthId;
   }
 
+  // stopPropagation prevents the card click (navigate) from firing
+  // while keeping the dropdown open on the same click
+  openMenu(event: MouseEvent, workspaceId: string) {
+    event.stopPropagation();
+    this.activeMenu = this.activeMenu === workspaceId ? null : workspaceId;
+  }
+
   onJoin() {
     if (this.joinForm.invalid || this.isJoining) return;
     this.isJoining = true;
@@ -85,7 +92,7 @@ export class WorkspaceListComponent implements OnInit {
     });
   }
 
-  onLeave(workspace: Workspace, event: Event) {
+  onLeave(workspace: Workspace, event: MouseEvent) {
     event.stopPropagation();
     this.activeMenu = null;
     if (!confirm(`Leave "${workspace.name}"?`)) return;
@@ -97,7 +104,7 @@ export class WorkspaceListComponent implements OnInit {
     });
   }
 
-  onDelete(workspace: Workspace, event: Event) {
+  onDelete(workspace: Workspace, event: MouseEvent) {
     event.stopPropagation();
     this.activeMenu = null;
     if (!confirm(`Delete "${workspace.name}"? This cannot be undone.`)) return;
