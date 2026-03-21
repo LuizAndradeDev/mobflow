@@ -20,23 +20,19 @@
   } @else {
     <div class="grid grid-cols-3 gap-4">
 
-      <!-- Existing workspace cards -->
       @for (workspace of workspaces; track workspace.id) {
         <div
           class="relative bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-blue-200 dark:hover:border-blue-700 transition-all cursor-pointer group"
           (click)="router.navigate(['/workspaces', workspace.id])"
         >
-          <!-- Banner -->
           <div class="h-20 bg-gradient-to-br from-blue-400 to-indigo-500 dark:from-blue-700 dark:to-indigo-800"></div>
 
-          <!-- Avatar -->
           <div class="px-4 -mt-5 mb-2">
             <div class="w-10 h-10 rounded-xl border-4 border-white dark:border-gray-800 bg-blue-600 flex items-center justify-center shadow">
               <span class="text-white font-bold">{{ workspace.name[0].toUpperCase() }}</span>
             </div>
           </div>
 
-          <!-- Info -->
           <div class="px-4 pb-8">
             <h3 class="font-semibold text-gray-800 dark:text-gray-100 text-sm">{{ workspace.name }}</h3>
             @if (workspace.description) {
@@ -46,14 +42,14 @@
             }
           </div>
 
-          <!-- 3 dots — bottom right, always visible on hover -->
+
           <div
             class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
             (click)="$event.stopPropagation()"
           >
             <button
               class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-              (click)="activeMenu = activeMenu === workspace.id ? null : workspace.id"
+              (click)="openMenu($event, workspace.id)"
             >
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <circle cx="5" cy="12" r="1.5"/>
@@ -63,19 +59,19 @@
             </button>
 
             @if (activeMenu === workspace.id) {
-              <div class="absolute bottom-8 right-0 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden z-10 min-w-36">
+              <div class="absolute bottom-8 right-0 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden z-20 min-w-36">
                 @if (!isOwner(workspace)) {
                   <button
-                    (click)="onLeave(workspace, $event)"
-                    class="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    class="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    (mousedown)="onLeave(workspace, $event)"
                   >
                     Leave team
                   </button>
                 }
                 @if (isOwner(workspace)) {
                   <button
-                    (click)="onDelete(workspace, $event)"
-                    class="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    class="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+                    (mousedown)="onDelete(workspace, $event)"
                   >
                     Delete team
                   </button>
@@ -86,7 +82,7 @@
         </div>
       }
 
-      <!-- Create / Join card -->
+
       <button
         (click)="showModal.set(true)"
         class="bg-white dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex flex-col items-center justify-center gap-2 min-h-[152px] text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 group"
@@ -104,12 +100,15 @@
 
 </div>
 
-<!-- Active menu backdrop -->
+
 @if (activeMenu) {
-  <div class="fixed inset-0 z-0" (click)="activeMenu = null"></div>
+  <div
+    class="fixed inset-0 z-10"
+    (mousedown)="activeMenu = null"
+  ></div>
 }
 
-<!-- Modal -->
+
 @if (showModal()) {
   <div class="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4" (click)="showModal.set(false)">
     <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md" (click)="$event.stopPropagation()">
