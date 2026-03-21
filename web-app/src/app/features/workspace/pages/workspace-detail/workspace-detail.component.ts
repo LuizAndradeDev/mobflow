@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin, switchMap } from 'rxjs';
 import { WorkspaceService } from '../../../../core/services/workspace.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
 import { UserProfileStateService } from '../../../../core/services/user-profile-state.service';
@@ -10,13 +11,16 @@ import { Workspace, WorkspaceMember, WorkspaceRole } from '../../../../core/mode
 @Component({
   selector: 'app-workspace-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './workspace-detail.component.html',
 })
 export class WorkspaceDetailComponent implements OnInit {
   workspace: Workspace | null = null;
   members: WorkspaceMember[] = [];
+
   isLoading = true;
+  membersLoading = true;
+
   isUpdating = false;
   isAddingMember = false;
   showEditForm = false;
@@ -33,12 +37,12 @@ export class WorkspaceDetailComponent implements OnInit {
     private workspaceService: WorkspaceService,
     private alertService: AlertService,
     public userProfileState: UserProfileStateService,
+    private cdr: ChangeDetectorRef,
   ) {
     this.editForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       description: ['', [Validators.maxLength(500)]],
     });
-
     this.addMemberForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
     });
@@ -46,27 +50,24 @@ export class WorkspaceDetailComponent implements OnInit {
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.loadWorkspace(id);
-  }
 
-  private loadWorkspace(id: string) {
-    this.workspaceService.getById(id).subscribe({
-      next: (workspace) => {
+    forkJoin({
+      workspace: this.workspaceService.getById(id),
+      members: this.workspaceService.listMembers(id),
+    }).subscribe({
+      next: ({ workspace, members }) => {
         this.workspace = workspace;
-        this.editForm.patchValue({ name: workspace.name, description: workspace.description ?? '' });
-        this.loadMembers(id);
-      },
-      error: () => {
+        this.members = members;
         this.isLoading = false;
+        this.membersLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.membersLoading = false;
+        this.cdr.markForCheck();
         this.router.navigate(['/workspaces']);
       },
-    });
-  }
-
-  private loadMembers(workspaceId: string) {
-    this.workspaceService.listMembers(workspaceId).subscribe({
-      next: (members) => { this.members = members; this.isLoading = false; },
-      error: () => { this.isLoading = false; },
     });
   }
 
@@ -102,7 +103,9 @@ export class WorkspaceDetailComponent implements OnInit {
         this.isUpdating = false;
         this.alertService.success('Workspace updated!', 'Saved');
       },
-      error: () => { this.isUpdating = false; },
+      error: () => {
+        this.isUpdating = false;
+      },
     });
   }
 
@@ -120,33 +123,50 @@ export class WorkspaceDetailComponent implements OnInit {
   onAddMember() {
     if (this.addMemberForm.invalid || this.isAddingMember || !this.workspace) return;
     this.isAddingMember = true;
-    this.workspaceService.addMember(this.workspace.id, this.addMemberForm.value).subscribe({
-      next: () => {
-        // invalidate cache and reload members with profiles
-        this.workspaceService.invalidateMemberCache(this.workspace!.id);
-        this.loadMembers(this.workspace!.id);
-        this.addMemberForm.reset();
-        this.showAddMember = false;
-        this.isAddingMember = false;
-        this.alertService.success('Member added to the workspace.', 'Member added');
-      },
-      error: () => { this.isAddingMember = false; },
-    });
-  }
 
+    this.workspaceService
+      .addMember(this.workspace.id, this.addMemberForm.value)
+      .pipe(
+        switchMap(() => {
+          this.workspaceService.invalidateMemberCache(this.workspace!.id);
+          this.membersLoading = true;
+          return this.workspaceService.listMembers(this.workspace!.id);
+        }),
+      )
+      .subscribe({
+        next: (members) => {
+          this.members = members;
+          this.membersLoading = false;
+          this.isAddingMember = false;
+          this.addMemberForm.reset();
+          this.showAddMember = false;
+          this.alertService.success('Member added to the workspace.', 'Member added');
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.membersLoading = false;
+          this.isAddingMember = false;
+        },
+      });
+  }
   onRemoveMember(member: WorkspaceMember) {
     if (!this.workspace) return;
     if (!confirm(`Remove ${member.displayName} from this workspace?`)) return;
     this.workspaceService.removeMember(this.workspace.id, member.authId).subscribe({
       next: () => {
         this.members = this.members.filter((m) => m.id !== member.id);
+        this.cdr.markForCheck();
         this.alertService.success('Member removed.', 'Removed');
       },
     });
   }
 
   roleLabel(role: WorkspaceRole): string {
-    const labels: Record<WorkspaceRole, string> = { OWNER: 'Owner', ADMIN: 'Admin', MEMBER: 'Member' };
+    const labels: Record<WorkspaceRole, string> = {
+      OWNER: 'Owner',
+      ADMIN: 'Admin',
+      MEMBER: 'Member',
+    };
     return labels[role];
   }
 
