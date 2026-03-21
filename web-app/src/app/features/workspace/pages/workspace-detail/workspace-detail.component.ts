@@ -21,13 +21,14 @@ export class WorkspaceDetailComponent implements OnInit {
   isAddingMember = false;
   showEditForm = false;
   showAddMember = false;
+  codeCopied = false;
 
   editForm: FormGroup;
   addMemberForm: FormGroup;
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
+    public router: Router,
     private fb: FormBuilder,
     private workspaceService: WorkspaceService,
     private alertService: AlertService,
@@ -39,7 +40,7 @@ export class WorkspaceDetailComponent implements OnInit {
     });
 
     this.addMemberForm = this.fb.group({
-      authId: ['', [Validators.required]],
+      username: ['', [Validators.required, Validators.minLength(3)]],
     });
   }
 
@@ -64,14 +65,16 @@ export class WorkspaceDetailComponent implements OnInit {
 
   private loadMembers(workspaceId: string) {
     this.workspaceService.listMembers(workspaceId).subscribe({
-      next: (members) => {
-        this.members = members;
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-      },
+      next: (members) => { this.members = members; this.isLoading = false; },
+      error: () => { this.isLoading = false; },
     });
+  }
+
+  copyCode() {
+    if (!this.workspace?.publicCode) return;
+    navigator.clipboard.writeText(this.workspace.publicCode);
+    this.codeCopied = true;
+    setTimeout(() => (this.codeCopied = false), 2000);
   }
 
   get currentUserRole(): WorkspaceRole | null {
@@ -92,24 +95,20 @@ export class WorkspaceDetailComponent implements OnInit {
   onUpdate() {
     if (this.editForm.invalid || this.isUpdating || !this.workspace) return;
     this.isUpdating = true;
-
     this.workspaceService.update(this.workspace.id, this.editForm.value).subscribe({
       next: (updated) => {
         this.workspace = updated;
         this.showEditForm = false;
         this.isUpdating = false;
-        this.alertService.success('Workspace updated successfully!', 'Saved');
+        this.alertService.success('Workspace updated!', 'Saved');
       },
-      error: () => {
-        this.isUpdating = false;
-      },
+      error: () => { this.isUpdating = false; },
     });
   }
 
   onDelete() {
     if (!this.workspace) return;
-    if (!confirm(`Delete "${this.workspace.name}"? This action cannot be undone.`)) return;
-
+    if (!confirm(`Delete "${this.workspace.name}"? This cannot be undone.`)) return;
     this.workspaceService.delete(this.workspace.id).subscribe({
       next: () => {
         this.alertService.success('Workspace deleted.', 'Deleted');
@@ -121,25 +120,23 @@ export class WorkspaceDetailComponent implements OnInit {
   onAddMember() {
     if (this.addMemberForm.invalid || this.isAddingMember || !this.workspace) return;
     this.isAddingMember = true;
-
     this.workspaceService.addMember(this.workspace.id, this.addMemberForm.value).subscribe({
-      next: (member) => {
-        this.members = [...this.members, member];
+      next: () => {
+        // invalidate cache and reload members with profiles
+        this.workspaceService.invalidateMemberCache(this.workspace!.id);
+        this.loadMembers(this.workspace!.id);
         this.addMemberForm.reset();
         this.showAddMember = false;
         this.isAddingMember = false;
         this.alertService.success('Member added to the workspace.', 'Member added');
       },
-      error: () => {
-        this.isAddingMember = false;
-      },
+      error: () => { this.isAddingMember = false; },
     });
   }
 
   onRemoveMember(member: WorkspaceMember) {
     if (!this.workspace) return;
-    if (!confirm('Remove this member from the workspace?')) return;
-
+    if (!confirm(`Remove ${member.displayName} from this workspace?`)) return;
     this.workspaceService.removeMember(this.workspace.id, member.authId).subscribe({
       next: () => {
         this.members = this.members.filter((m) => m.id !== member.id);
@@ -149,19 +146,15 @@ export class WorkspaceDetailComponent implements OnInit {
   }
 
   roleLabel(role: WorkspaceRole): string {
-    const labels: Record<WorkspaceRole, string> = {
-      OWNER: 'Owner',
-      ADMIN: 'Admin',
-      MEMBER: 'Member',
-    };
+    const labels: Record<WorkspaceRole, string> = { OWNER: 'Owner', ADMIN: 'Admin', MEMBER: 'Member' };
     return labels[role];
   }
 
   roleBadgeClass(role: WorkspaceRole): string {
     const classes: Record<WorkspaceRole, string> = {
-      OWNER: 'bg-purple-100 text-purple-700',
-      ADMIN: 'bg-blue-100 text-blue-700',
-      MEMBER: 'bg-gray-100 text-gray-600',
+      OWNER: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
+      ADMIN: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+      MEMBER: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
     };
     return classes[role];
   }
