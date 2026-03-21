@@ -12,6 +12,7 @@ import java.util.UUID;
 public class WorkspaceResponseDTO {
 
     private UUID id;
+    private String publicCode;
     private String name;
     private String description;
     private UUID ownerAuthId;
@@ -21,6 +22,7 @@ public class WorkspaceResponseDTO {
     public static WorkspaceResponseDTO fromEntity(Workspace workspace) {
         return WorkspaceResponseDTO.builder()
                 .id(workspace.getId())
+                .publicCode(workspace.getPublicCode())
                 .name(workspace.getName())
                 .description(workspace.getDescription())
                 .ownerAuthId(workspace.getOwnerAuthId())
