@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
@@ -18,4 +19,8 @@ public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
             ORDER BY w.createdAt DESC
             """)
     List<Workspace> findAllByMemberAuthId(@Param("authId") UUID authId);
+
+    Optional<Workspace> findByPublicCode(String publicCode);
+
+    boolean existsByPublicCode(String publicCode);
 }
