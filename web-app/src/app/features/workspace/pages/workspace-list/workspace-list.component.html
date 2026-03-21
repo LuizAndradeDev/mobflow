@@ -41,48 +41,10 @@
               <p class="text-xs text-gray-300 dark:text-gray-600 mt-0.5 italic">No description</p>
             }
           </div>
-
-
-          <div
-            class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            (click)="$event.stopPropagation()"
-          >
-            <button
-              class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-              (click)="openMenu($event, workspace.id)"
-            >
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <circle cx="5" cy="12" r="1.5"/>
-                <circle cx="12" cy="12" r="1.5"/>
-                <circle cx="19" cy="12" r="1.5"/>
-              </svg>
-            </button>
-
-            @if (activeMenu === workspace.id) {
-              <div class="absolute bottom-8 right-0 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden z-20 min-w-36">
-                @if (!isOwner(workspace)) {
-                  <button
-                    class="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                    (mousedown)="onLeave(workspace, $event)"
-                  >
-                    Leave team
-                  </button>
-                }
-                @if (isOwner(workspace)) {
-                  <button
-                    class="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
-                    (mousedown)="onDelete(workspace, $event)"
-                  >
-                    Delete team
-                  </button>
-                }
-              </div>
-            }
-          </div>
         </div>
       }
 
-
+      <!-- Create / Join card -->
       <button
         (click)="showModal.set(true)"
         class="bg-white dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex flex-col items-center justify-center gap-2 min-h-[152px] text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 group"
@@ -101,29 +63,21 @@
 </div>
 
 
-@if (activeMenu) {
-  <div
-    class="fixed inset-0 z-10"
-    (mousedown)="activeMenu = null"
-  ></div>
-}
-
-
 @if (showModal()) {
   <div class="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4" (click)="showModal.set(false)">
     <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md" (click)="$event.stopPropagation()">
 
       <div class="flex border-b border-gray-100 dark:border-gray-800">
         <button (click)="modalTab.set('join')"
-          class="flex-1 py-4 text-sm font-semibold transition border-b-2"
-          [class.text-blue-600]="modalTab() === 'join'" [class.border-blue-600]="modalTab() === 'join'"
-          [class.text-gray-400]="modalTab() !== 'join'" [class.border-transparent]="modalTab() !== 'join'">
+                class="flex-1 py-4 text-sm font-semibold transition border-b-2"
+                [class.text-blue-600]="modalTab() === 'join'" [class.border-blue-600]="modalTab() === 'join'"
+                [class.text-gray-400]="modalTab() !== 'join'" [class.border-transparent]="modalTab() !== 'join'">
           Join a team
         </button>
         <button (click)="modalTab.set('create')"
-          class="flex-1 py-4 text-sm font-semibold transition border-b-2"
-          [class.text-blue-600]="modalTab() === 'create'" [class.border-blue-600]="modalTab() === 'create'"
-          [class.text-gray-400]="modalTab() !== 'create'" [class.border-transparent]="modalTab() !== 'create'">
+                class="flex-1 py-4 text-sm font-semibold transition border-b-2"
+                [class.text-blue-600]="modalTab() === 'create'" [class.border-blue-600]="modalTab() === 'create'"
+                [class.text-gray-400]="modalTab() !== 'create'" [class.border-transparent]="modalTab() !== 'create'">
           Create a team
         </button>
       </div>
@@ -134,7 +88,7 @@
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">Enter the 8-character code shared by the team owner.</p>
           <form [formGroup]="joinForm" (ngSubmit)="onJoin()" class="space-y-4">
             <input formControlName="code" type="text" maxlength="8" placeholder="e.g. aB3xK9mZ"
-              class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono text-center text-lg tracking-widest"/>
+                   class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono text-center text-lg tracking-widest"/>
             <div class="flex gap-3">
               <button type="button" (click)="showModal.set(false)" class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">Cancel</button>
               <button type="submit" [disabled]="joinForm.invalid || isJoining" class="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50">
@@ -149,12 +103,12 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name <span class="text-red-500">*</span></label>
               <input formControlName="name" type="text" placeholder="e.g. Backend Squad"
-                class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"/>
+                     class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"/>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
               <textarea formControlName="description" rows="2" placeholder="What is this team for?"
-                class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+                        class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
             </div>
             <div class="flex gap-3">
               <button type="button" (click)="showModal.set(false)" class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">Cancel</button>
