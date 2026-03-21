@@ -1,35 +1,84 @@
-<div class="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-  <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
-    <h2 class="text-2xl font-bold text-center text-gray-800 mb-8">Create your Mobflow account</h2>
+<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
+  <div class="w-full max-w-md">
 
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Username</label>
-        <input formControlName="username" type="text"
-               class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+          <span class="text-white font-bold">M</span>
+        </div>
+        <span class="text-2xl font-bold text-blue-600">Mobflow</span>
       </div>
+      <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">Create your account</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Get started with Mobflow for free</p>
+    </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">E-mail</label>
-        <input formControlName="email" type="email"
-               class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-      </div>
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8">
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Password</label>
-        <input formControlName="password" type="password"
-               class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-      </div>
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5">
 
-      <button type="submit" [disabled]="registerForm.invalid"
-              class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400">
-        Sign up
-      </button>
-    </form>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Username</label>
+          <input
+            formControlName="username"
+            type="text"
+            placeholder="yourname"
+            class="w-full px-4 py-3 rounded-xl border text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 outline-none transition focus:ring-2 focus:ring-blue-500"
+            [class.border-red-400]="fieldErrors.username"
+            [class.dark:border-red-600]="fieldErrors.username"
+            [class.border-gray-300]="!fieldErrors.username"
+            [class.dark:border-gray-600]="!fieldErrors.username"
+          />
+          @if (fieldErrors.username) {
+            <p class="mt-1.5 text-xs text-red-500 dark:text-red-400">{{ fieldErrors.username }}</p>
+          }
+        </div>
 
-    <p class="mt-6 text-center text-sm text-gray-500">
-      Already have an account?
-      <a routerLink="/login" class="text-blue-600 font-medium hover:underline">Sign in</a>
-    </p>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
+          <input
+            formControlName="email"
+            type="email"
+            placeholder="you@example.com"
+            class="w-full px-4 py-3 rounded-xl border text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 outline-none transition focus:ring-2 focus:ring-blue-500"
+            [class.border-red-400]="fieldErrors.email"
+            [class.dark:border-red-600]="fieldErrors.email"
+            [class.border-gray-300]="!fieldErrors.email"
+            [class.dark:border-gray-600]="!fieldErrors.email"
+          />
+          @if (fieldErrors.email) {
+            <p class="mt-1.5 text-xs text-red-500 dark:text-red-400">{{ fieldErrors.email }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+          <input
+            formControlName="password"
+            type="password"
+            placeholder="••••••••"
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 outline-none transition focus:ring-2 focus:ring-blue-500"
+          />
+          @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
+            <p class="mt-1.5 text-xs text-red-500 dark:text-red-400">Password must be at least 6 characters.</p>
+          }
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="registerForm.invalid"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        >
+          Create account
+        </button>
+
+      </form>
+
+      <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        Already have an account?
+        <a routerLink="/login" class="text-blue-600 dark:text-blue-400 font-medium hover:underline ml-1">Sign in</a>
+      </p>
+
+    </div>
   </div>
 </div>

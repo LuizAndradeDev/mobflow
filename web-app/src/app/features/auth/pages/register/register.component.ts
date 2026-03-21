@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
 import { SignupRequest } from '../../../../core/models/auth.model';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-register',
@@ -14,6 +15,7 @@ import { SignupRequest } from '../../../../core/models/auth.model';
 })
 export class RegisterComponent {
   registerForm: FormGroup;
+  fieldErrors: { username?: string; email?: string } = {};
 
   constructor(
     private fb: FormBuilder,
@@ -28,14 +30,25 @@ export class RegisterComponent {
   }
 
   onSubmit() {
-    if (this.registerForm.valid) {
-      const payload = this.registerForm.value as SignupRequest;
-      this.authService.register(payload).subscribe({
-        next: () => {
-          this.alertService.success('Your account has been created successfully!', 'Account created');
-          this.registerForm.reset();
-        },
-      });
-    }
+    if (this.registerForm.invalid) return;
+    this.fieldErrors = {};
+
+    const payload = this.registerForm.value as SignupRequest;
+    this.authService.register(payload).subscribe({
+      next: () => {
+        this.alertService.success('Account created! Please sign in.', 'Welcome to Mobflow');
+        this.registerForm.reset();
+      },
+      error: (err: HttpErrorResponse) => {
+        const errorType = err.error?.errorType;
+        if (errorType === 'USERNAME_ALREADY_EXIST') {
+          this.fieldErrors.username = 'This username is already taken.';
+          this.registerForm.get('username')?.reset();
+        } else if (errorType === 'EMAIL_ALREADY_EXIST') {
+          this.fieldErrors.email = 'This email is already registered.';
+          this.registerForm.get('email')?.reset();
+        }
+      },
+    });
   }
 }
