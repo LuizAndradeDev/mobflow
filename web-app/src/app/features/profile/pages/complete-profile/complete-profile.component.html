@@ -1,67 +1,67 @@
-<div class="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-  <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
+<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
+  <div class="w-full max-w-md">
 
     <div class="text-center mb-8">
-      <div class="mx-auto mb-4 w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
-        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      <div class="mx-auto mb-4 w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+        <svg class="w-7 h-7 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
         </svg>
       </div>
-      <h2 class="text-2xl font-bold text-gray-800">Complete your profile</h2>
-      <p class="text-sm text-gray-500 mt-1">Tell us a little about yourself to get started</p>
+      <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">Complete your profile</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tell us a little about yourself</p>
     </div>
 
-    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-5">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8">
+      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-5">
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-          Display name <span class="text-red-500">*</span>
-        </label>
-        <input
-          formControlName="displayName"
-          type="text"
-          placeholder="How should we call you?"
-          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
-          [class.border-red-400]="profileForm.get('displayName')?.invalid && profileForm.get('displayName')?.touched"
-        />
-        @if (profileForm.get('displayName')?.invalid && profileForm.get('displayName')?.touched) {
-          <p class="text-xs text-red-500 mt-1">Display name is required (2–100 characters)</p>
-        }
-      </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Display name <span class="text-red-500">*</span>
+          </label>
+          <input
+            formControlName="displayName"
+            type="text"
+            placeholder="How should we call you?"
+            class="w-full px-4 py-3 rounded-xl border text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 outline-none transition focus:ring-2 focus:ring-blue-500"
+            [class.border-red-400]="profileForm.get('displayName')?.invalid && profileForm.get('displayName')?.touched"
+            [class.border-gray-300]="!(profileForm.get('displayName')?.invalid && profileForm.get('displayName')?.touched)"
+            [class.dark:border-gray-600]="!(profileForm.get('displayName')?.invalid && profileForm.get('displayName')?.touched)"
+            [class.dark:border-red-600]="profileForm.get('displayName')?.invalid && profileForm.get('displayName')?.touched"
+          />
+          @if (profileForm.get('displayName')?.invalid && profileForm.get('displayName')?.touched) {
+            <p class="mt-1.5 text-xs text-red-500 dark:text-red-400">Display name is required (2–100 characters)</p>
+          }
+        </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-        <textarea
-          formControlName="bio"
-          rows="3"
-          placeholder="A short description about yourself..."
-          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"
-          [class.border-red-400]="profileForm.get('bio')?.invalid && profileForm.get('bio')?.touched"
-        ></textarea>
-        @if (profileForm.get('bio')?.invalid && profileForm.get('bio')?.touched) {
-          <p class="text-xs text-red-500 mt-1">Bio must not exceed 500 characters</p>
-        }
-      </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bio</label>
+          <textarea
+            formControlName="bio"
+            rows="3"
+            placeholder="A short description about yourself..."
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 outline-none transition focus:ring-2 focus:ring-blue-500 resize-none"
+          ></textarea>
+        </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-        <input
-          formControlName="phone"
-          type="tel"
-          placeholder="+55 11 99999-9999"
-          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
-        />
-      </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Phone</label>
+          <input
+            formControlName="phone"
+            type="tel"
+            placeholder="+55 11 99999-9999"
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 outline-none transition focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
-      <button
-        type="submit"
-        [disabled]="profileForm.invalid || isLoading"
-        class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {{ isLoading ? 'Saving...' : 'Save and continue' }}
-      </button>
+        <button
+          type="submit"
+          [disabled]="profileForm.invalid || isLoading"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        >
+          {{ isLoading ? 'Saving...' : 'Save and continue' }}
+        </button>
 
-    </form>
+      </form>
+    </div>
   </div>
 </div>
