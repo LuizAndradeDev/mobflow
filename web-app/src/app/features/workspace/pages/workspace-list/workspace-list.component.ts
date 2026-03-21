@@ -18,7 +18,6 @@ export class WorkspaceListComponent implements OnInit {
   isLoading = true;
   showModal = signal(false);
   modalTab = signal<'join' | 'create'>('join');
-  activeMenu: string | null = null;
 
   joinForm: FormGroup;
   createForm: FormGroup;
@@ -43,8 +42,13 @@ export class WorkspaceListComponent implements OnInit {
 
   ngOnInit() {
     this.workspaceService.listMine().subscribe({
-      next: (data) => { this.workspaces = data; this.isLoading = false; },
-      error: () => { this.isLoading = false; },
+      next: (data) => {
+        this.workspaces = data;
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      },
     });
   }
 
@@ -54,13 +58,6 @@ export class WorkspaceListComponent implements OnInit {
 
   isOwner(workspace: Workspace): boolean {
     return workspace.ownerAuthId === this.currentAuthId;
-  }
-
-  // stopPropagation prevents the card click (navigate) from firing
-  // while keeping the dropdown open on the same click
-  openMenu(event: MouseEvent, workspaceId: string) {
-    event.stopPropagation();
-    this.activeMenu = this.activeMenu === workspaceId ? null : workspaceId;
   }
 
   onJoin() {
@@ -74,7 +71,9 @@ export class WorkspaceListComponent implements OnInit {
         this.reloadWorkspaces();
         this.isJoining = false;
       },
-      error: () => { this.isJoining = false; },
+      error: () => {
+        this.isJoining = false;
+      },
     });
   }
 
@@ -88,30 +87,8 @@ export class WorkspaceListComponent implements OnInit {
         this.createForm.reset();
         this.router.navigate(['/workspaces', workspace.id]);
       },
-      error: () => { this.isCreating = false; },
-    });
-  }
-
-  onLeave(workspace: Workspace, event: MouseEvent) {
-    event.stopPropagation();
-    this.activeMenu = null;
-    if (!confirm(`Leave "${workspace.name}"?`)) return;
-    this.workspaceService.leave(workspace.id).subscribe({
-      next: () => {
-        this.workspaces = this.workspaces.filter((w) => w.id !== workspace.id);
-        this.alertService.success('You left the workspace.', 'Left');
-      },
-    });
-  }
-
-  onDelete(workspace: Workspace, event: MouseEvent) {
-    event.stopPropagation();
-    this.activeMenu = null;
-    if (!confirm(`Delete "${workspace.name}"? This cannot be undone.`)) return;
-    this.workspaceService.delete(workspace.id).subscribe({
-      next: () => {
-        this.workspaces = this.workspaces.filter((w) => w.id !== workspace.id);
-        this.alertService.success('Workspace deleted.', 'Deleted');
+      error: () => {
+        this.isCreating = false;
       },
     });
   }
@@ -119,7 +96,9 @@ export class WorkspaceListComponent implements OnInit {
   private reloadWorkspaces() {
     this.workspaceService.invalidateListCache();
     this.workspaceService.listMine().subscribe({
-      next: (data) => { this.workspaces = data; },
+      next: (data) => {
+        this.workspaces = data;
+      },
     });
   }
 }
