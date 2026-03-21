@@ -78,6 +78,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      user-service:
+        condition: service_started
     networks:
       - mobflow-network
     env_file:
