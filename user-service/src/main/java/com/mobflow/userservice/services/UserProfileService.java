@@ -1,8 +1,9 @@
 package com.mobflow.userservice.services;
 
+import com.mobflow.userservice.model.dto.request.UpdateUserProfileDTO;
+import com.mobflow.userservice.model.dto.response.UserProfileResponseDTO;
 import com.mobflow.userservice.model.entities.UserProfile;
 import com.mobflow.userservice.repository.UserProfileRepository;
-import com.mobflow.userservice.model.dto.request.UpdateUserProfileDTO;
 import com.mobflow.userservice.exceptions.UserProfileNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,12 @@ public class UserProfileService {
     public UserProfile getProfileByAuthId(UUID authId) {
         return userProfileRepository.findByAuthId(authId)
                 .orElseThrow(UserProfileNotFoundException::new);
+    }
+
+    public UserProfileResponseDTO getProfileByUsername(String username) {
+        UserProfile profile = userProfileRepository.findByDisplayName(username)
+                .orElseThrow(UserProfileNotFoundException::new);
+        return UserProfileResponseDTO.fromEntity(profile);
     }
 
     @Transactional
