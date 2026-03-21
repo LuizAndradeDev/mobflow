@@ -27,8 +27,14 @@ export class WorkspaceDetailComponent implements OnInit {
   showAddMember = false;
   codeCopied = false;
 
+  // role editing state — tracks which member is being edited
+  editingRoleMemberId: string | null = null;
+  isUpdatingRole = false;
+
   editForm: FormGroup;
   addMemberForm: FormGroup;
+
+  readonly availableRoles: WorkspaceRole[] = ['ADMIN', 'MEMBER'];
 
   constructor(
     private route: ActivatedRoute,
@@ -62,7 +68,7 @@ export class WorkspaceDetailComponent implements OnInit {
         this.membersLoading = false;
         this.cdr.markForCheck();
       },
-      error: (err) => {
+      error: () => {
         this.isLoading = false;
         this.membersLoading = false;
         this.cdr.markForCheck();
@@ -149,6 +155,7 @@ export class WorkspaceDetailComponent implements OnInit {
         },
       });
   }
+
   onRemoveMember(member: WorkspaceMember) {
     if (!this.workspace) return;
     if (!confirm(`Remove ${member.displayName} from this workspace?`)) return;
@@ -159,6 +166,42 @@ export class WorkspaceDetailComponent implements OnInit {
         this.alertService.success('Member removed.', 'Removed');
       },
     });
+  }
+
+  startEditRole(member: WorkspaceMember) {
+    this.editingRoleMemberId = member.id;
+  }
+
+  cancelEditRole() {
+    this.editingRoleMemberId = null;
+  }
+
+  onUpdateRole(member: WorkspaceMember, newRole: WorkspaceRole) {
+    if (!this.workspace || this.isUpdatingRole) return;
+    if (newRole === member.role) {
+      this.editingRoleMemberId = null;
+      return;
+    }
+    this.isUpdatingRole = true;
+    this.workspaceService
+      .updateMemberRole(this.workspace.id, member.authId, { role: newRole })
+      .subscribe({
+        next: (updated) => {
+          this.members = this.members.map((m) =>
+            m.id === member.id ? { ...m, role: updated.role } : m,
+          );
+          this.editingRoleMemberId = null;
+          this.isUpdatingRole = false;
+          this.alertService.success(
+            `${member.displayName} is now ${newRole.toLowerCase()}.`,
+            'Role updated',
+          );
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.isUpdatingRole = false;
+        },
+      });
   }
 
   roleLabel(role: WorkspaceRole): string {
