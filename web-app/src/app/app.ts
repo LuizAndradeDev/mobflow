@@ -1,14 +1,32 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AlertComponent } from './shared/components/alert/alert.component';
-import { NavbarComponent } from './shared/components/navbar/navbar.component';
+import { AuthService } from './core/services/auth.service';
+import { UserStateService } from './core/services/user-state.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, AlertComponent, NavbarComponent],
-  templateUrl: './app.html',
-  styleUrl: './app.css',
+  imports: [RouterOutlet, AlertComponent, CommonModule],
+  template: `
+    <app-alert></app-alert>
+    <router-outlet></router-outlet>
+  `,
 })
-export class App {
-  protected readonly title = signal('web-app');
+export class App implements OnInit {
+  constructor(
+    private authService: AuthService,
+    private userState: UserStateService,
+  ) {}
+
+  ngOnInit() {
+    const token = localStorage.getItem('token');
+    if (token && !this.userState.user()) {
+      this.authService.getProfile().subscribe({
+        error: () => {
+          this.authService.logout();
+        },
+      });
+    }
+  }
 }
