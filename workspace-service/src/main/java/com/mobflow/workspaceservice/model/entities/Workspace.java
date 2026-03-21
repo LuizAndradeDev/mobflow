@@ -23,6 +23,9 @@ public class Workspace {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "public_code", nullable = false, unique = true, length = 8)
+    private String publicCode;
+
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
@@ -40,11 +43,12 @@ public class Workspace {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public static Workspace create(String name, String description, UUID ownerAuthId) {
+    public static Workspace create(String name, String description, UUID ownerAuthId, String publicCode) {
         return Workspace.builder()
                 .name(name)
                 .description(description)
                 .ownerAuthId(ownerAuthId)
+                .publicCode(publicCode)
                 .build();
     }
 }
