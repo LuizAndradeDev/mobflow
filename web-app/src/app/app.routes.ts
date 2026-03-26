@@ -10,6 +10,8 @@ import { CompleteProfileComponent } from './features/profile/pages/complete-prof
 import { EditProfileComponent } from './features/profile/pages/edit-profile/edit-profile.component';
 import { WorkspaceListComponent } from './features/workspace/pages/workspace-list/workspace-list.component';
 import { WorkspaceDetailComponent } from './features/workspace/pages/workspace-detail/workspace-detail.component';
+import { TasksOverviewComponent } from './features/tasks/pages/tasks-overview/tasks-overview.component';
+import { WorkspaceTasksComponent } from './features/tasks/pages/workspace-tasks/workspace-tasks.component';
 import { MainLayoutComponent } from './shared/components/sidebar/main-layout.component';
 import { guestGuard } from './core/guards/guest.guard';
 import { authGuard } from './core/guards/auth.guard';
@@ -35,6 +37,8 @@ export const routes: Routes = [
       { path: 'profile/edit', component: EditProfileComponent, canActivate: [profileGuard] },
       { path: 'workspaces', component: WorkspaceListComponent, canActivate: [profileGuard] },
       { path: 'workspaces/:id', component: WorkspaceDetailComponent, canActivate: [profileGuard] },
+      { path: 'tasks', component: TasksOverviewComponent, canActivate: [profileGuard] },
+      { path: 'tasks/:workspaceId', component: WorkspaceTasksComponent, canActivate: [profileGuard] },
     ],
   },
 
