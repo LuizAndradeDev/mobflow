@@ -1,16 +1,17 @@
-<div class="p-8 max-w-3xl">
+<div class="p-8 max-w-5xl">
 
   @if (isLoading) {
     <div class="animate-pulse space-y-4">
-      <div class="h-8 w-64 bg-gray-100 dark:bg-gray-700 rounded"></div>
-      <div class="h-4 w-96 bg-gray-100 dark:bg-gray-700 rounded"></div>
+      <div class="h-7 w-48 bg-gray-100 dark:bg-gray-700 rounded"></div>
+      <div class="h-4 w-72 bg-gray-100 dark:bg-gray-700 rounded"></div>
     </div>
   } @else if (workspace) {
 
-
+    <!-- Header -->
     <div class="flex items-start justify-between mb-8">
       <div class="flex items-center gap-3">
-        <button (click)="router.navigate(['/workspaces'])" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition cursor-pointer">
+        <button (click)="router.navigate(['/workspaces'])"
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
@@ -23,23 +24,32 @@
         </div>
       </div>
 
-      @if (isOwnerOrAdmin) {
-        <div class="flex gap-2">
+      <div class="flex gap-2">
+        <!-- Open kanban -->
+        <button (click)="router.navigate(['/tasks', workspace.id])"
+          class="flex items-center gap-2 text-sm px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+          </svg>
+          Open kanban
+        </button>
+        @if (isOwnerOrAdmin) {
           <button (click)="showEditForm = !showEditForm"
-                  class="text-sm px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer">
+            class="text-sm px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer">
             Edit
           </button>
           @if (isOwner) {
             <button (click)="onDelete()"
-                    class="text-sm px-3 py-2 border border-red-200 dark:border-red-900 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition cursor-pointer">
+              class="text-sm px-3 py-2 border border-red-200 dark:border-red-900 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition cursor-pointer">
               Delete
             </button>
           }
-        </div>
-      }
+        }
+      </div>
     </div>
 
-
+    <!-- Invite code -->
     <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-2xl px-5 py-4 mb-6 flex items-center justify-between gap-4">
       <div>
         <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-0.5">Invite code</p>
@@ -48,22 +58,19 @@
         </span>
       </div>
       <button (click)="copyCode()"
-              class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition cursor-pointer">
+        class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition cursor-pointer">
         @if (codeCopied) {
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
           Copied!
         } @else {
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"/>
-          </svg>
           Copy code
         }
       </button>
     </div>
 
-
+    <!-- Edit form -->
     @if (showEditForm) {
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 mb-6">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Edit workspace</h2>
@@ -71,18 +78,18 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
             <input formControlName="name" type="text"
-                   class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"/>
+              class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"/>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
             <textarea formControlName="description" rows="2"
-                      class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+              class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
           </div>
           <div class="flex gap-3 justify-end">
             <button type="button" (click)="showEditForm = false"
-                    class="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition cursor-pointer">Cancel</button>
+              class="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition cursor-pointer">Cancel</button>
             <button type="submit" [disabled]="editForm.invalid || isUpdating"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer">
+              class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer">
               {{ isUpdating ? 'Saving...' : 'Save changes' }}
             </button>
           </div>
@@ -90,137 +97,143 @@
       </div>
     }
 
+    <!-- Two-column layout: boards + members -->
+    <div class="grid grid-cols-2 gap-6">
 
-    <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-6">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-          Members
-          @if (!membersLoading) {
-            <span class="text-gray-400 font-normal">({{ members.length }})</span>
-          }
-        </h2>
-        @if (isOwnerOrAdmin) {
-          <button (click)="showAddMember = !showAddMember"
-                  class="text-sm text-blue-600 hover:text-blue-800 dark:hover:text-blue-400 font-medium transition cursor-pointer">
-            + Add member
+      <!-- Boards panel -->
+      <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+            Boards
+            @if (!boardsLoading) {
+              <span class="text-gray-400 font-normal">({{ boards.length }})</span>
+            }
+          </h2>
+          <button (click)="router.navigate(['/tasks', workspace.id])"
+            class="text-xs text-blue-600 hover:text-blue-800 dark:hover:text-blue-400 font-medium transition cursor-pointer">
+            Open kanban →
           </button>
+        </div>
+
+        @if (boardsLoading) {
+          <div class="space-y-3">
+            @for (i of [1,2,3]; track i) {
+              <div class="h-12 bg-gray-100 dark:bg-gray-700 rounded-xl animate-pulse"></div>
+            }
+          </div>
+        } @else if (boards.length === 0) {
+          <div class="text-center py-8">
+            <p class="text-sm text-gray-400">No boards yet</p>
+            <button (click)="router.navigate(['/tasks', workspace.id])"
+              class="mt-3 text-xs text-blue-600 hover:text-blue-800 dark:hover:text-blue-400 font-medium transition cursor-pointer">
+              Create your first board →
+            </button>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            @for (board of boards; track board.id) {
+              <button
+                (click)="router.navigate(['/tasks', workspace.id])"
+                class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-left group cursor-pointer">
+                <span class="w-3 h-3 rounded-full flex-shrink-0" [style.background-color]="board.color"></span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{{ board.name }}</p>
+                  <p class="text-xs text-gray-400">{{ board.lists.length }} list{{ board.lists.length !== 1 ? 's' : '' }}</p>
+                </div>
+                <svg class="w-4 h-4 text-gray-300 group-hover:text-gray-500 dark:group-hover:text-gray-300 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            }
+          </div>
         }
       </div>
 
-      @if (showAddMember) {
-        <div class="bg-gray-50 dark:bg-gray-900/40 rounded-xl p-4 mb-5">
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Enter the username of the user you want to add.</p>
-          <form [formGroup]="addMemberForm" (ngSubmit)="onAddMember()" class="flex gap-3">
-            <input formControlName="username" type="text" placeholder="username"
-                   class="flex-1 p-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
-            <button type="submit" [disabled]="addMemberForm.invalid || isAddingMember"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer">
-              {{ isAddingMember ? 'Adding...' : 'Add' }}
+      <!-- Members panel -->
+      <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+            Members
+            @if (!membersLoading) {
+              <span class="text-gray-400 font-normal">({{ members.length }})</span>
+            }
+          </h2>
+          @if (isOwnerOrAdmin) {
+            <button (click)="showAddMember = !showAddMember"
+              class="text-xs text-blue-600 hover:text-blue-800 dark:hover:text-blue-400 font-medium transition cursor-pointer">
+              + Add member
             </button>
-            <button type="button" (click)="showAddMember = false"
-                    class="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer">
-              Cancel
-            </button>
-          </form>
-        </div>
-      }
-
-
-      @if (membersLoading) {
-        <div class="space-y-3">
-          @for (i of [1,2,3]; track i) {
-            <div class="flex items-center gap-3 animate-pulse">
-              <div class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700"></div>
-              <div class="flex-1 space-y-1.5">
-                <div class="h-3.5 bg-gray-100 dark:bg-gray-700 rounded w-32"></div>
-                <div class="h-3 bg-gray-100 dark:bg-gray-700 rounded w-20"></div>
-              </div>
-              <div class="h-6 w-14 bg-gray-100 dark:bg-gray-700 rounded-full"></div>
-            </div>
           }
         </div>
-      } @else {
-        <ul class="divide-y divide-gray-100 dark:divide-gray-700">
-          @for (member of members; track member.id) {
-            <li class="flex items-center justify-between py-3">
 
+        <!-- Add member form -->
+        @if (showAddMember) {
+          <div class="bg-gray-50 dark:bg-gray-900/40 rounded-xl p-3 mb-4">
+            <form [formGroup]="addMemberForm" (ngSubmit)="onAddMember()" class="flex gap-2">
+              <input formControlName="username" type="text" placeholder="username"
+                class="flex-1 p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+              <button type="submit" [disabled]="addMemberForm.invalid || isAddingMember"
+                class="px-3 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer">
+                {{ isAddingMember ? '...' : 'Add' }}
+              </button>
+              <button type="button" (click)="showAddMember = false"
+                class="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer">
+                ✕
+              </button>
+            </form>
+          </div>
+        }
 
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full overflow-hidden bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center">
-                  @if (member.avatarUrl) {
-                    <img [src]="member.avatarUrl" [alt]="member.displayName" class="w-full h-full object-cover"/>
-                  } @else {
-                    <span class="text-blue-600 dark:text-blue-300 font-bold text-sm select-none">
-                      {{ member.displayName[0].toUpperCase() }}
-                    </span>
-                  }
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ member.displayName }}</p>
-                  <p class="text-xs text-gray-400">Joined {{ member.joinedAt | date: 'mediumDate' }}</p>
+        @if (membersLoading) {
+          <div class="space-y-3">
+            @for (i of [1,2,3]; track i) {
+              <div class="flex items-center gap-3 animate-pulse">
+                <div class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700"></div>
+                <div class="flex-1 space-y-1.5">
+                  <div class="h-3 bg-gray-100 dark:bg-gray-700 rounded w-28"></div>
+                  <div class="h-3 bg-gray-100 dark:bg-gray-700 rounded w-16"></div>
                 </div>
               </div>
-
-
-              <div class="flex items-center gap-2">
-
-                @if (editingRoleMemberId === member.id) {
-
-                  <div class="flex items-center gap-1.5">
-                    @for (role of availableRoles; track role) {
-                      <button
-                        (click)="onUpdateRole(member, role)"
-                        [disabled]="isUpdatingRole"
-                        class="text-xs px-2.5 py-1 rounded-full border transition cursor-pointer disabled:opacity-50"
-                        [ngClass]="member.role === role
-                          ? roleBadgeClass(role) + ' border-transparent'
-                          : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-blue-400 dark:hover:border-blue-500'"
-                      >
-                        {{ roleLabel(role) }}
-                      </button>
+            }
+          </div>
+        } @else {
+          <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+            @for (member of members; track member.id) {
+              <li class="flex items-center justify-between py-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full overflow-hidden bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center">
+                    @if (member.avatarUrl) {
+                      <img [src]="member.avatarUrl" [alt]="member.displayName" class="w-full h-full object-cover"/>
+                    } @else {
+                      <span class="text-blue-600 dark:text-blue-300 font-bold text-sm select-none">
+                        {{ member.displayName[0].toUpperCase() }}
+                      </span>
                     }
-                    <button
-                      (click)="cancelEditRole()"
-                      class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 px-1 cursor-pointer"
-                    >
-                      ✕
-                    </button>
                   </div>
-                } @else {
-
-                  @if (isOwner && member.role !== 'OWNER') {
-                    <button
-                      (click)="startEditRole(member)"
-                      class="text-xs font-medium px-2.5 py-1 rounded-full cursor-pointer transition hover:opacity-70"
-                      [ngClass]="roleBadgeClass(member.role)"
-                      title="Click to change role"
-                    >
-                      {{ roleLabel(member.role) }}
-                      <span class="ml-1 opacity-60">✎</span>
+                  <div>
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ member.displayName }}</p>
+                    <p class="text-xs text-gray-400">Joined {{ member.joinedAt | date: 'mediumDate' }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-medium px-2.5 py-1 rounded-full" [ngClass]="roleBadgeClass(member.role)">
+                    {{ roleLabel(member.role) }}
+                  </span>
+                  @if (isOwnerOrAdmin && member.role !== 'OWNER') {
+                    <button (click)="onRemoveMember(member)"
+                      class="text-xs text-red-400 hover:text-red-600 dark:hover:text-red-400 transition cursor-pointer px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20">
+                      Remove
                     </button>
-                  } @else {
-                    <span class="text-xs font-medium px-2.5 py-1 rounded-full" [ngClass]="roleBadgeClass(member.role)">
-                      {{ roleLabel(member.role) }}
-                    </span>
                   }
-                }
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
 
-
-                @if (isOwnerOrAdmin && member.role !== 'OWNER') {
-                  <button
-                    (click)="onRemoveMember(member)"
-                    class="text-xs text-red-400 hover:text-red-600 dark:hover:text-red-400 transition cursor-pointer px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
-                  >
-                    Remove
-                  </button>
-                }
-
-              </div>
-            </li>
-          }
-        </ul>
-      }
     </div>
 
   }
+
 </div>
