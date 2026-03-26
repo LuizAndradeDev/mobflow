@@ -102,6 +102,25 @@ services:
     env_file:
       - .env
 
+  task-service:
+    build: ./task-service
+    container_name: mobflow-task
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      workspace-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+    networks:
+      - mobflow-network
+    env_file:
+      - .env
+
 volumes:
   postgres_data:
   minio_data:
