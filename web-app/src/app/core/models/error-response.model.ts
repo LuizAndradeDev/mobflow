@@ -17,13 +17,24 @@ export enum WorkspaceErrorTP {
   CANNOT_REMOVE_OWNER = 'CANNOT_REMOVE_OWNER',
 }
 
+export enum TaskErrorTP {
+  BOARD_NOT_FOUND = 'BOARD_NOT_FOUND',
+  TASK_LIST_NOT_FOUND = 'TASK_LIST_NOT_FOUND',
+  TASK_NOT_FOUND = 'TASK_NOT_FOUND',
+  ACCESS_DENIED = 'ACCESS_DENIED',
+  WORKSPACE_MEMBER_NOT_FOUND = 'WORKSPACE_MEMBER_NOT_FOUND',
+}
+
 export interface ErrorResponseDTO {
-  errorType: ErrorTP | UserErrorTP | WorkspaceErrorTP;
+  errorType: ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP;
   message: string;
   timestamp: string;
 }
 
-export const ErrorMessages: Record<ErrorTP | UserErrorTP | WorkspaceErrorTP, string> = {
+export const ErrorMessages: Record<
+  ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP,
+  string
+> = {
   [ErrorTP.USERNAME_ALREADY_EXIST]: 'This username is already in use.',
   [ErrorTP.EMAIL_ALREADY_EXIST]: 'This email is already registered.',
   [ErrorTP.INVALID_CREDENTIALS]: 'Invalid email or password.',
@@ -34,4 +45,9 @@ export const ErrorMessages: Record<ErrorTP | UserErrorTP | WorkspaceErrorTP, str
   [WorkspaceErrorTP.MEMBER_NOT_FOUND]: 'Member not found in this workspace.',
   [WorkspaceErrorTP.UNAUTHORIZED_ACTION]: 'You do not have permission to perform this action.',
   [WorkspaceErrorTP.CANNOT_REMOVE_OWNER]: 'The workspace owner cannot be removed.',
+  [TaskErrorTP.BOARD_NOT_FOUND]: 'Board not found.',
+  [TaskErrorTP.TASK_LIST_NOT_FOUND]: 'List not found.',
+  [TaskErrorTP.TASK_NOT_FOUND]: 'Task not found.',
+  [TaskErrorTP.ACCESS_DENIED]: 'You do not have permission to perform this action.',
+  [TaskErrorTP.WORKSPACE_MEMBER_NOT_FOUND]: 'You are not a member of this workspace.',
 };
