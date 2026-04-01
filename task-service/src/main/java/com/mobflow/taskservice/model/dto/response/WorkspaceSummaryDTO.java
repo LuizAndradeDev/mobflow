@@ -6,11 +6,6 @@ import lombok.Data;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Compact representation of a workspace's boards for the overview page.
- * Each board carries only the task count per list — not full task objects.
- * This keeps the payload light for the masonry overview on /tasks.
- */
 @Data
 @Builder
 public class WorkspaceSummaryDTO {

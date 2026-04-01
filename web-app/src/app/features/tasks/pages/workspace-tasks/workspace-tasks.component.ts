@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -13,6 +19,7 @@ import {
   CreateTaskRequest,
   Task,
   TaskList,
+  UpdateTaskRequest,
 } from '../../../../core/models/task.model';
 import { Workspace, WorkspaceMember } from '../../../../core/models/workspace.model';
 
@@ -35,27 +42,29 @@ export class WorkspaceTasksComponent implements OnInit {
 
   showCreateBoard = signal(false);
   showCreateList = signal(false);
-  showCreateTask = signal<string | null>(null); // listId
+  activeTask = signal<Task | null>(null);
+  createTaskListId = signal<string | null>(null);
 
   createBoardForm: FormGroup;
   createListForm: FormGroup;
   createTaskForm: FormGroup;
+  editTaskForm: FormGroup;
 
   selectedColor = '#6366f1';
   readonly PRESET_COLORS = [
-    '#6366f1',
-    '#3b82f6',
-    '#10b981',
-    '#f59e0b',
-    '#ef4444',
-    '#8b5cf6',
-    '#ec4899',
-    '#14b8a6',
+    '#6366f1', '#3b82f6', '#10b981', '#f59e0b',
+    '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6',
   ];
 
   isCreatingBoard = false;
   isCreatingList = false;
   isCreatingTask = false;
+  isSavingTask = false;
+
+  dragTask: Task | null = null;
+  dragSourceListId: string | null = null;
+  dragOverListId = signal<string | null>(null);
+  dragOverIndex = signal<number>(-1);
 
   constructor(
     private route: ActivatedRoute,
@@ -75,13 +84,22 @@ export class WorkspaceTasksComponent implements OnInit {
     });
     this.createTaskForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(255)]],
+      description: [''],
       priority: ['MEDIUM'],
+      assigneeAuthId: [null],
+      dueDate: [null],
+    });
+    this.editTaskForm = this.fb.group({
+      title: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(255)]],
+      description: [''],
+      priority: ['MEDIUM'],
+      assigneeAuthId: [null],
+      dueDate: [null],
     });
   }
 
   ngOnInit() {
     this.workspaceId = this.route.snapshot.paramMap.get('workspaceId')!;
-
     forkJoin({
       workspace: this.workspaceService.getById(this.workspaceId),
       members: this.workspaceService.listMembers(this.workspaceId),
@@ -100,9 +118,7 @@ export class WorkspaceTasksComponent implements OnInit {
     this.taskService.listBoards(this.workspaceId).subscribe({
       next: (boards) => {
         this.boards = boards;
-        if (boards.length > 0 && !this.selectedBoard) {
-          this.selectedBoard = boards[0];
-        }
+        if (boards.length > 0 && !this.selectedBoard) this.selectedBoard = boards[0];
         this.boardsLoading = false;
         this.isLoading = false;
         this.cdr.markForCheck();
@@ -128,15 +144,16 @@ export class WorkspaceTasksComponent implements OnInit {
     return member?.role === 'OWNER' || member?.role === 'ADMIN';
   }
 
+  memberById(authId: string | null): WorkspaceMember | undefined {
+    if (!authId) return undefined;
+    return this.members.find((m) => m.authId === authId);
+  }
+
+  // ── Create Board ──
   onCreateBoard() {
     if (this.createBoardForm.invalid || this.isCreatingBoard) return;
     this.isCreatingBoard = true;
-
-    const req: CreateBoardRequest = {
-      name: this.createBoardForm.value.name,
-      color: this.selectedColor,
-    };
-
+    const req: CreateBoardRequest = { name: this.createBoardForm.value.name, color: this.selectedColor };
     this.taskService.createBoard(this.workspaceId, req).subscribe({
       next: (board) => {
         this.boards = [...this.boards, { ...board, lists: [] }];
@@ -148,53 +165,51 @@ export class WorkspaceTasksComponent implements OnInit {
         this.alertService.success(`Board "${board.name}" created!`, 'Board created');
         this.cdr.markForCheck();
       },
-      error: () => {
-        this.isCreatingBoard = false;
-        this.cdr.markForCheck();
-      },
+      error: () => { this.isCreatingBoard = false; this.cdr.markForCheck(); },
     });
   }
 
+  // ── Create List ──
   onCreateList() {
     if (this.createListForm.invalid || !this.selectedBoard || this.isCreatingList) return;
     this.isCreatingList = true;
-
-    this.taskService
-      .createList(this.workspaceId, this.selectedBoard.id, {
-        name: this.createListForm.value.name,
-      })
-      .subscribe({
-        next: (list) => {
-          if (this.selectedBoard) {
-            this.selectedBoard = {
-              ...this.selectedBoard,
-              lists: [...this.selectedBoard.lists, { ...list, tasks: [] }],
-            };
-            this.boards = this.boards.map((b) =>
-              b.id === this.selectedBoard!.id ? this.selectedBoard! : b,
-            );
-          }
-          this.showCreateList.set(false);
-          this.createListForm.reset();
-          this.isCreatingList = false;
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.isCreatingList = false;
-          this.cdr.markForCheck();
-        },
-      });
+    this.taskService.createList(this.workspaceId, this.selectedBoard.id, { name: this.createListForm.value.name }).subscribe({
+      next: (list) => {
+        if (this.selectedBoard) {
+          this.selectedBoard = { ...this.selectedBoard, lists: [...this.selectedBoard.lists, { ...list, tasks: [] }] };
+          this.boards = this.boards.map((b) => b.id === this.selectedBoard!.id ? this.selectedBoard! : b);
+        }
+        this.showCreateList.set(false);
+        this.createListForm.reset();
+        this.isCreatingList = false;
+        this.cdr.markForCheck();
+      },
+      error: () => { this.isCreatingList = false; this.cdr.markForCheck(); },
+    });
   }
 
-  onCreateTask(listId: string) {
-    if (this.createTaskForm.invalid || this.isCreatingTask) return;
+  // ── Create Task Modal ──
+  openCreateTaskModal(listId: string) {
+    this.createTaskForm.reset({ priority: 'MEDIUM' });
+    this.createTaskListId.set(listId);
+  }
+
+  closeCreateTaskModal() {
+    this.createTaskListId.set(null);
+  }
+
+  onCreateTask() {
+    const listId = this.createTaskListId();
+    if (this.createTaskForm.invalid || this.isCreatingTask || !listId) return;
     this.isCreatingTask = true;
-
+    const v = this.createTaskForm.value;
     const req: CreateTaskRequest = {
-      title: this.createTaskForm.value.title,
-      priority: this.createTaskForm.value.priority,
+      title: v.title,
+      description: v.description || undefined,
+      priority: v.priority,
+      assigneeAuthId: v.assigneeAuthId || undefined,
+      dueDate: v.dueDate || undefined,
     };
-
     this.taskService.createTask(this.workspaceId, listId, req).subscribe({
       next: (task) => {
         if (this.selectedBoard) {
@@ -204,22 +219,88 @@ export class WorkspaceTasksComponent implements OnInit {
               l.id === listId ? { ...l, tasks: [...l.tasks, task] } : l,
             ),
           };
-          this.boards = this.boards.map((b) =>
-            b.id === this.selectedBoard!.id ? this.selectedBoard! : b,
-          );
+          this.boards = this.boards.map((b) => b.id === this.selectedBoard!.id ? this.selectedBoard! : b);
         }
-        this.showCreateTask.set(null);
-        this.createTaskForm.reset({ priority: 'MEDIUM' });
+        this.createTaskListId.set(null);
         this.isCreatingTask = false;
         this.cdr.markForCheck();
       },
-      error: () => {
-        this.isCreatingTask = false;
-        this.cdr.markForCheck();
-      },
+      error: () => { this.isCreatingTask = false; this.cdr.markForCheck(); },
     });
   }
 
+  // ── Task Detail Modal ──
+  openTaskDetail(task: Task) {
+    this.editTaskForm.patchValue({
+      title: task.title,
+      description: task.description ?? '',
+      priority: task.priority,
+      assigneeAuthId: task.assigneeAuthId ?? null,
+      dueDate: task.dueDate ? task.dueDate.substring(0, 10) : null,
+    });
+    this.activeTask.set(task);
+  }
+
+  closeTaskDetail() {
+    this.activeTask.set(null);
+  }
+
+  onSaveTask() {
+    const task = this.activeTask();
+    if (!task || this.editTaskForm.invalid || this.isSavingTask) return;
+    this.isSavingTask = true;
+    const v = this.editTaskForm.value;
+    const req: UpdateTaskRequest = {
+      title: v.title,
+      description: v.description || undefined,
+      priority: v.priority,
+      assigneeAuthId: v.assigneeAuthId || undefined,
+      dueDate: v.dueDate || undefined,
+    };
+    this.taskService.updateTask(this.workspaceId, task.id, req).subscribe({
+      next: (updated) => {
+        this._replaceTaskInState(updated);
+        this.activeTask.set(updated);
+        this.isSavingTask = false;
+        this.alertService.success('Task updated.', 'Saved');
+        this.cdr.markForCheck();
+      },
+      error: () => { this.isSavingTask = false; this.cdr.markForCheck(); },
+    });
+  }
+
+  // ── Complete Task (move to last list) ──
+  onToggleComplete(task: Task) {
+    if (!this.selectedBoard || this.selectedBoard.lists.length < 2) {
+      this.alertService.warning('Add at least 2 lists to use complete (e.g. "To Do" and "Done").', 'Cannot complete');
+      return;
+    }
+    const lists = this.selectedBoard.lists;
+    const lastList = lists[lists.length - 1];
+    const currentList = lists.find((l) => l.tasks.some((t) => t.id === task.id));
+    if (!currentList) return;
+
+    if (currentList.id === lastList.id) {
+      const firstList = lists[0];
+      this.taskService.moveTask(this.workspaceId, task.id, { targetListId: firstList.id, position: 0 }).subscribe({
+        next: (moved) => {
+          this._moveTaskInState(task, currentList.id, firstList.id, 0, moved);
+          if (this.activeTask()?.id === task.id) this.activeTask.set(moved);
+          this.cdr.markForCheck();
+        },
+      });
+    } else {
+      this.taskService.moveTask(this.workspaceId, task.id, { targetListId: lastList.id, position: lastList.tasks.length }).subscribe({
+        next: (moved) => {
+          this._moveTaskInState(task, currentList.id, lastList.id, lastList.tasks.length, moved);
+          if (this.activeTask()?.id === task.id) this.activeTask.set(moved);
+          this.cdr.markForCheck();
+        },
+      });
+    }
+  }
+
+  // ── Delete ──
   onDeleteTask(task: Task) {
     if (!confirm(`Delete "${task.title}"?`)) return;
     this.taskService.deleteTask(this.workspaceId, task.id).subscribe({
@@ -227,15 +308,11 @@ export class WorkspaceTasksComponent implements OnInit {
         if (this.selectedBoard) {
           this.selectedBoard = {
             ...this.selectedBoard,
-            lists: this.selectedBoard.lists.map((l) => ({
-              ...l,
-              tasks: l.tasks.filter((t) => t.id !== task.id),
-            })),
+            lists: this.selectedBoard.lists.map((l) => ({ ...l, tasks: l.tasks.filter((t) => t.id !== task.id) })),
           };
-          this.boards = this.boards.map((b) =>
-            b.id === this.selectedBoard!.id ? this.selectedBoard! : b,
-          );
+          this.boards = this.boards.map((b) => b.id === this.selectedBoard!.id ? this.selectedBoard! : b);
         }
+        if (this.activeTask()?.id === task.id) this.activeTask.set(null);
         this.cdr.markForCheck();
       },
     });
@@ -258,17 +335,104 @@ export class WorkspaceTasksComponent implements OnInit {
     this.taskService.deleteList(this.workspaceId, this.selectedBoard!.id, list.id).subscribe({
       next: () => {
         if (this.selectedBoard) {
-          this.selectedBoard = {
-            ...this.selectedBoard,
-            lists: this.selectedBoard.lists.filter((l) => l.id !== list.id),
-          };
-          this.boards = this.boards.map((b) =>
-            b.id === this.selectedBoard!.id ? this.selectedBoard! : b,
-          );
+          this.selectedBoard = { ...this.selectedBoard, lists: this.selectedBoard.lists.filter((l) => l.id !== list.id) };
+          this.boards = this.boards.map((b) => b.id === this.selectedBoard!.id ? this.selectedBoard! : b);
         }
         this.cdr.markForCheck();
       },
     });
+  }
+
+  // ── Drag & Drop ──
+  onDragStart(event: DragEvent, task: Task, listId: string) {
+    this.dragTask = task;
+    this.dragSourceListId = listId;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', task.id);
+    }
+  }
+
+  onDragEnd() {
+    this.dragTask = null;
+    this.dragSourceListId = null;
+    this.dragOverListId.set(null);
+    this.dragOverIndex.set(-1);
+  }
+
+  onDragOver(event: DragEvent, listId: string, index: number) {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    this.dragOverListId.set(listId);
+    this.dragOverIndex.set(index);
+  }
+
+  onDrop(event: DragEvent, targetListId: string, position: number) {
+    event.preventDefault();
+    const task = this.dragTask;
+    const sourceListId = this.dragSourceListId;
+    if (!task || !sourceListId || !this.selectedBoard) return;
+    this.dragOverListId.set(null);
+    this.dragOverIndex.set(-1);
+    this.taskService.moveTask(this.workspaceId, task.id, { targetListId, position }).subscribe({
+      next: (moved) => {
+        this._moveTaskInState(task, sourceListId, targetListId, position, moved);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  onDropOnList(event: DragEvent, targetListId: string) {
+    event.preventDefault();
+    const task = this.dragTask;
+    const sourceListId = this.dragSourceListId;
+    if (!task || !sourceListId || !this.selectedBoard) return;
+    const targetList = this.selectedBoard.lists.find((l) => l.id === targetListId);
+    const position = targetList ? targetList.tasks.length : 0;
+    this.dragOverListId.set(null);
+    this.dragOverIndex.set(-1);
+    this.taskService.moveTask(this.workspaceId, task.id, { targetListId, position }).subscribe({
+      next: (moved) => {
+        this._moveTaskInState(task, sourceListId, targetListId, position, moved);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  // ── Private Helpers ──
+  private _replaceTaskInState(updated: Task) {
+    if (!this.selectedBoard) return;
+    this.selectedBoard = {
+      ...this.selectedBoard,
+      lists: this.selectedBoard.lists.map((l) => ({
+        ...l,
+        tasks: l.tasks.map((t) => (t.id === updated.id ? updated : t)),
+      })),
+    };
+    this.boards = this.boards.map((b) => b.id === this.selectedBoard!.id ? this.selectedBoard! : b);
+  }
+
+  private _moveTaskInState(task: Task, sourceListId: string, targetListId: string, position: number, updated: Task) {
+    if (!this.selectedBoard) return;
+    this.selectedBoard = {
+      ...this.selectedBoard,
+      lists: this.selectedBoard.lists.map((l) => {
+        if (l.id === sourceListId) return { ...l, tasks: l.tasks.filter((t) => t.id !== task.id) };
+        if (l.id === targetListId) {
+          const tasks = l.tasks.filter((t) => t.id !== task.id);
+          tasks.splice(position, 0, updated);
+          return { ...l, tasks };
+        }
+        return l;
+      }),
+    };
+    this.boards = this.boards.map((b) => b.id === this.selectedBoard!.id ? this.selectedBoard! : b);
+  }
+
+  isTaskInLastList(task: Task): boolean {
+    if (!this.selectedBoard || this.selectedBoard.lists.length === 0) return false;
+    const lastList = this.selectedBoard.lists[this.selectedBoard.lists.length - 1];
+    return lastList.tasks.some((t) => t.id === task.id);
   }
 
   priorityBadge(priority: string): string {
@@ -283,9 +447,7 @@ export class WorkspaceTasksComponent implements OnInit {
 
   isDueSoon(dueDate: string | null): boolean {
     if (!dueDate) return false;
-    const d = new Date(dueDate);
-    const now = new Date();
-    const diff = (d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    const diff = (new Date(dueDate).getTime() - Date.now()) / 86_400_000;
     return diff <= 2 && diff >= 0;
   }
 

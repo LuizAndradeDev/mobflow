@@ -9,10 +9,6 @@ import org.springframework.web.client.RestClient;
 
 import java.util.UUID;
 
-/**
- * HTTP client for internal communication with workspace-service.
- * Validates that a user is a member of a workspace and checks their role.
- */
 @Component
 public class WorkspaceClient {
 
@@ -29,10 +25,6 @@ public class WorkspaceClient {
         this.internalSecret = internalSecret;
     }
 
-    /**
-     * Returns the role of a member in a workspace.
-     * Throws TaskServiceException (memberNotFound) if the user is not a member.
-     */
     public MemberRoleResponse getMemberRole(UUID workspaceId, UUID authId) {
         try {
             return restClient.get()
@@ -45,9 +37,7 @@ public class WorkspaceClient {
         }
     }
 
-    /**
-     * Returns true if the member has OWNER or ADMIN role.
-     */
+
     public boolean isOwnerOrAdmin(UUID workspaceId, UUID authId) {
         MemberRoleResponse response = getMemberRole(workspaceId, authId);
         if (response == null) return false;

@@ -2,8 +2,6 @@
 
   <!-- ── Left sidebar: board list ── -->
   <aside class="w-56 flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col overflow-hidden">
-
-    <!-- Workspace name -->
     <div class="px-4 pt-6 pb-3 border-b border-gray-100 dark:border-gray-800">
       <button (click)="router.navigate(['/tasks'])" class="flex items-center gap-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mb-3 transition text-xs">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,7 +13,6 @@
       <p class="text-xs text-gray-400 mt-0.5">{{ boards.length }} board{{ boards.length !== 1 ? 's' : '' }}</p>
     </div>
 
-    <!-- Boards list -->
     <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
       @if (boardsLoading) {
         @for (i of [1,2,3]; track i) {
@@ -23,8 +20,7 @@
         }
       } @else {
         @for (board of boards; track board.id) {
-          <button
-            (click)="selectBoard(board)"
+          <button (click)="selectBoard(board)"
             class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition"
             [class.bg-gray-100]="selectedBoard?.id === board.id"
             [class.dark:bg-gray-800]="selectedBoard?.id === board.id"
@@ -34,8 +30,7 @@
             [class.text-gray-500]="selectedBoard?.id !== board.id"
             [class.dark:text-gray-400]="selectedBoard?.id !== board.id"
             [class.hover:bg-gray-50]="selectedBoard?.id !== board.id"
-            [class.dark:hover:bg-gray-800]="selectedBoard?.id !== board.id"
-          >
+            [class.dark:hover:bg-gray-800]="selectedBoard?.id !== board.id">
             <span class="w-3 h-3 rounded-full flex-shrink-0" [style.background-color]="board.color"></span>
             <span class="truncate text-left">{{ board.name }}</span>
           </button>
@@ -43,7 +38,6 @@
       }
     </nav>
 
-    <!-- Create board button (OWNER/ADMIN only) -->
     @if (isOwnerOrAdmin) {
       <div class="p-3 border-t border-gray-100 dark:border-gray-800">
         @if (!showCreateBoard()) {
@@ -56,11 +50,9 @@
           </button>
         } @else {
           <form [formGroup]="createBoardForm" (ngSubmit)="onCreateBoard()" class="space-y-2">
-            <!-- Color picker row -->
             <div class="flex gap-1.5 flex-wrap">
               @for (color of PRESET_COLORS; track color) {
-                <button type="button"
-                  class="w-5 h-5 rounded-full border-2 transition"
+                <button type="button" class="w-5 h-5 rounded-full border-2 transition"
                   [style.background-color]="color"
                   [class.border-gray-800]="selectedColor === color"
                   [class.dark:border-white]="selectedColor === color"
@@ -69,24 +61,18 @@
                 </button>
               }
             </div>
-            <input formControlName="name"
-              type="text" placeholder="Board name"
+            <input formControlName="name" type="text" placeholder="Board name"
               class="w-full px-2.5 py-1.5 text-xs border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"/>
             <div class="flex gap-1.5">
               <button type="submit" [disabled]="createBoardForm.invalid || isCreatingBoard"
-                class="flex-1 py-1.5 bg-blue-600 text-white text-xs rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition">
-                Create
-              </button>
+                class="flex-1 py-1.5 bg-blue-600 text-white text-xs rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition">Create</button>
               <button type="button" (click)="showCreateBoard.set(false)"
-                class="px-3 py-1.5 border border-gray-200 dark:border-gray-700 text-xs rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                Cancel
-              </button>
+                class="px-3 py-1.5 border border-gray-200 dark:border-gray-700 text-xs rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition">Cancel</button>
             </div>
           </form>
         }
       </div>
     }
-
   </aside>
 
   <!-- ── Main kanban area ── -->
@@ -97,9 +83,7 @@
         @for (i of [1, 2, 3]; track i) {
           <div class="w-72 flex-shrink-0 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 animate-pulse">
             <div class="h-4 w-24 bg-gray-100 dark:bg-gray-700 rounded mb-4"></div>
-            @for (j of [1,2,3]; track j) {
-              <div class="h-16 bg-gray-100 dark:bg-gray-700 rounded-xl mb-2"></div>
-            }
+            @for (j of [1,2,3]; track j) { <div class="h-16 bg-gray-100 dark:bg-gray-700 rounded-xl mb-2"></div> }
           </div>
         }
       </div>
@@ -112,13 +96,10 @@
           </svg>
         </div>
         <p class="font-semibold text-gray-700 dark:text-gray-300">No boards yet</p>
-        @if (isOwnerOrAdmin) {
-          <p class="text-sm text-gray-400 mt-1">Create your first board using the panel on the left</p>
-        } @else {
-          <p class="text-sm text-gray-400 mt-1">Ask an admin to create a board for this workspace</p>
-        }
+        <p class="text-sm text-gray-400 mt-1">{{ isOwnerOrAdmin ? 'Create your first board using the panel on the left' : 'Ask an admin to create a board for this workspace' }}</p>
       </div>
     } @else {
+
       <!-- Board header -->
       <div class="flex items-center gap-3 mb-5">
         <span class="w-3 h-3 rounded-full" [style.background-color]="selectedBoard.color"></span>
@@ -135,19 +116,21 @@
       <div class="flex gap-4 h-[calc(100vh-220px)] overflow-x-auto pb-4">
 
         @for (list of selectedBoard.lists; track list.id) {
-          <div class="w-72 flex-shrink-0 flex flex-col bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div class="w-72 flex-shrink-0 flex flex-col bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors"
+            [class.ring-2]="dragOverListId() === list.id"
+            [class.ring-blue-400]="dragOverListId() === list.id"
+            (dragover)="onDragOver($event, list.id, list.tasks.length)"
+            (dragleave)="onDrop($event, list.id, list.tasks.length)"
+            (drop)="onDropOnList($event, list.id)">
 
             <!-- List header -->
             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
               <div class="flex items-center gap-2">
                 <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ list.name }}</span>
-                <span class="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
-                  {{ list.tasks.length }}
-                </span>
+                <span class="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">{{ list.tasks.length }}</span>
               </div>
               @if (isOwnerOrAdmin) {
-                <button (click)="onDeleteList(list)"
-                  class="text-gray-300 hover:text-red-400 transition p-1 rounded">
+                <button (click)="onDeleteList(list)" class="text-gray-300 hover:text-red-400 transition p-1 rounded">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                   </svg>
@@ -157,13 +140,45 @@
 
             <!-- Task cards -->
             <div class="flex-1 overflow-y-auto px-3 py-3 space-y-2">
-              @for (task of list.tasks; track task.id) {
-                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-3 shadow-sm hover:shadow-md transition group">
-                  <div class="flex items-start justify-between gap-2">
-                    <p class="text-sm font-medium text-gray-800 dark:text-gray-100 leading-snug">{{ task.title }}</p>
+              @for (task of list.tasks; track task.id; let idx = $index) {
+                <div
+                  draggable="true"
+                  (dragstart)="onDragStart($event, task, list.id)"
+                  (dragend)="onDragEnd()"
+                  (dragover)="onDragOver($event, list.id, idx)"
+                  (drop)="onDrop($event, list.id, idx)"
+                  class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-3 shadow-sm hover:shadow-md transition group cursor-grab active:cursor-grabbing"
+                  [class.opacity-40]="dragTask?.id === task.id"
+                  [class.ring-2]="dragOverListId() === list.id && dragOverIndex() === idx"
+                  [class.ring-blue-400]="dragOverListId() === list.id && dragOverIndex() === idx">
+
+                  <!-- Title row -->
+                  <div class="flex items-start gap-2">
+                    <!-- Complete toggle -->
+                    <button (click)="onToggleComplete(task); $event.stopPropagation()"
+                      class="flex-shrink-0 mt-0.5 w-4 h-4 rounded border-2 transition flex items-center justify-center"
+                      [class.border-emerald-500]="isTaskInLastList(task)"
+                      [class.bg-emerald-500]="isTaskInLastList(task)"
+                      [class.border-gray-300]="!isTaskInLastList(task)"
+                      [class.dark:border-gray-600]="!isTaskInLastList(task)"
+                      title="{{ isTaskInLastList(task) ? 'Mark as incomplete' : 'Mark as complete' }}">
+                      @if (isTaskInLastList(task)) {
+                        <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                        </svg>
+                      }
+                    </button>
+
+                    <p class="flex-1 text-sm font-medium text-gray-800 dark:text-gray-100 leading-snug cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition"
+                      [class.line-through]="isTaskInLastList(task)"
+                      [class.text-gray-400]="isTaskInLastList(task)"
+                      (click)="openTaskDetail(task)">
+                      {{ task.title }}
+                    </p>
+
                     @if (isOwnerOrAdmin) {
-                      <button (click)="onDeleteTask(task)"
-                        class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition flex-shrink-0 mt-0.5">
+                      <button (click)="onDeleteTask(task); $event.stopPropagation()"
+                        class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition flex-shrink-0">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
@@ -171,6 +186,7 @@
                     }
                   </div>
 
+                  <!-- Metadata row -->
                   <div class="flex items-center gap-2 mt-2 flex-wrap">
                     <span class="text-xs px-2 py-0.5 rounded-full font-medium" [ngClass]="priorityBadge(task.priority)">
                       {{ task.priority }}
@@ -181,15 +197,18 @@
                         [class.text-amber-500]="!isOverdue(task.dueDate) && isDueSoon(task.dueDate)"
                         [class.text-gray-400]="!isOverdue(task.dueDate) && !isDueSoon(task.dueDate)">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                         {{ task.dueDate | date: 'MMM d' }}
                       </span>
                     }
+                    @if (task.description) {
+                      <svg class="w-3 h-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h12M4 18h8"/>
+                      </svg>
+                    }
                     @if (task.assigneeAvatarUrl) {
-                      <img [src]="task.assigneeAvatarUrl" [alt]="task.assigneeDisplayName ?? ''"
-                        class="w-5 h-5 rounded-full ml-auto object-cover"/>
+                      <img [src]="task.assigneeAvatarUrl" [alt]="task.assigneeDisplayName ?? ''" class="w-5 h-5 rounded-full ml-auto object-cover"/>
                     } @else if (task.assigneeDisplayName) {
                       <span class="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-xs font-bold flex items-center justify-center ml-auto select-none">
                         {{ task.assigneeDisplayName[0].toUpperCase() }}
@@ -198,47 +217,18 @@
                   </div>
                 </div>
               }
-
-              <!-- Add task form -->
-              @if (showCreateTask() === list.id) {
-                <form [formGroup]="createTaskForm" (ngSubmit)="onCreateTask(list.id)" class="bg-white dark:bg-gray-800 rounded-xl border border-blue-200 dark:border-blue-700 p-3 space-y-2">
-                  <input formControlName="title"
-                    type="text" placeholder="Task title"
-                    class="w-full text-sm bg-transparent outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400"/>
-                  <select formControlName="priority"
-                    class="w-full text-xs border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1 outline-none">
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                    <option value="URGENT">Urgent</option>
-                  </select>
-                  <div class="flex gap-2">
-                    <button type="submit" [disabled]="createTaskForm.invalid || isCreatingTask"
-                      class="flex-1 py-1.5 bg-blue-600 text-white text-xs rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition">
-                      Add
-                    </button>
-                    <button type="button" (click)="showCreateTask.set(null)"
-                      class="px-3 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              }
             </div>
 
             <!-- Add task button -->
             <div class="px-3 pb-3">
-              @if (showCreateTask() !== list.id) {
-                <button (click)="showCreateTask.set(list.id); createTaskForm.reset({ priority: 'MEDIUM' })"
-                  class="w-full flex items-center gap-1.5 px-3 py-2 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                  </svg>
-                  Add task
-                </button>
-              }
+              <button (click)="openCreateTaskModal(list.id)"
+                class="w-full flex items-center gap-1.5 px-3 py-2 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add task
+              </button>
             </div>
-
           </div>
         }
 
@@ -256,18 +246,13 @@
             } @else {
               <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
                 <form [formGroup]="createListForm" (ngSubmit)="onCreateList()" class="space-y-3">
-                  <input formControlName="name"
-                    type="text" placeholder="List name (e.g. To Do)"
+                  <input formControlName="name" type="text" placeholder="List name (e.g. To Do)"
                     class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"/>
                   <div class="flex gap-2">
                     <button type="submit" [disabled]="createListForm.invalid || isCreatingList"
-                      class="flex-1 py-2 bg-blue-600 text-white text-sm rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition">
-                      Add list
-                    </button>
+                      class="flex-1 py-2 bg-blue-600 text-white text-sm rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition">Add list</button>
                     <button type="button" (click)="showCreateList.set(false)"
-                      class="px-4 border border-gray-200 dark:border-gray-700 text-sm text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                      Cancel
-                    </button>
+                      class="px-4 border border-gray-200 dark:border-gray-700 text-sm text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition">Cancel</button>
                   </div>
                 </form>
               </div>
@@ -277,7 +262,205 @@
 
       </div>
     }
-
   </main>
-
 </div>
+
+<!-- ═══════════════════════════════════════════════════════
+     CREATE TASK MODAL
+═══════════════════════════════════════════════════════ -->
+@if (createTaskListId()) {
+  <div class="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4"
+    (click)="closeCreateTaskModal()">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg"
+      (click)="$event.stopPropagation()">
+
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+        <h3 class="font-semibold text-gray-800 dark:text-gray-100">New task</h3>
+        <button (click)="closeCreateTaskModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <form [formGroup]="createTaskForm" (ngSubmit)="onCreateTask()" class="p-6 space-y-4">
+
+        <!-- Title -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Title *</label>
+          <input formControlName="title" type="text" placeholder="What needs to be done?"
+            class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+            autofocus/>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Description</label>
+          <textarea formControlName="description" rows="3" placeholder="Add more context..."
+            class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 resize-none">
+          </textarea>
+        </div>
+
+        <!-- Priority + Due Date -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Priority</label>
+            <select formControlName="priority"
+              class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="LOW">🟢 Low</option>
+              <option value="MEDIUM">🔵 Medium</option>
+              <option value="HIGH">🟠 High</option>
+              <option value="URGENT">🔴 Urgent</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Due date</label>
+            <input formControlName="dueDate" type="date"
+              class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"/>
+          </div>
+        </div>
+
+        <!-- Assignee -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Assignee</label>
+          <select formControlName="assigneeAuthId"
+            class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+            <option [ngValue]="null">— Unassigned —</option>
+            @for (member of members; track member.authId) {
+              <option [value]="member.authId">{{ member.displayName }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 pt-2">
+          <button type="button" (click)="closeCreateTaskModal()"
+            class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="createTaskForm.invalid || isCreatingTask"
+            class="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50">
+            {{ isCreatingTask ? 'Creating...' : 'Create task' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════
+     TASK DETAIL MODAL
+═══════════════════════════════════════════════════════ -->
+@if (activeTask()) {
+  <div class="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4"
+    (click)="closeTaskDetail()">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"
+      (click)="$event.stopPropagation()">
+
+      <!-- Modal header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <!-- Complete toggle -->
+          <button (click)="onToggleComplete(activeTask()!)"
+            class="w-5 h-5 rounded border-2 transition flex items-center justify-center flex-shrink-0"
+            [class.border-emerald-500]="isTaskInLastList(activeTask()!)"
+            [class.bg-emerald-500]="isTaskInLastList(activeTask()!)"
+            [class.border-gray-300]="!isTaskInLastList(activeTask()!)"
+            [class.dark:border-gray-600]="!isTaskInLastList(activeTask()!)">
+            @if (isTaskInLastList(activeTask()!)) {
+              <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            }
+          </button>
+          <h3 class="font-semibold text-gray-800 dark:text-gray-100">Task details</h3>
+          @if (isTaskInLastList(activeTask()!)) {
+            <span class="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-medium">Completed</span>
+          }
+        </div>
+        <div class="flex items-center gap-2">
+          @if (isOwnerOrAdmin) {
+            <button (click)="onDeleteTask(activeTask()!)"
+              class="text-xs text-red-400 hover:text-red-600 transition px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20">
+              Delete
+            </button>
+          }
+          <button (click)="closeTaskDetail()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal body -->
+      <div class="flex-1 overflow-y-auto">
+        <form [formGroup]="editTaskForm" (ngSubmit)="onSaveTask()" class="p-6 space-y-4">
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Title *</label>
+            <input formControlName="title" type="text"
+              class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"/>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Description</label>
+            <textarea formControlName="description" rows="4" placeholder="Add more context..."
+              class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 resize-none">
+            </textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Priority</label>
+              <select formControlName="priority"
+                class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="LOW">🟢 Low</option>
+                <option value="MEDIUM">🔵 Medium</option>
+                <option value="HIGH">🟠 High</option>
+                <option value="URGENT">🔴 Urgent</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Due date</label>
+              <input formControlName="dueDate" type="date"
+                class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"/>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Assignee</label>
+            <select formControlName="assigneeAuthId"
+              class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+              <option [ngValue]="null">— Unassigned —</option>
+              @for (member of members; track member.authId) {
+                <option [value]="member.authId">{{ member.displayName }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Timestamps -->
+          <div class="flex items-center gap-4 text-xs text-gray-400 pt-1">
+            <span>Created {{ activeTask()!.createdAt | date: 'MMM d, y' }}</span>
+            @if (activeTask()!.updatedAt !== activeTask()!.createdAt) {
+              <span>· Updated {{ activeTask()!.updatedAt | date: 'MMM d, y' }}</span>
+            }
+          </div>
+
+          <div class="flex gap-3 pt-2">
+            <button type="button" (click)="closeTaskDetail()"
+              class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+              Close
+            </button>
+            <button type="submit" [disabled]="editTaskForm.invalid || isSavingTask"
+              class="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50">
+              {{ isSavingTask ? 'Saving...' : 'Save changes' }}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+}
