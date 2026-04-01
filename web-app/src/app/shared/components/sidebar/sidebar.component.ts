@@ -1,9 +1,11 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserProfileStateService } from '../../../core/services/user-profile-state.service';
 import { UserStateService } from '../../../core/services/user-state.service';
+import { WorkspaceService } from '../../../core/services/workspace.service';
+import { Workspace } from '../../../core/models/workspace.model';
 
 @Component({
   selector: 'app-sidebar',
@@ -11,9 +13,10 @@ import { UserStateService } from '../../../core/services/user-state.service';
   imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.component.html',
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   expanded = signal(false);
   analyticsOpen = signal(false);
+  workspaces: Workspace[] = [];
 
   private leaveTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -21,8 +24,15 @@ export class SidebarComponent {
     public userState: UserStateService,
     public userProfileState: UserProfileStateService,
     private authService: AuthService,
+    private workspaceService: WorkspaceService,
     private router: Router,
   ) {}
+
+  ngOnInit() {
+    this.workspaceService.listMine().subscribe({
+      next: (workspaces) => (this.workspaces = workspaces),
+    });
+  }
 
   onContainerEnter() {
     if (this.leaveTimer) {
