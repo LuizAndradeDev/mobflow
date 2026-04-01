@@ -1,116 +1,172 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { WorkspaceService } from '../../core/services/workspace.service';
+import { TaskService } from '../../core/services/task.service';
+import { UserProfileStateService } from '../../core/services/user-profile-state.service';
+import { Workspace } from '../../core/models/workspace.model';
+import { WorkspaceSummary, BoardSummary } from '../../core/models/task.model';
+
+interface WorkspaceStats {
+  workspace: Workspace;
+  summary: WorkspaceSummary | null;
+  totalTasks: number;
+  doneTasks: number;
+  inProgressTasks: number;
+  overdueTasks: number;
+  completionPct: number;
+  members: number;
+}
 
 @Component({
   selector: 'app-analytics',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="p-8 max-w-5xl mx-auto">
-
-      <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Analytics</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {{ scope === 'team' ? 'Team performance overview' : 'Your personal productivity metrics' }}
-        </p>
-      </div>
-
-      <!-- KPI cards -->
-      <div class="grid grid-cols-4 gap-4 mb-8">
-        @for (kpi of (scope === 'team' ? teamKpis : personalKpis); track kpi.label) {
-          <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-              <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ kpi.label }}</p>
-              <span class="text-lg">{{ kpi.icon }}</span>
-            </div>
-            <p class="text-3xl font-bold text-gray-800 dark:text-gray-100">{{ kpi.value }}</p>
-            <div class="flex items-center gap-1 mt-1">
-              <span class="text-xs font-medium" [class.text-emerald-500]="kpi.up" [class.text-red-400]="!kpi.up">
-                {{ kpi.up ? '▲' : '▼' }} {{ kpi.delta }}
-              </span>
-              <span class="text-xs text-gray-400">vs last week</span>
-            </div>
-          </div>
-        }
-      </div>
-
-      <!-- Charts mockup -->
-      <div class="grid grid-cols-2 gap-6 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 class="font-semibold text-gray-700 dark:text-gray-200 mb-4">Tasks completed per day</h3>
-          <div class="flex items-end gap-2 h-32">
-            @for (bar of chartBars; track $index) {
-              <div class="flex-1 flex flex-col items-center gap-1">
-                <div
-                  class="w-full rounded-t-md bg-blue-500 dark:bg-blue-600 opacity-80 hover:opacity-100 transition"
-                  [style.height.%]="bar.pct"
-                ></div>
-                <span class="text-xs text-gray-400">{{ bar.day }}</span>
-              </div>
-            }
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 class="font-semibold text-gray-700 dark:text-gray-200 mb-4">Tasks by status</h3>
-          <div class="space-y-3 mt-2">
-            @for (item of statusBreakdown; track item.label) {
-              <div>
-                <div class="flex items-center justify-between mb-1">
-                  <span class="text-xs text-gray-600 dark:text-gray-300">{{ item.label }}</span>
-                  <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">{{ item.value }}%</span>
-                </div>
-                <div class="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div class="h-full rounded-full" [ngClass]="item.color" [style.width.%]="item.value"></div>
-                </div>
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl px-5 py-4 text-sm text-amber-700 dark:text-amber-300">
-        📊 These are sample metrics. Real analytics will be available once task tracking is implemented.
-      </div>
-
-    </div>
-  `,
+  imports: [CommonModule, RouterLink],
+  templateUrl: './analytics.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnalyticsComponent implements OnInit {
-  scope: 'personal' | 'team' = 'personal';
+  /** 'personal' | 'team' | workspaceId */
+  scope = 'personal';
 
-  constructor(private route: ActivatedRoute) {}
+  workspaces: Workspace[] = [];
+  workspaceStats: WorkspaceStats[] = [];
+  isLoading = true;
+
+  constructor(
+    private route: ActivatedRoute,
+    public router: Router,
+    private workspaceService: WorkspaceService,
+    private taskService: TaskService,
+    public userProfileState: UserProfileStateService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit() {
     this.route.queryParams.subscribe((p) => {
-      this.scope = p['scope'] === 'team' ? 'team' : 'personal';
+      this.scope = p['scope'] ?? 'personal';
+      this.cdr.markForCheck();
+    });
+
+    this.loadData();
+  }
+
+  loadData() {
+    this.isLoading = true;
+    this.workspaceService.listMine().subscribe({
+      next: (workspaces) => {
+        this.workspaces = workspaces;
+        if (workspaces.length === 0) {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+          return;
+        }
+
+        const ids = workspaces.map((w) => w.id);
+
+        forkJoin({
+          summaries: this.taskService.getBatchSummaries(ids).pipe(catchError(() => of([] as WorkspaceSummary[]))),
+          memberCounts: forkJoin(
+            workspaces.map((w) =>
+              this.workspaceService.listMembers(w.id).pipe(catchError(() => of([]))),
+            ),
+          ),
+        }).subscribe({
+          next: ({ summaries, memberCounts }) => {
+            const summaryMap = new Map(summaries.map((s) => [s.workspaceId, s]));
+
+            this.workspaceStats = workspaces.map((ws, i) => {
+              const summary = summaryMap.get(ws.id) ?? null;
+              const members = (memberCounts[i] as any[]).length;
+
+              let totalTasks = 0;
+              let doneTasks = 0;
+              let inProgressTasks = 0;
+              let overdueTasks = 0;
+
+              if (summary) {
+                summary.boards.forEach((board) => {
+                  const lists = board.lists;
+                  lists.forEach((list, idx) => {
+                    const isDone = idx === lists.length - 1 && lists.length > 1;
+                    totalTasks += list.taskCount;
+                    if (isDone) {
+                      doneTasks += list.taskCount;
+                    } else if (idx === 0) {
+                      // first list = todo, rest = in progress
+                    } else {
+                      inProgressTasks += list.taskCount;
+                    }
+                    // Count overdue from preview tasks
+                    list.previewTasks.forEach((t) => {
+                      if (t.dueDate && new Date(t.dueDate) < new Date()) overdueTasks++;
+                    });
+                  });
+                });
+              }
+
+              const completionPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+              return { workspace: ws, summary, totalTasks, doneTasks, inProgressTasks, overdueTasks, completionPct, members };
+            });
+
+            this.isLoading = false;
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.isLoading = false;
+            this.cdr.markForCheck();
+          },
+        });
+      },
+      error: () => {
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
-  personalKpis = [
-    { label: 'Tasks Done', value: '34', delta: '8', up: true, icon: '✅' },
-    { label: 'In Progress', value: '7', delta: '2', up: true, icon: '🔄' },
-    { label: 'Overdue', value: '2', delta: '1', up: false, icon: '⚠️' },
-    { label: 'Streak', value: '5d', delta: '2d', up: true, icon: '🔥' },
-  ];
+  get selectedWorkspaceStats(): WorkspaceStats | null {
+    if (this.scope === 'personal' || this.scope === 'team') return null;
+    return this.workspaceStats.find((s) => s.workspace.id === this.scope) ?? null;
+  }
 
-  teamKpis = [
-    { label: 'Total Tasks', value: '142', delta: '23', up: true, icon: '📋' },
-    { label: 'Completed', value: '98', delta: '15', up: true, icon: '✅' },
-    { label: 'Members', value: '8', delta: '1', up: true, icon: '👥' },
-    { label: 'Velocity', value: '92%', delta: '5%', up: true, icon: '🚀' },
-  ];
+  get globalStats() {
+    const total = this.workspaceStats.reduce((a, s) => a + s.totalTasks, 0);
+    const done = this.workspaceStats.reduce((a, s) => a + s.doneTasks, 0);
+    const inProgress = this.workspaceStats.reduce((a, s) => a + s.inProgressTasks, 0);
+    const overdue = this.workspaceStats.reduce((a, s) => a + s.overdueTasks, 0);
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    return { total, done, inProgress, overdue, pct };
+  }
 
-  chartBars = [
-    { day: 'Mon', pct: 60 }, { day: 'Tue', pct: 80 }, { day: 'Wed', pct: 45 },
-    { day: 'Thu', pct: 90 }, { day: 'Fri', pct: 70 }, { day: 'Sat', pct: 30 }, { day: 'Sun', pct: 20 },
-  ];
+  get personalStats() {
+    const profile = this.userProfileState.profile();
+    // Personal = tasks assigned to the current user across all workspaces
+    // Since the summary doesn't include assignee info, we show workspace-level overview
+    // as personal scope for now (real implementation needs a backend endpoint)
+    return this.globalStats;
+  }
 
-  statusBreakdown = [
-    { label: 'Done', value: 58, color: 'bg-emerald-500' },
-    { label: 'In Progress', value: 24, color: 'bg-blue-500' },
-    { label: 'Todo', value: 13, color: 'bg-gray-400' },
-    { label: 'Overdue', value: 5, color: 'bg-red-500' },
-  ];
+  boardTotalTasks(board: BoardSummary): number {
+    return board.lists.reduce((a, l) => a + l.taskCount, 0);
+  }
+
+  priorityColor(priority: string): string {
+    const map: Record<string, string> = {
+      URGENT: 'bg-red-500', HIGH: 'bg-orange-400', MEDIUM: 'bg-blue-400', LOW: 'bg-gray-300 dark:bg-gray-600',
+    };
+    return map[priority] ?? 'bg-gray-300';
+  }
+
+  setScope(s: string) {
+    this.router.navigate(['/analytics'], { queryParams: { scope: s } });
+  }
 }
