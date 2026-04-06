@@ -269,35 +269,27 @@ export class WorkspaceTasksComponent implements OnInit {
     });
   }
 
-  // ── Complete Task (move to last list) ──
+  // ── Complete Task: alterna status entre COMPLETED e TODO via updateTask ──
   onToggleComplete(task: Task) {
-    if (!this.selectedBoard || this.selectedBoard.lists.length < 2) {
-      this.alertService.warning('Add at least 2 lists to use complete (e.g. "To Do" and "Done").', 'Cannot complete');
-      return;
-    }
-    const lists = this.selectedBoard.lists;
-    const lastList = lists[lists.length - 1];
-    const currentList = lists.find((l) => l.tasks.some((t) => t.id === task.id));
-    if (!currentList) return;
+    const profile = this.userProfileState.profile();
+    if (!profile) return;
 
-    if (currentList.id === lastList.id) {
-      const firstList = lists[0];
-      this.taskService.moveTask(this.workspaceId, task.id, { targetListId: firstList.id, position: 0 }).subscribe({
-        next: (moved) => {
-          this._moveTaskInState(task, currentList.id, firstList.id, 0, moved);
-          if (this.activeTask()?.id === task.id) this.activeTask.set(moved);
-          this.cdr.markForCheck();
-        },
-      });
-    } else {
-      this.taskService.moveTask(this.workspaceId, task.id, { targetListId: lastList.id, position: lastList.tasks.length }).subscribe({
-        next: (moved) => {
-          this._moveTaskInState(task, currentList.id, lastList.id, lastList.tasks.length, moved);
-          if (this.activeTask()?.id === task.id) this.activeTask.set(moved);
-          this.cdr.markForCheck();
-        },
-      });
-    }
+    const isCompleted = task.status === 'COMPLETED';
+    const req: UpdateTaskRequest = isCompleted
+      ? { status: 'TODO', completedByAuthId: undefined }
+      : { status: 'COMPLETED', completedByAuthId: profile.authId };
+
+    this.taskService.updateTask(this.workspaceId, task.id, req).subscribe({
+      next: (updated) => {
+        this._replaceTaskInState(updated);
+        if (this.activeTask()?.id === task.id) this.activeTask.set(updated);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.alertService.danger('Could not update task status.', 'Error');
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   // ── Delete ──
@@ -399,7 +391,34 @@ export class WorkspaceTasksComponent implements OnInit {
     });
   }
 
-  // ── Private Helpers ──
+  // ── Helpers ──
+
+  /** Task está concluída quando seu status é COMPLETED */
+  isTaskCompleted(task: Task): boolean {
+    return task.status === 'COMPLETED';
+  }
+
+  priorityBadge(priority: string): string {
+    const map: Record<string, string> = {
+      URGENT: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+      HIGH: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
+      MEDIUM: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+      LOW: 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400',
+    };
+    return map[priority] ?? map['MEDIUM'];
+  }
+
+  isDueSoon(dueDate: string | null): boolean {
+    if (!dueDate) return false;
+    const diff = (new Date(dueDate).getTime() - Date.now()) / 86_400_000;
+    return diff <= 2 && diff >= 0;
+  }
+
+  isOverdue(dueDate: string | null): boolean {
+    if (!dueDate) return false;
+    return new Date(dueDate) < new Date();
+  }
+
   private _replaceTaskInState(updated: Task) {
     if (!this.selectedBoard) return;
     this.selectedBoard = {
@@ -427,32 +446,5 @@ export class WorkspaceTasksComponent implements OnInit {
       }),
     };
     this.boards = this.boards.map((b) => b.id === this.selectedBoard!.id ? this.selectedBoard! : b);
-  }
-
-  isTaskInLastList(task: Task): boolean {
-    if (!this.selectedBoard || this.selectedBoard.lists.length === 0) return false;
-    const lastList = this.selectedBoard.lists[this.selectedBoard.lists.length - 1];
-    return lastList.tasks.some((t) => t.id === task.id);
-  }
-
-  priorityBadge(priority: string): string {
-    const map: Record<string, string> = {
-      URGENT: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
-      HIGH: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
-      MEDIUM: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-      LOW: 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400',
-    };
-    return map[priority] ?? map['MEDIUM'];
-  }
-
-  isDueSoon(dueDate: string | null): boolean {
-    if (!dueDate) return false;
-    const diff = (new Date(dueDate).getTime() - Date.now()) / 86_400_000;
-    return diff <= 2 && diff >= 0;
-  }
-
-  isOverdue(dueDate: string | null): boolean {
-    if (!dueDate) return false;
-    return new Date(dueDate) < new Date();
   }
 }

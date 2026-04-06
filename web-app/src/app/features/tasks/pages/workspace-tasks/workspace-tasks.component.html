@@ -157,12 +157,12 @@
                     <!-- Complete toggle -->
                     <button (click)="onToggleComplete(task); $event.stopPropagation()"
                       class="flex-shrink-0 mt-0.5 w-4 h-4 rounded border-2 transition flex items-center justify-center"
-                      [class.border-emerald-500]="isTaskInLastList(task)"
-                      [class.bg-emerald-500]="isTaskInLastList(task)"
-                      [class.border-gray-300]="!isTaskInLastList(task)"
-                      [class.dark:border-gray-600]="!isTaskInLastList(task)"
-                      title="{{ isTaskInLastList(task) ? 'Mark as incomplete' : 'Mark as complete' }}">
-                      @if (isTaskInLastList(task)) {
+                      [class.border-emerald-500]="isTaskCompleted(task)"
+                      [class.bg-emerald-500]="isTaskCompleted(task)"
+                      [class.border-gray-300]="!isTaskCompleted(task)"
+                      [class.dark:border-gray-600]="!isTaskCompleted(task)"
+                      title="{{ isTaskCompleted(task) ? 'Mark as incomplete' : 'Mark as complete' }}">
+                      @if (isTaskCompleted(task)) {
                         <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
                         </svg>
@@ -170,8 +170,8 @@
                     </button>
 
                     <p class="flex-1 text-sm font-medium text-gray-800 dark:text-gray-100 leading-snug cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition"
-                      [class.line-through]="isTaskInLastList(task)"
-                      [class.text-gray-400]="isTaskInLastList(task)"
+                      [class.line-through]="isTaskCompleted(task)"
+                      [class.text-gray-400]="isTaskCompleted(task)"
                       (click)="openTaskDetail(task)">
                       {{ task.title }}
                     </p>
@@ -364,18 +364,18 @@
           <!-- Complete toggle -->
           <button (click)="onToggleComplete(activeTask()!)"
             class="w-5 h-5 rounded border-2 transition flex items-center justify-center flex-shrink-0"
-            [class.border-emerald-500]="isTaskInLastList(activeTask()!)"
-            [class.bg-emerald-500]="isTaskInLastList(activeTask()!)"
-            [class.border-gray-300]="!isTaskInLastList(activeTask()!)"
-            [class.dark:border-gray-600]="!isTaskInLastList(activeTask()!)">
-            @if (isTaskInLastList(activeTask()!)) {
+            [class.border-emerald-500]="isTaskCompleted(activeTask()!)"
+            [class.bg-emerald-500]="isTaskCompleted(activeTask()!)"
+            [class.border-gray-300]="!isTaskCompleted(activeTask()!)"
+            [class.dark:border-gray-600]="!isTaskCompleted(activeTask()!)">
+            @if (isTaskCompleted(activeTask()!)) {
               <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
               </svg>
             }
           </button>
           <h3 class="font-semibold text-gray-800 dark:text-gray-100">Task details</h3>
-          @if (isTaskInLastList(activeTask()!)) {
+          @if (isTaskCompleted(activeTask()!)) {
             <span class="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-medium">Completed</span>
           }
         </div>
