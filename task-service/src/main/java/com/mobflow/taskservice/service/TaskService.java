@@ -26,20 +26,17 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskListRepository taskListRepository;
-    private final BoardRepository boardRepository;
     private final WorkspaceClient workspaceClient;
     private final UserServiceClient userServiceClient;
 
     public TaskService(
             TaskRepository taskRepository,
             TaskListRepository taskListRepository,
-            BoardRepository boardRepository,
             WorkspaceClient workspaceClient,
             UserServiceClient userServiceClient
     ) {
         this.taskRepository = taskRepository;
         this.taskListRepository = taskListRepository;
-        this.boardRepository = boardRepository;
         this.workspaceClient = workspaceClient;
         this.userServiceClient = userServiceClient;
     }
@@ -100,6 +97,16 @@ public class TaskService {
         if (request.getPriority() != null) task.setPriority(request.getPriority());
         if (request.getAssigneeAuthId() != null) task.setAssigneeAuthId(request.getAssigneeAuthId());
         if (request.getDueDate() != null) task.setDueDate(request.getDueDate());
+        if (request.getStatus() != null) {
+            task.setStatus(request.getStatus());
+            if (request.getStatus() == com.mobflow.taskservice.model.enums.TaskStatus.COMPLETED && task.getCompletedAt() == null) {
+                task.setCompletedAt(java.time.LocalDateTime.now());
+            } else if (request.getStatus() != com.mobflow.taskservice.model.enums.TaskStatus.COMPLETED) {
+                task.setCompletedAt(null);
+                task.setCompletedByAuthId(null);
+            }
+        }
+        if (request.getCompletedByAuthId() != null) task.setCompletedByAuthId(request.getCompletedByAuthId());
 
         taskRepository.save(task);
         return enrichSingle(task);
