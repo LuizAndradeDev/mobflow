@@ -1,6 +1,7 @@
 package com.mobflow.taskservice.model.dto.request;
 
 import com.mobflow.taskservice.model.enums.TaskPriority;
+import com.mobflow.taskservice.model.enums.TaskStatus;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -16,6 +17,10 @@ public class UpdateTaskRequest {
     private String description;
 
     private TaskPriority priority;
+
+    private TaskStatus status;
+
+    private UUID completedByAuthId;
 
     private UUID assigneeAuthId;
 

@@ -2,6 +2,7 @@ package com.mobflow.taskservice.model.dto.response;
 
 import com.mobflow.taskservice.model.entities.Task;
 import com.mobflow.taskservice.model.enums.TaskPriority;
+import com.mobflow.taskservice.model.enums.TaskStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -27,6 +28,9 @@ public class TaskResponseDTO {
     private int position;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private TaskStatus status;
+    private UUID completedByAuthId;
+    private LocalDateTime completedAt;
 
     public static TaskResponseDTO fromEntity(Task task) {
         return TaskResponseDTO.builder()
@@ -42,6 +46,9 @@ public class TaskResponseDTO {
                 .position(task.getPosition())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
+                .status(task.getStatus())
+                .completedByAuthId(task.getCompletedByAuthId())
+                .completedAt(task.getCompletedAt())
                 .build();
     }
 
