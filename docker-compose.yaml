@@ -2,6 +2,8 @@ version: "3.9"
 
 services:
 
+
+
   postgres:
     image: postgres:16
     container_name: mobflow-postgres
@@ -120,6 +122,8 @@ services:
       - mobflow-network
     env_file:
       - .env
+
+
 
 volumes:
   postgres_data:
