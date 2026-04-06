@@ -9,6 +9,7 @@ import {
   MoveTaskRequest,
   ReorderListsRequest,
   Task,
+  TaskAnalytics,
   TaskList,
   UpdateBoardRequest,
   UpdateTaskListRequest,
@@ -18,8 +19,8 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
-  private readonly API = 'http://localhost:8083/api';
-  private readonly INTERNAL_API = 'http://localhost:8083/internal/tasks';
+  private readonly API = 'http://localhost:8083/tasks/api';
+  private readonly INTERNAL_API = 'http://localhost:8083/tasks/internal/tasks';
   private readonly INTERNAL_SECRET = 'mobflow-internal-secret-2024';
 
   constructor(private http: HttpClient) {}
@@ -119,5 +120,36 @@ export class TaskService {
     return this.http.post<WorkspaceSummary[]>(`${this.INTERNAL_API}/summaries`, workspaceIds, {
       headers: { 'X-Internal-Secret': this.INTERNAL_SECRET },
     });
+  }
+
+  // ---- Analytics ----
+
+  /**
+   * Analytics de um workspace específico para o usuário autenticado.
+   * GET /api/task-analytics/workspace/{workspaceId}/user/{authId}
+   */
+  getWorkspaceAnalytics(workspaceId: string, authId: string): Observable<TaskAnalytics> {
+    return this.http.get<TaskAnalytics>(
+      `${this.API}/task-analytics/workspace/${workspaceId}/user/${authId}`,
+    );
+  }
+
+  /**
+   * Analytics do usuário em múltiplos workspaces.
+   * POST /api/task-analytics/user/{authId}/workspaces
+   */
+  getUserAnalyticsAcrossWorkspaces(authId: string, workspaceIds: string[]): Observable<TaskAnalytics> {
+    return this.http.post<TaskAnalytics>(
+      `${this.API}/task-analytics/user/${authId}/workspaces`,
+      workspaceIds,
+    );
+  }
+
+  /**
+   * Analytics globais do usuário (todos os workspaces).
+   * GET /api/task-analytics/user/{authId}
+   */
+  getUserAnalytics(authId: string): Observable<TaskAnalytics> {
+    return this.http.get<TaskAnalytics>(`${this.API}/task-analytics/user/${authId}`);
   }
 }
