@@ -94,7 +94,7 @@ export class EditProfileComponent implements OnInit {
     this.userProfileService.updateMyProfile(payload).subscribe({
       next: () => {
         this.alertService.success('Your profile has been updated!', 'Profile saved');
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/home']);
       },
       error: () => {
         this.isLoading = false;
@@ -103,6 +103,6 @@ export class EditProfileComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/home']);
   }
 }

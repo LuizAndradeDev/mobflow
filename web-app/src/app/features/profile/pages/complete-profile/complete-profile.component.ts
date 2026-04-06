@@ -38,7 +38,7 @@ export class CompleteProfileComponent {
     this.userProfileService.updateMyProfile(payload).subscribe({
       next: () => {
         this.alertService.success('Your profile is all set!', 'Profile created');
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/home']);
       },
       error: () => {
         this.isLoading = false;
