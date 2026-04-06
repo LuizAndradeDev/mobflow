@@ -61,7 +61,7 @@ public class TaskController {
     }
 
     /**
-     * Update task fields (title, description, priority, assignee, dueDate).
+     * Update task fields (title, description, priority, assignee, dueDate, status).
      */
     @PutMapping("/api/workspaces/{workspaceId}/tasks/{taskId}")
     public ResponseEntity<TaskResponseDTO> updateTask(
