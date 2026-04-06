@@ -1,4 +1,5 @@
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'COMPLETED';
 
 export interface Task {
   id: string;
@@ -7,14 +8,17 @@ export interface Task {
   title: string;
   description: string | null;
   priority: TaskPriority;
+  status: TaskStatus;
   assigneeAuthId: string | null;
   assigneeDisplayName: string | null;
   assigneeAvatarUrl: string | null;
   createdByAuthId: string;
+  completedByAuthId: string | null;
   dueDate: string | null;
   position: number;
   createdAt: string;
   updatedAt: string;
+  completedAt: string | null;
 }
 
 export interface TaskList {
@@ -72,7 +76,9 @@ export interface UpdateTaskRequest {
   title?: string;
   description?: string;
   priority?: TaskPriority;
+  status?: TaskStatus;
   assigneeAuthId?: string;
+  completedByAuthId?: string;
   dueDate?: string;
 }
 
@@ -110,4 +116,14 @@ export interface BoardSummary {
 export interface WorkspaceSummary {
   workspaceId: string;
   boards: BoardSummary[];
+}
+
+// ---- Analytics ----
+
+export interface TaskAnalytics {
+  totalTasks: number;
+  completedTasks: number;
+  createdTasks: number;
+  assignedTasks: number;
+  overdueTasks: number;
 }
