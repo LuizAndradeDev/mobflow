@@ -1,0 +1,6 @@
+ALTER TABLE task
+    ADD COLUMN status VARCHAR(30) DEFAULT 'TODO';
+
+UPDATE task
+SET status = 'TODO'
+WHERE status IS NULL;
