@@ -12,15 +12,14 @@ import { WorkspaceService } from '../../core/services/workspace.service';
 import { TaskService } from '../../core/services/task.service';
 import { UserProfileStateService } from '../../core/services/user-profile-state.service';
 import { Workspace } from '../../core/models/workspace.model';
-import { WorkspaceSummary, BoardSummary } from '../../core/models/task.model';
+import { BoardSummary, TaskAnalytics, WorkspaceSummary } from '../../core/models/task.model';
 
 interface WorkspaceStats {
   workspace: Workspace;
   summary: WorkspaceSummary | null;
-  totalTasks: number;
-  doneTasks: number;
+  analytics: TaskAnalytics;
+  /** Número de tasks em andamento (totalTasks - completedTasks - overdueTasks, mínimo 0) */
   inProgressTasks: number;
-  overdueTasks: number;
   completionPct: number;
   members: number;
 }
@@ -38,6 +37,13 @@ export class AnalyticsComponent implements OnInit {
 
   workspaces: Workspace[] = [];
   workspaceStats: WorkspaceStats[] = [];
+
+  /** Analytics pessoais do usuário (via endpoint /user/{authId}) */
+  personalAnalytics: TaskAnalytics | null = null;
+
+  /** Analytics do usuário em todos os workspaces (via endpoint /user/{authId}/workspaces) */
+  crossWorkspaceAnalytics: TaskAnalytics | null = null;
+
   isLoading = true;
 
   constructor(
@@ -60,9 +66,19 @@ export class AnalyticsComponent implements OnInit {
 
   loadData() {
     this.isLoading = true;
+    const profile = this.userProfileState.profile();
+    if (!profile) {
+      this.isLoading = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const authId = profile.authId;
+
     this.workspaceService.listMine().subscribe({
       next: (workspaces) => {
         this.workspaces = workspaces;
+
         if (workspaces.length === 0) {
           this.isLoading = false;
           this.cdr.markForCheck();
@@ -72,49 +88,70 @@ export class AnalyticsComponent implements OnInit {
         const ids = workspaces.map((w) => w.id);
 
         forkJoin({
-          summaries: this.taskService.getBatchSummaries(ids).pipe(catchError(() => of([] as WorkspaceSummary[]))),
+          // Summaries ainda são necessárias para o breakdown visual de boards/listas
+          summaries: this.taskService.getBatchSummaries(ids).pipe(
+            catchError(() => of([] as WorkspaceSummary[])),
+          ),
+          // Analytics por workspace para o usuário atual
+          workspaceAnalytics: forkJoin(
+            workspaces.map((w) =>
+              this.taskService.getWorkspaceAnalytics(w.id, authId).pipe(
+                catchError(() => of<TaskAnalytics>({
+                  totalTasks: 0, completedTasks: 0, createdTasks: 0,
+                  assignedTasks: 0, overdueTasks: 0,
+                })),
+              ),
+            ),
+          ),
+          // Contagem de membros por workspace
           memberCounts: forkJoin(
             workspaces.map((w) =>
               this.workspaceService.listMembers(w.id).pipe(catchError(() => of([]))),
             ),
           ),
+          // Analytics pessoais globais do usuário
+          personalAnalytics: this.taskService.getUserAnalytics(authId).pipe(
+            catchError(() => of<TaskAnalytics>({
+              totalTasks: 0, completedTasks: 0, createdTasks: 0,
+              assignedTasks: 0, overdueTasks: 0,
+            })),
+          ),
+          // Analytics do usuário em todos os workspaces
+          crossWorkspaceAnalytics: this.taskService.getUserAnalyticsAcrossWorkspaces(authId, ids).pipe(
+            catchError(() => of<TaskAnalytics>({
+              totalTasks: 0, completedTasks: 0, createdTasks: 0,
+              assignedTasks: 0, overdueTasks: 0,
+            })),
+          ),
         }).subscribe({
-          next: ({ summaries, memberCounts }) => {
+          next: ({ summaries, workspaceAnalytics, memberCounts, personalAnalytics, crossWorkspaceAnalytics }) => {
             const summaryMap = new Map(summaries.map((s) => [s.workspaceId, s]));
+
+            this.personalAnalytics = personalAnalytics;
+            this.crossWorkspaceAnalytics = crossWorkspaceAnalytics;
 
             this.workspaceStats = workspaces.map((ws, i) => {
               const summary = summaryMap.get(ws.id) ?? null;
+              const analytics = workspaceAnalytics[i];
               const members = (memberCounts[i] as any[]).length;
 
-              let totalTasks = 0;
-              let doneTasks = 0;
-              let inProgressTasks = 0;
-              let overdueTasks = 0;
+              const inProgressTasks = Math.max(
+                0,
+                analytics.totalTasks - analytics.completedTasks - analytics.overdueTasks,
+              );
+              const completionPct =
+                analytics.totalTasks > 0
+                  ? Math.round((analytics.completedTasks / analytics.totalTasks) * 100)
+                  : 0;
 
-              if (summary) {
-                summary.boards.forEach((board) => {
-                  const lists = board.lists;
-                  lists.forEach((list, idx) => {
-                    const isDone = idx === lists.length - 1 && lists.length > 1;
-                    totalTasks += list.taskCount;
-                    if (isDone) {
-                      doneTasks += list.taskCount;
-                    } else if (idx === 0) {
-                      // first list = todo, rest = in progress
-                    } else {
-                      inProgressTasks += list.taskCount;
-                    }
-                    // Count overdue from preview tasks
-                    list.previewTasks.forEach((t) => {
-                      if (t.dueDate && new Date(t.dueDate) < new Date()) overdueTasks++;
-                    });
-                  });
-                });
-              }
-
-              const completionPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
-
-              return { workspace: ws, summary, totalTasks, doneTasks, inProgressTasks, overdueTasks, completionPct, members };
+              return {
+                workspace: ws,
+                summary,
+                analytics,
+                inProgressTasks,
+                completionPct,
+                members,
+              };
             });
 
             this.isLoading = false;
@@ -138,21 +175,46 @@ export class AnalyticsComponent implements OnInit {
     return this.workspaceStats.find((s) => s.workspace.id === this.scope) ?? null;
   }
 
+  /**
+   * Estatísticas globais (escopo "team"): agrega analytics de todos os workspaces.
+   * Usa crossWorkspaceAnalytics quando disponível; caso contrário agrega localmente.
+   */
   get globalStats() {
-    const total = this.workspaceStats.reduce((a, s) => a + s.totalTasks, 0);
-    const done = this.workspaceStats.reduce((a, s) => a + s.doneTasks, 0);
-    const inProgress = this.workspaceStats.reduce((a, s) => a + s.inProgressTasks, 0);
-    const overdue = this.workspaceStats.reduce((a, s) => a + s.overdueTasks, 0);
+    if (this.crossWorkspaceAnalytics) {
+      const a = this.crossWorkspaceAnalytics;
+      const pct = a.totalTasks > 0 ? Math.round((a.completedTasks / a.totalTasks) * 100) : 0;
+      return {
+        total: a.totalTasks,
+        done: a.completedTasks,
+        inProgress: Math.max(0, a.totalTasks - a.completedTasks - a.overdueTasks),
+        overdue: a.overdueTasks,
+        pct,
+      };
+    }
+    // Fallback: agrega localmente a partir dos stats por workspace
+    const total = this.workspaceStats.reduce((a, s) => a + s.analytics.totalTasks, 0);
+    const done = this.workspaceStats.reduce((a, s) => a + s.analytics.completedTasks, 0);
+    const overdue = this.workspaceStats.reduce((a, s) => a + s.analytics.overdueTasks, 0);
+    const inProgress = Math.max(0, total - done - overdue);
     const pct = total > 0 ? Math.round((done / total) * 100) : 0;
     return { total, done, inProgress, overdue, pct };
   }
 
+  /**
+   * Estatísticas pessoais (escopo "personal"): usa o endpoint /user/{authId}
+   * que retorna tasks criadas, atribuídas e concluídas pelo usuário.
+   */
   get personalStats() {
-    const profile = this.userProfileState.profile();
-    // Personal = tasks assigned to the current user across all workspaces
-    // Since the summary doesn't include assignee info, we show workspace-level overview
-    // as personal scope for now (real implementation needs a backend endpoint)
-    return this.globalStats;
+    if (this.personalAnalytics) {
+      const a = this.personalAnalytics;
+      const total = a.assignedTasks;
+      const done = a.completedTasks;
+      const overdue = a.overdueTasks;
+      const inProgress = Math.max(0, total - done - overdue);
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      return { total, done, inProgress, overdue, pct };
+    }
+    return { total: 0, done: 0, inProgress: 0, overdue: 0, pct: 0 };
   }
 
   boardTotalTasks(board: BoardSummary): number {
@@ -161,7 +223,10 @@ export class AnalyticsComponent implements OnInit {
 
   priorityColor(priority: string): string {
     const map: Record<string, string> = {
-      URGENT: 'bg-red-500', HIGH: 'bg-orange-400', MEDIUM: 'bg-blue-400', LOW: 'bg-gray-300 dark:bg-gray-600',
+      URGENT: 'bg-red-500',
+      HIGH: 'bg-orange-400',
+      MEDIUM: 'bg-blue-400',
+      LOW: 'bg-gray-300 dark:bg-gray-600',
     };
     return map[priority] ?? 'bg-gray-300';
   }

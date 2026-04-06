@@ -28,7 +28,7 @@
     <!-- KPI cards -->
     <div class="grid grid-cols-4 gap-4 mb-8">
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-        <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Total Tasks</p>
+        <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Assigned Tasks</p>
         <p class="text-3xl font-bold text-gray-800 dark:text-gray-100">{{ personalStats.total }}</p>
         <p class="text-xs text-gray-400 mt-1">across {{ workspaces.length }} teams</p>
       </div>
@@ -68,7 +68,7 @@
               </svg>
             </div>
             <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3">
-              <span>{{ stat.totalTasks }} tasks</span>
+              <span>{{ stat.analytics.totalTasks }} tasks</span>
               <span>{{ stat.members }} members</span>
               <span class="text-emerald-500 font-medium">{{ stat.completionPct }}% done</span>
             </div>
@@ -137,11 +137,11 @@
                 </div>
                 <div class="flex items-center gap-6 text-sm flex-shrink-0">
                   <div class="text-center">
-                    <p class="font-semibold text-gray-800 dark:text-gray-100">{{ stat.totalTasks }}</p>
+                    <p class="font-semibold text-gray-800 dark:text-gray-100">{{ stat.analytics.totalTasks }}</p>
                     <p class="text-xs text-gray-400">Total</p>
                   </div>
                   <div class="text-center">
-                    <p class="font-semibold text-emerald-600 dark:text-emerald-400">{{ stat.doneTasks }}</p>
+                    <p class="font-semibold text-emerald-600 dark:text-emerald-400">{{ stat.analytics.completedTasks }}</p>
                     <p class="text-xs text-gray-400">Done</p>
                   </div>
                   <div class="text-center">
@@ -149,8 +149,8 @@
                     <p class="text-xs text-gray-400">Active</p>
                   </div>
                   <div class="text-center">
-                    <p class="font-semibold" [class.text-red-500]="stat.overdueTasks > 0" [class.text-gray-400]="stat.overdueTasks === 0">
-                      {{ stat.overdueTasks }}
+                    <p class="font-semibold" [class.text-red-500]="stat.analytics.overdueTasks > 0" [class.text-gray-400]="stat.analytics.overdueTasks === 0">
+                      {{ stat.analytics.overdueTasks }}
                     </p>
                     <p class="text-xs text-gray-400">Overdue</p>
                   </div>
@@ -196,11 +196,11 @@
     <div class="grid grid-cols-4 gap-4 mb-8">
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
         <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Total Tasks</p>
-        <p class="text-3xl font-bold text-gray-800 dark:text-gray-100">{{ stat.totalTasks }}</p>
+        <p class="text-3xl font-bold text-gray-800 dark:text-gray-100">{{ stat.analytics.totalTasks }}</p>
       </div>
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
         <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Completed</p>
-        <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{ stat.doneTasks }}</p>
+        <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{ stat.analytics.completedTasks }}</p>
         <p class="text-xs text-emerald-500 mt-1">{{ stat.completionPct }}% done</p>
       </div>
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -209,8 +209,8 @@
       </div>
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
         <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Overdue</p>
-        <p class="text-3xl font-bold" [class.text-red-500]="stat.overdueTasks > 0" [class.text-gray-400]="stat.overdueTasks === 0">
-          {{ stat.overdueTasks }}
+        <p class="text-3xl font-bold" [class.text-red-500]="stat.analytics.overdueTasks > 0" [class.text-gray-400]="stat.analytics.overdueTasks === 0">
+          {{ stat.analytics.overdueTasks }}
         </p>
       </div>
     </div>
@@ -230,8 +230,8 @@
         </div>
       </div>
       <div class="flex justify-between mt-2 text-xs text-gray-400">
-        <span>{{ stat.doneTasks }} done</span>
-        <span>{{ stat.totalTasks - stat.doneTasks }} remaining</span>
+        <span>{{ stat.analytics.completedTasks }} done</span>
+        <span>{{ stat.analytics.totalTasks - stat.analytics.completedTasks }} remaining</span>
       </div>
     </div>
 
