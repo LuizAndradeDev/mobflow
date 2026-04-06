@@ -1,6 +1,7 @@
 package com.mobflow.taskservice.model.entities;
 
 import com.mobflow.taskservice.model.enums.TaskPriority;
+import com.mobflow.taskservice.model.enums.TaskStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -48,11 +49,18 @@ public class Task {
     @Column(name = "created_by_auth_id", nullable = false)
     private UUID createdByAuthId;
 
+    @Column(name = "completed_by_auth_id")
+    private UUID completedByAuthId;
+
     @Column(name = "due_date")
     private LocalDate dueDate;
 
     @Column(name = "position", nullable = false)
     private int position;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 30)
+    private TaskStatus status;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -62,6 +70,9 @@ public class Task {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     public static Task create(TaskList list, UUID workspaceId, String title, TaskPriority priority, UUID createdBy) {
         return Task.builder()
                 .list(list)
@@ -70,6 +81,7 @@ public class Task {
                 .priority(priority)
                 .createdByAuthId(createdBy)
                 .position(0)
+                .status(TaskStatus.TODO)
                 .build();
     }
 }
