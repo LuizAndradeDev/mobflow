@@ -1,4 +1,4 @@
-package com.mobflow.notification_service;
+package com.mobflow.notificationservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

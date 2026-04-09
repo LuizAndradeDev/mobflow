@@ -1,4 +1,4 @@
-package com.mobflow.notification_service;
+package com.mobflow.notificationservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

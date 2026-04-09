@@ -3,6 +3,25 @@ version: "3.9"
 services:
 
 
+  mongodb:
+    image: mongo:latest
+    container_name: moblfow-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongodb_data:/data
+    networks:
+      - mobflow-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 
   postgres:
     image: postgres:16
@@ -129,6 +148,7 @@ volumes:
   postgres_data:
   minio_data:
   redis_data:
+  mongodb_data:
 
 networks:
   mobflow-network:
