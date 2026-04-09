@@ -1,25 +1,62 @@
 package com.mobflow.notificationservice.model.entities;
 
-import com.mobflow.notificationservice.model.enums.NotificationType;
+import  com.mobflow.notificationservice.model.enums.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@ToString
-@EqualsAndHashCode(of = "id")
+@Document(collection = "notifications")
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Notification {
-    private String id;
-    private UUID recipientAuthId;
-    private NotificationType type;
-    private Boolean read = false;
-    private LocalDateTime createdAt;
-    private Map<String,String> payload;
 
+    @Id
+    private String id;
+
+    @Indexed
+    private String recipientId;
+    private String recipientEmail;
+
+    private String title;
+    private String body;
+    private String templateId;
+    private Map<String, Object> templateData;
+
+    @Indexed
+    private NotificationType type;
+    @Indexed
+    private NotificationChannel channel;
+    private NotificationPriority priority;
+
+
+    @Indexed
+    private NotificationStatus status;
+    private String errorMessage;
+    private int retryCount;
+    private int maxRetries;
+
+    private Instant scheduledAt;
+
+    private Map<String, String> metadata;
+    private List<String> tags;
+
+    @CreatedDate
+    @Indexed
+    private Instant createdAt;
+
+    @LastModifiedDate
+    private Instant updatedAt;
+
+    private Instant sentAt;
+    private Instant deliveredAt;
+    private Instant readAt;
 }
