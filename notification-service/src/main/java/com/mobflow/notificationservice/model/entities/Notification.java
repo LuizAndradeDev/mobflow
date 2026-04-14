@@ -28,19 +28,19 @@ public class Notification {
 
     private String title;
     private String body;
-    private String templateId;
-    private Map<String, Object> templateData;
 
     @Indexed
     private NotificationType type;
+
     @Indexed
     private NotificationChannel channel;
-    private NotificationPriority priority;
 
+    private NotificationPriority priority;
 
     @Indexed
     private NotificationStatus status;
     private String errorMessage;
+
     private int retryCount;
     private int maxRetries;
 
