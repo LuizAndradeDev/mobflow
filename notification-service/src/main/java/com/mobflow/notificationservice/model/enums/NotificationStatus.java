@@ -1,7 +1,11 @@
 package com.mobflow.notificationservice.model.enums;
 
 public enum NotificationStatus {
-    SUCCESS,
-    FAILURE,
-
+    PENDING,
+    PROCESSING,
+    SENT,
+    DELIVERED,
+    FAILED,
+    CANCELLED,
+    RETRYING
 }
