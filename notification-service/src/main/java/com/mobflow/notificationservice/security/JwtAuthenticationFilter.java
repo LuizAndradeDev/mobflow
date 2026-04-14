@@ -1,6 +1,6 @@
 package com.mobflow.notificationservice.security;
 
-import com.mobflow.userservice.security.JwtService;
+import com.mobflow.notificationservice.security.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
