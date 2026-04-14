@@ -9,7 +9,6 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 
 @Document(collection = "notifications")
@@ -37,17 +36,10 @@ public class Notification {
 
     private NotificationPriority priority;
 
-    @Indexed
-    private NotificationStatus status;
-    private String errorMessage;
-
     private int retryCount;
     private int maxRetries;
 
-    private Instant scheduledAt;
-
     private Map<String, String> metadata;
-    private List<String> tags;
 
     @CreatedDate
     @Indexed
@@ -59,4 +51,5 @@ public class Notification {
     private Instant sentAt;
     private Instant deliveredAt;
     private Instant readAt;
+    private boolean read = false;
 }
