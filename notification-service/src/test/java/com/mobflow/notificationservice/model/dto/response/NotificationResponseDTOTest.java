@@ -1,5 +1,6 @@
 package com.mobflow.notificationservice.model.dto.response;
 
+import com.mobflow.notificationservice.dto.response.NotificationResponseDTO;
 import com.mobflow.notificationservice.model.entities.Notification;
 import com.mobflow.notificationservice.model.enums.NotificationChannel;
 import com.mobflow.notificationservice.model.enums.NotificationPriority;
@@ -23,7 +24,7 @@ class NotificationResponseDTOTest {
                 .recipientId("user-1")
                 .title("Task assigned")
                 .body("You were assigned to task ABC-123")
-                .type(NotificationType.TASK_UPDATE)
+                .type(NotificationType.TASK_UPDATED)
                 .channel(NotificationChannel.IN_APP)
                 .priority(NotificationPriority.HIGH)
                 .read(true)
@@ -35,7 +36,7 @@ class NotificationResponseDTOTest {
         NotificationResponseDTO response = NotificationResponseDTO.fromEntity(notification);
 
         assertThat(response.id()).isEqualTo("notification-1");
-        assertThat(response.type()).isEqualTo(NotificationType.TASK_UPDATE);
+        assertThat(response.type()).isEqualTo(NotificationType.TASK_UPDATED);
         assertThat(response.channel()).isEqualTo(NotificationChannel.IN_APP);
         assertThat(response.title()).isEqualTo("Task assigned");
         assertThat(response.body()).isEqualTo("You were assigned to task ABC-123");
