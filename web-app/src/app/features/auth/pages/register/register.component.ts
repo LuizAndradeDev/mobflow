@@ -16,6 +16,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class RegisterComponent {
   registerForm: FormGroup;
   fieldErrors: { username?: string; email?: string } = {};
+  registrationCompleted = false;
+  confirmationEmail = '';
 
   constructor(
     private fb: FormBuilder,
@@ -32,11 +34,14 @@ export class RegisterComponent {
   onSubmit() {
     if (this.registerForm.invalid) return;
     this.fieldErrors = {};
+    this.registrationCompleted = false;
 
     const payload = this.registerForm.value as SignupRequest;
     this.authService.register(payload).subscribe({
       next: () => {
-        this.alertService.success('Account created! Please sign in.', 'Welcome to Mobflow');
+        this.confirmationEmail = payload.email;
+        this.registrationCompleted = true;
+        this.alertService.success('Account created. Check your inbox to confirm your email.', 'Confirm your email');
         this.registerForm.reset();
       },
       error: (err: HttpErrorResponse) => {

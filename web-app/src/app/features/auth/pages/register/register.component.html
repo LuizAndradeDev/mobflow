@@ -14,6 +14,14 @@
     </div>
 
     <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8">
+      @if (registrationCompleted) {
+        <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-100">
+          <p class="font-semibold">Confirm your email to activate your account.</p>
+          <p class="mt-1 text-emerald-800 dark:text-emerald-200">
+            We sent a confirmation link to <span class="font-medium">{{ confirmationEmail }}</span>. Open that email before trying to sign in.
+          </p>
+        </div>
+      }
 
       <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5">
 
