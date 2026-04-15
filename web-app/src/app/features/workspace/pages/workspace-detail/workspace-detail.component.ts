@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, switchMap } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { WorkspaceService } from '../../../../core/services/workspace.service';
 import { TaskService } from '../../../../core/services/task.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
@@ -146,27 +146,16 @@ export class WorkspaceDetailComponent implements OnInit {
     this.isAddingMember = true;
 
     this.workspaceService
-      .addMember(this.workspace.id, this.addMemberForm.value)
-      .pipe(
-        switchMap(() => {
-          this.workspaceService.invalidateMemberCache(this.workspace!.id);
-          this.membersLoading = true;
-          this.cdr.markForCheck();
-          return this.workspaceService.listMembers(this.workspace!.id);
-        }),
-      )
+      .inviteMember(this.workspace.id, this.addMemberForm.value)
       .subscribe({
-        next: (members) => {
-          this.members = members;
-          this.membersLoading = false;
+        next: () => {
           this.isAddingMember = false;
           this.addMemberForm.reset();
           this.showAddMember = false;
-          this.alertService.success('Member added.', 'Member added');
+          this.alertService.success('Invitation sent successfully.', 'Invite sent');
           this.cdr.markForCheck();
         },
         error: () => {
-          this.membersLoading = false;
           this.isAddingMember = false;
           this.cdr.markForCheck();
         },
@@ -179,6 +168,17 @@ export class WorkspaceDetailComponent implements OnInit {
       next: () => {
         this.members = this.members.filter((m) => m.id !== member.id);
         this.alertService.success('Member removed.', 'Removed');
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  onChangeRole(member: WorkspaceMember, newRole: WorkspaceRole) {
+    if (!this.workspace || member.role === newRole) return;
+    this.workspaceService.updateMemberRole(this.workspace.id, member.authId, { role: newRole }).subscribe({
+      next: (updated) => {
+        this.members = this.members.map((m) => (m.id === member.id ? { ...m, role: updated.role } : m));
+        this.alertService.success(`${member.displayName} is now ${this.roleLabel(newRole).toLowerCase()}.`, 'Role updated');
         this.cdr.markForCheck();
       },
     });
