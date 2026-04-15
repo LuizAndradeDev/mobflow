@@ -1,5 +1,6 @@
 package com.mobflow.authservice.services;
 
+import com.mobflow.authservice.events.AuthEventPublisher;
 import com.mobflow.authservice.exceptions.GenericAplicationException;
 import com.mobflow.authservice.model.dtos.request.LoginUserDTO;
 import com.mobflow.authservice.model.dtos.request.RegisterUserCredentialsDTO;
@@ -32,11 +33,14 @@ class AuthenticationServiceTest {
     @Mock
     private AuthenticationManager authenticationManager;
 
+    @Mock
+    private AuthEventPublisher authEventPublisher;
+
     private AuthenticationService authenticationService;
 
     @BeforeEach
     void setUp() {
-        authenticationService = new AuthenticationService(authenticationManager, userCredentialService);
+        authenticationService = new AuthenticationService(authenticationManager, userCredentialService, authEventPublisher);
     }
 
     @Test
@@ -53,6 +57,7 @@ class AuthenticationServiceTest {
         // Then
         assertThat(result).isSameAs(savedUser);
         verify(userCredentialService).SaveCredential(request);
+        verify(authEventPublisher).publishEmailConfirmation(savedUser);
     }
 
     @Test

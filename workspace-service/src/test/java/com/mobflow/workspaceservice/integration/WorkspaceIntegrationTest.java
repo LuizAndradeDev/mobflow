@@ -89,6 +89,14 @@ class WorkspaceIntegrationTest extends AbstractPostgresWorkspaceServiceTest {
                 .isEqualTo(InviteStatus.ACCEPTED);
         assertThat(member.getRole()).isEqualTo(WorkspaceRole.MEMBER);
         assertThat(workspaceMemberRepository.findByWorkspaceIdAndAuthId(workspace.getId(), targetAuthId)).isPresent();
-        verify(workspaceEventPublisher).publish("WORKSPACE_INVITE", targetAuthId, ownerAuthId, workspace, invite.getId().toString(), null);
+        verify(workspaceEventPublisher).publish(
+                "WORKSPACE_INVITE",
+                targetAuthId,
+                ownerAuthId,
+                targetAuthId,
+                workspace,
+                invite.getId().toString(),
+                null
+        );
     }
 }
