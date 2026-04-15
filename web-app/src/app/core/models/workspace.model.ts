@@ -20,6 +20,16 @@ export interface WorkspaceMember {
   avatarUrl: string | null;
 }
 
+export interface WorkspaceInvite {
+  id: string;
+  workspaceId: string;
+  targetAuthId: string;
+  invitedByAuthId: string;
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED';
+  createdAt: string;
+  respondedAt: string | null;
+}
+
 export interface CreateWorkspaceRequest {
   name: string;
   description?: string;

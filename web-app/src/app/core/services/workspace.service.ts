@@ -7,6 +7,7 @@ import {
   UpdateMemberRoleRequest,
   UpdateWorkspaceRequest,
   Workspace,
+  WorkspaceInvite,
   WorkspaceMember,
 } from '../models/workspace.model';
 
@@ -64,10 +65,18 @@ export class WorkspaceService {
     return this.http.get<WorkspaceMember[]>(`${this.API}/${workspaceId}/members`);
   }
 
-  addMember(workspaceId: string, data: AddMemberRequest) {
+  inviteMember(workspaceId: string, data: AddMemberRequest) {
+    return this.http.post<WorkspaceInvite>(`${this.API}/${workspaceId}/invites`, data);
+  }
+
+  acceptInvite(inviteId: string) {
     return this.http
-      .post<WorkspaceMember>(`${this.API}/${workspaceId}/members`, data)
-      .pipe(tap(() => this.invalidateMemberCache(workspaceId)));
+      .post<WorkspaceMember>(`${this.API}/invites/${inviteId}/accept`, {})
+      .pipe(tap(() => this.invalidateListCache()));
+  }
+
+  declineInvite(inviteId: string) {
+    return this.http.post<WorkspaceInvite>(`${this.API}/invites/${inviteId}/decline`, {});
   }
 
   removeMember(workspaceId: string, memberAuthId: string) {
