@@ -2,6 +2,7 @@ package com.mobflow.taskservice.service;
 
 import com.mobflow.taskservice.client.UserServiceClient;
 import com.mobflow.taskservice.client.WorkspaceClient;
+import com.mobflow.taskservice.events.TaskEventPublisher;
 import com.mobflow.taskservice.exception.TaskServiceException;
 import com.mobflow.taskservice.model.dto.request.CreateTaskRequest;
 import com.mobflow.taskservice.model.dto.request.MoveTaskRequest;
@@ -28,17 +29,20 @@ public class TaskService {
     private final TaskListRepository taskListRepository;
     private final WorkspaceClient workspaceClient;
     private final UserServiceClient userServiceClient;
+    private final TaskEventPublisher taskEventPublisher;
 
     public TaskService(
             TaskRepository taskRepository,
             TaskListRepository taskListRepository,
             WorkspaceClient workspaceClient,
-            UserServiceClient userServiceClient
+            UserServiceClient userServiceClient,
+            TaskEventPublisher taskEventPublisher
     ) {
         this.taskRepository = taskRepository;
         this.taskListRepository = taskListRepository;
         this.workspaceClient = workspaceClient;
         this.userServiceClient = userServiceClient;
+        this.taskEventPublisher = taskEventPublisher;
     }
 
     public List<TaskResponseDTO> listTasksByList(UUID listId) {
@@ -77,6 +81,9 @@ public class TaskService {
         task.setPosition(position);
 
         taskRepository.save(task);
+        if (task.getAssigneeAuthId() != null) {
+            taskEventPublisher.publish("TASK_ASSIGNED", task, authId, list.getBoard().getName());
+        }
         return enrichSingle(task);
     }
 
@@ -95,6 +102,7 @@ public class TaskService {
         if (request.getTitle() != null) task.setTitle(request.getTitle());
         if (request.getDescription() != null) task.setDescription(request.getDescription());
         if (request.getPriority() != null) task.setPriority(request.getPriority());
+        UUID previousAssigneeAuthId = task.getAssigneeAuthId();
         if (request.getAssigneeAuthId() != null) task.setAssigneeAuthId(request.getAssigneeAuthId());
         if (request.getDueDate() != null) task.setDueDate(request.getDueDate());
         if (request.getStatus() != null) {
@@ -109,6 +117,13 @@ public class TaskService {
         if (request.getCompletedByAuthId() != null) task.setCompletedByAuthId(request.getCompletedByAuthId());
 
         taskRepository.save(task);
+        if (task.getStatus() == com.mobflow.taskservice.model.enums.TaskStatus.COMPLETED) {
+            taskEventPublisher.publish("TASK_COMPLETED", task, authId, task.getList().getBoard().getName());
+        } else if (task.getAssigneeAuthId() != null && !task.getAssigneeAuthId().equals(previousAssigneeAuthId)) {
+            taskEventPublisher.publish("TASK_ASSIGNED", task, authId, task.getList().getBoard().getName());
+        } else if (task.getAssigneeAuthId() != null) {
+            taskEventPublisher.publish("TASK_UPDATED", task, authId, task.getList().getBoard().getName());
+        }
         return enrichSingle(task);
     }
 
@@ -164,6 +179,9 @@ public class TaskService {
             throw TaskServiceException.accessDenied();
         }
 
+        if (task.getAssigneeAuthId() != null) {
+            taskEventPublisher.publish("TASK_DELETED", task, authId, task.getList().getBoard().getName());
+        }
         taskRepository.delete(task);
     }
 

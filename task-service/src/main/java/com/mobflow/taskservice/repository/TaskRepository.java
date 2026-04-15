@@ -30,6 +30,8 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
 
     int countByListId(UUID listId);
 
+    List<Task> findByDueDateAndStatusNot(LocalDate dueDate, com.mobflow.taskservice.model.enums.TaskStatus status);
+
     @Query("SELECT t FROM Task t WHERE t.workspaceId IN :workspaceIds ORDER BY t.createdAt DESC")
     List<Task> findByWorkspaceIds(@Param("workspaceIds") List<UUID> workspaceIds);
 }
