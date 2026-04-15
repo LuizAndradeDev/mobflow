@@ -71,6 +71,7 @@ public class NotificationFactory {
         NotificationType type = switch (event.eventType()) {
             case "WORKSPACE_INVITE" -> NotificationType.WORKSPACE_INVITE;
             case "WORKSPACE_INVITE_ACCEPTED" -> NotificationType.WORKSPACE_INVITE_ACCEPTED;
+            case "WORKSPACE_INVITE_DECLINED" -> NotificationType.WORKSPACE_INVITE_DECLINED;
             case "WORKSPACE_MEMBER_ADDED" -> NotificationType.WORKSPACE_MEMBER_ADDED;
             case "WORKSPACE_MEMBER_REMOVED" -> NotificationType.WORKSPACE_MEMBER_REMOVED;
             case "WORKSPACE_ROLE_CHANGED" -> NotificationType.WORKSPACE_ROLE_CHANGED;
@@ -122,6 +123,7 @@ public class NotificationFactory {
         return switch (type) {
             case WORKSPACE_INVITE -> "Workspace invitation";
             case WORKSPACE_INVITE_ACCEPTED -> "Invitation accepted";
+            case WORKSPACE_INVITE_DECLINED -> "Invitation declined";
             case WORKSPACE_MEMBER_ADDED -> "Member added";
             case WORKSPACE_MEMBER_REMOVED -> "Member removed";
             case WORKSPACE_ROLE_CHANGED -> "Role updated";
@@ -132,11 +134,13 @@ public class NotificationFactory {
     private String workspaceBodyFor(NotificationType type, WorkspaceNotificationEvent event) {
         String actor = blankFallback(event.actorDisplayName(), "A workspace admin");
         String workspaceName = blankFallback(event.workspaceName(), "your workspace");
+        String subject = blankFallback(event.subjectDisplayName(), "A user");
         return switch (type) {
             case WORKSPACE_INVITE -> actor + " invited you to join " + workspaceName + ".";
-            case WORKSPACE_INVITE_ACCEPTED -> blankFallback(event.recipientDisplayName(), "A user") + " accepted the invite to " + workspaceName + ".";
-            case WORKSPACE_MEMBER_ADDED -> actor + " added a member to " + workspaceName + ".";
-            case WORKSPACE_MEMBER_REMOVED -> actor + " removed a member from " + workspaceName + ".";
+            case WORKSPACE_INVITE_ACCEPTED -> subject + " accepted the invite to " + workspaceName + ".";
+            case WORKSPACE_INVITE_DECLINED -> subject + " declined the invite to " + workspaceName + ".";
+            case WORKSPACE_MEMBER_ADDED -> subject + " joined " + workspaceName + ".";
+            case WORKSPACE_MEMBER_REMOVED -> actor + " removed " + subject + " from " + workspaceName + ".";
             case WORKSPACE_ROLE_CHANGED -> actor + " changed a workspace role to " + blankFallback(event.role(), "the new role") + ".";
             default -> "Workspace update available.";
         };
@@ -162,6 +166,8 @@ public class NotificationFactory {
         metadata.put("inviteId", safe(event.inviteId()));
         metadata.put("actorAuthId", safe(event.actorAuthId()));
         metadata.put("actorDisplayName", safe(event.actorDisplayName()));
+        metadata.put("subjectAuthId", safe(event.subjectAuthId()));
+        metadata.put("subjectDisplayName", safe(event.subjectDisplayName()));
         metadata.put("role", safe(event.role()));
         return metadata;
     }
