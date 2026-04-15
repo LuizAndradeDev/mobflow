@@ -37,6 +37,12 @@ public class AuthController {
         return ResponseEntity.ok(registeredUser);
     }
 
+    @GetMapping("/confirm-email")
+    public ResponseEntity<String> confirmEmail(@RequestParam String token) {
+        authenticationService.confirmEmail(token);
+        return ResponseEntity.ok("Email confirmed successfully");
+    }
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> authenticate(@RequestBody LoginUserDTO loginUserDto) {
         UserCredential authenticatedUser = authenticationService.login(loginUserDto);

@@ -65,6 +65,15 @@ public class UserCredential implements UserDetails {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+    @Column(name = "confirmation_token", length = 200)
+    private String confirmationToken;
+
+    @Column(name = "confirmation_token_expires_at")
+    private LocalDateTime confirmationTokenExpiresAt;
+
+    @Column(name = "email_confirmed_at")
+    private LocalDateTime emailConfirmedAt;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if(this.role == Role.ROLE_ADMIN){
@@ -100,6 +109,9 @@ public class UserCredential implements UserDetails {
                 .email(email)
                 .passwordHash(passwordHash)
                 .role(Role.ROLE_USER)
+                .enabled(false)
+                .accountNonLocked(true)
+                .failedLoginAttempts(0)
                 .build();
     }
 }
