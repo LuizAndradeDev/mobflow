@@ -2,6 +2,9 @@ version: "3.9"
 
 services:
 
+  # ============================================================================
+  # Infrastructure Services
+  # ============================================================================
 
   mongodb:
     image: mongo:latest
@@ -71,7 +74,9 @@ services:
     networks:
       - mobflow-network
 
-
+  # ============================================================================
+  # Database Services
+  # ============================================================================
 
   postgres:
     image: postgres:16
@@ -127,6 +132,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # ============================================================================
+  # Microservices
+  # ============================================================================
 
   auth-service:
     build: ./auth-service
@@ -209,13 +218,47 @@ services:
     env_file:
       - .env
 
+  # ============================================================================
+  # Reverse Proxy & Web Application
+  # ============================================================================
 
+  web-app:
+    build:
+      context: ./web-app
+      dockerfile: ../Dockerfile.webapp
+    container_name: mobflow-webapp
+    depends_on:
+      - nginx
+    networks:
+      - mobflow-network
+    volumes:
+      - webapp_data:/usr/share/nginx/html
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: mobflow-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - user-service
+      - workspace-service
+      - task-service
+      - notification-service
+      - web-app
+    networks:
+      - mobflow-network
+    volumes:
+      - webapp_data:/usr/share/nginx/html:ro
 
 volumes:
   postgres_data:
   minio_data:
   redis_data:
   mongodb_data:
+  webapp_data:
 
 networks:
   mobflow-network:
