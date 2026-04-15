@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirm your email</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #1f2937;">
+<h2 th:text="${title}">Confirm your Mobflow account</h2>
+<p th:text="${body}">Finish your registration by confirming your email address.</p>
+<p>
+    <a th:href="${confirmationLink}" style="display:inline-block;padding:12px 18px;background:#111827;color:#ffffff;text-decoration:none;border-radius:6px;">
+        Confirm email
+    </a>
+</p>
+<p>If the button does not work, use this link:</p>
+<p><a th:href="${confirmationLink}" th:text="${confirmationLink}">confirmation link</a></p>
+</body>
+</html>

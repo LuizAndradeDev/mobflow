@@ -11,7 +11,6 @@ import java.util.Optional;
 @Repository
 public interface NotificationRepository extends MongoRepository<Notification, String> {
     List<Notification> findAllByRecipientIdOrderByCreatedAtDesc(String recipientId);
-    List<Notification> findAllByRecipientIdAndReadFalseOrderByCreatedAtDesc(String recipientId);
     Optional<Notification> findByIdAndRecipientId(String id, String recipientId);
     long countByRecipientIdAndReadFalse(String recipientId);
 }

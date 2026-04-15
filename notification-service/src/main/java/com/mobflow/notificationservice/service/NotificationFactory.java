@@ -1,0 +1,176 @@
+package com.mobflow.notificationservice.service;
+
+import com.mobflow.notificationservice.kafka.events.AuthNotificationEvent;
+import com.mobflow.notificationservice.kafka.events.TaskNotificationEvent;
+import com.mobflow.notificationservice.kafka.events.WorkspaceNotificationEvent;
+import com.mobflow.notificationservice.model.entities.Notification;
+import com.mobflow.notificationservice.model.enums.NotificationChannel;
+import com.mobflow.notificationservice.model.enums.NotificationPriority;
+import com.mobflow.notificationservice.model.enums.NotificationType;
+import org.springframework.stereotype.Component;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+@Component
+public class NotificationFactory {
+
+    public Notification createAuthNotification(AuthNotificationEvent event) {
+        return Notification.builder()
+                .recipientId(event.recipientId())
+                .recipientEmail(event.recipientEmail())
+                .title("Confirm your Mobflow account")
+                .body("Finish your registration by confirming your email address.")
+                .type(NotificationType.EMAIL_CONFIRMATION)
+                .channel(NotificationChannel.EMAIL)
+                .priority(NotificationPriority.HIGH)
+                .metadata(Map.of(
+                        "confirmationToken", safe(event.confirmationToken()),
+                        "confirmationUrl", safe(event.confirmationUrl()),
+                        "recipientUsername", safe(event.recipientUsername())
+                ))
+                .build();
+    }
+
+    public Notification createTaskNotification(TaskNotificationEvent event) {
+        if (event.recipientId() == null || event.recipientId().isBlank()) {
+            return null;
+        }
+
+        NotificationType type = switch (event.eventType()) {
+            case "TASK_CREATED" -> NotificationType.TASK_CREATED;
+            case "TASK_ASSIGNED" -> NotificationType.TASK_ASSIGNED;
+            case "TASK_UPDATED" -> NotificationType.TASK_UPDATED;
+            case "TASK_DELETED" -> NotificationType.TASK_DELETED;
+            case "TASK_COMPLETED" -> NotificationType.TASK_COMPLETED;
+            case "TASK_DUE_SOON" -> NotificationType.TASK_DUE_SOON;
+            default -> null;
+        };
+
+        if (type == null) {
+            return null;
+        }
+
+        return Notification.builder()
+                .recipientId(event.recipientId())
+                .recipientEmail(event.recipientEmail())
+                .title(taskTitleFor(type, event))
+                .body(taskBodyFor(type, event))
+                .type(type)
+                .channel(NotificationChannel.IN_APP)
+                .priority(type == NotificationType.TASK_DUE_SOON ? NotificationPriority.HIGH : NotificationPriority.MEDIUM)
+                .metadata(taskMetadata(event))
+                .build();
+    }
+
+    public Notification createWorkspaceNotification(WorkspaceNotificationEvent event) {
+        if (event.recipientId() == null || event.recipientId().isBlank()) {
+            return null;
+        }
+
+        NotificationType type = switch (event.eventType()) {
+            case "WORKSPACE_INVITE" -> NotificationType.WORKSPACE_INVITE;
+            case "WORKSPACE_INVITE_ACCEPTED" -> NotificationType.WORKSPACE_INVITE_ACCEPTED;
+            case "WORKSPACE_MEMBER_ADDED" -> NotificationType.WORKSPACE_MEMBER_ADDED;
+            case "WORKSPACE_MEMBER_REMOVED" -> NotificationType.WORKSPACE_MEMBER_REMOVED;
+            case "WORKSPACE_ROLE_CHANGED" -> NotificationType.WORKSPACE_ROLE_CHANGED;
+            default -> null;
+        };
+
+        if (type == null) {
+            return null;
+        }
+
+        return Notification.builder()
+                .recipientId(event.recipientId())
+                .recipientEmail(event.recipientEmail())
+                .title(workspaceTitleFor(type, event))
+                .body(workspaceBodyFor(type, event))
+                .type(type)
+                .channel(NotificationChannel.IN_APP)
+                .priority(NotificationPriority.MEDIUM)
+                .metadata(workspaceMetadata(event))
+                .build();
+    }
+
+    private String taskTitleFor(NotificationType type, TaskNotificationEvent event) {
+        return switch (type) {
+            case TASK_CREATED -> "Task created: " + safe(event.taskTitle());
+            case TASK_ASSIGNED -> "New task assigned";
+            case TASK_UPDATED -> "Task updated: " + safe(event.taskTitle());
+            case TASK_DELETED -> "Task removed";
+            case TASK_COMPLETED -> "Task completed";
+            case TASK_DUE_SOON -> "Task due soon";
+            default -> "Task notification";
+        };
+    }
+
+    private String taskBodyFor(NotificationType type, TaskNotificationEvent event) {
+        String actor = blankFallback(event.actorDisplayName(), "A workspace member");
+        return switch (type) {
+            case TASK_CREATED -> actor + " created \"" + safe(event.taskTitle()) + "\" in " + safe(event.workspaceName()) + ".";
+            case TASK_ASSIGNED -> actor + " assigned \"" + safe(event.taskTitle()) + "\" to you.";
+            case TASK_UPDATED -> actor + " updated \"" + safe(event.taskTitle()) + "\".";
+            case TASK_DELETED -> actor + " deleted \"" + safe(event.taskTitle()) + "\".";
+            case TASK_COMPLETED -> actor + " completed \"" + safe(event.taskTitle()) + "\".";
+            case TASK_DUE_SOON -> "\"" + safe(event.taskTitle()) + "\" is due on " + safe(String.valueOf(event.dueDate())) + ".";
+            default -> "Task update available.";
+        };
+    }
+
+    private String workspaceTitleFor(NotificationType type, WorkspaceNotificationEvent event) {
+        return switch (type) {
+            case WORKSPACE_INVITE -> "Workspace invitation";
+            case WORKSPACE_INVITE_ACCEPTED -> "Invitation accepted";
+            case WORKSPACE_MEMBER_ADDED -> "Member added";
+            case WORKSPACE_MEMBER_REMOVED -> "Member removed";
+            case WORKSPACE_ROLE_CHANGED -> "Role updated";
+            default -> "Workspace update";
+        };
+    }
+
+    private String workspaceBodyFor(NotificationType type, WorkspaceNotificationEvent event) {
+        String actor = blankFallback(event.actorDisplayName(), "A workspace admin");
+        String workspaceName = blankFallback(event.workspaceName(), "your workspace");
+        return switch (type) {
+            case WORKSPACE_INVITE -> actor + " invited you to join " + workspaceName + ".";
+            case WORKSPACE_INVITE_ACCEPTED -> blankFallback(event.recipientDisplayName(), "A user") + " accepted the invite to " + workspaceName + ".";
+            case WORKSPACE_MEMBER_ADDED -> actor + " added a member to " + workspaceName + ".";
+            case WORKSPACE_MEMBER_REMOVED -> actor + " removed a member from " + workspaceName + ".";
+            case WORKSPACE_ROLE_CHANGED -> actor + " changed a workspace role to " + blankFallback(event.role(), "the new role") + ".";
+            default -> "Workspace update available.";
+        };
+    }
+
+    private Map<String, String> taskMetadata(TaskNotificationEvent event) {
+        Map<String, String> metadata = new LinkedHashMap<>();
+        metadata.put("taskId", safe(event.taskId()));
+        metadata.put("taskTitle", safe(event.taskTitle()));
+        metadata.put("workspaceId", safe(event.workspaceId()));
+        metadata.put("workspaceName", safe(event.workspaceName()));
+        metadata.put("taskStatus", safe(event.taskStatus()));
+        metadata.put("dueDate", safe(String.valueOf(event.dueDate())));
+        metadata.put("actorAuthId", safe(event.actorAuthId()));
+        metadata.put("actorDisplayName", safe(event.actorDisplayName()));
+        return metadata;
+    }
+
+    private Map<String, String> workspaceMetadata(WorkspaceNotificationEvent event) {
+        Map<String, String> metadata = new LinkedHashMap<>();
+        metadata.put("workspaceId", safe(event.workspaceId()));
+        metadata.put("workspaceName", safe(event.workspaceName()));
+        metadata.put("inviteId", safe(event.inviteId()));
+        metadata.put("actorAuthId", safe(event.actorAuthId()));
+        metadata.put("actorDisplayName", safe(event.actorDisplayName()));
+        metadata.put("role", safe(event.role()));
+        return metadata;
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
+    }
+
+    private String blankFallback(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
+    }
+}

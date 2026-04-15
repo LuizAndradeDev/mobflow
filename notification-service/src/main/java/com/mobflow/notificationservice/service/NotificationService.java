@@ -1,48 +1,46 @@
 package com.mobflow.notificationservice.service;
 
-import com.mobflow.notificationservice.model.dto.response.NotificationResponseDTO;
+import com.mobflow.notificationservice.dto.response.NotificationResponseDTO;
+import com.mobflow.notificationservice.exception.NotificationNotFoundException;
 import com.mobflow.notificationservice.model.entities.Notification;
 import com.mobflow.notificationservice.model.enums.NotificationChannel;
 import com.mobflow.notificationservice.model.enums.NotificationPriority;
 import com.mobflow.notificationservice.repository.NotificationRepository;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class NotificationService {
     private static final int DEFAULT_MAX_RETRIES = 3;
 
     private final NotificationRepository notificationRepository;
+    private final MongoTemplate mongoTemplate;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository, MongoTemplate mongoTemplate) {
         this.notificationRepository = notificationRepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
     @Transactional
-    public Notification createNotification(Notification notification) {
+    public Notification save(Notification notification) {
         applyDefaults(notification);
         return notificationRepository.save(notification);
     }
 
-    public List<NotificationResponseDTO> listNotifications(String recipientId) {
+    public List<NotificationResponseDTO> listForUser(String recipientId) {
         return notificationRepository.findAllByRecipientIdOrderByCreatedAtDesc(recipientId).stream()
                 .map(NotificationResponseDTO::fromEntity)
                 .toList();
     }
 
-    public List<NotificationResponseDTO> listUnreadNotifications(String recipientId) {
-        return notificationRepository.findAllByRecipientIdAndReadFalseOrderByCreatedAtDesc(recipientId).stream()
-                .map(NotificationResponseDTO::fromEntity)
-                .toList();
-    }
-
-    public long countUnreadNotifications(String recipientId) {
+    public long countUnread(String recipientId) {
         return notificationRepository.countByRecipientIdAndReadFalse(recipientId);
     }
 
@@ -58,27 +56,41 @@ public class NotificationService {
     }
 
     @Transactional
-    public int markAllAsRead(String recipientId) {
-        List<Notification> unreadNotifications =
-                notificationRepository.findAllByRecipientIdAndReadFalseOrderByCreatedAtDesc(recipientId);
-
-        if (unreadNotifications.isEmpty()) {
+    public long markAllAsRead(String recipientId) {
+        long unread = countUnread(recipientId);
+        if (unread == 0) {
             return 0;
         }
 
-        Instant readAt = Instant.now();
-        unreadNotifications.forEach(notification -> {
-            notification.setRead(true);
-            notification.setReadAt(readAt);
-        });
-        notificationRepository.saveAll(unreadNotifications);
+        Query query = new Query(Criteria.where("recipientId").is(recipientId).and("read").is(false));
+        Update update = new Update()
+                .set("read", true)
+                .set("readAt", Instant.now())
+                .set("updatedAt", Instant.now());
+        mongoTemplate.updateMulti(query, update, Notification.class);
+        return unread;
+    }
 
-        return unreadNotifications.size();
+    @Transactional
+    public void markAsSent(String notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new NotificationNotFoundException(notificationId));
+        notification.setSentAt(Instant.now());
+        notification.setDeliveredAt(Instant.now());
+        notificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void incrementRetryCount(String notificationId) {
+        notificationRepository.findById(notificationId).ifPresent(notification -> {
+            notification.setRetryCount(notification.getRetryCount() + 1);
+            notificationRepository.save(notification);
+        });
     }
 
     private Notification findByIdAndRecipient(String notificationId, String recipientId) {
         return notificationRepository.findByIdAndRecipientId(notificationId, recipientId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Notification not found"));
+                .orElseThrow(() -> new NotificationNotFoundException(notificationId));
     }
 
     private void applyDefaults(Notification notification) {
