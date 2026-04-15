@@ -74,6 +74,8 @@ public final class NotificationTestFixtures {
                 null,
                 "Mary",
                 UUID.randomUUID().toString(),
+                "Kate",
+                UUID.randomUUID().toString(),
                 "John",
                 UUID.randomUUID().toString(),
                 "Platform",

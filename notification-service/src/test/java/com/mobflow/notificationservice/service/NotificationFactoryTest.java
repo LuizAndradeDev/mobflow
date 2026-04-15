@@ -59,6 +59,17 @@ class NotificationFactoryTest {
     }
 
     @Test
+    void createWorkspaceNotification_inviteDeclinedEvent_buildsDeclinedNotification() {
+        WorkspaceNotificationEvent event = workspaceEvent("WORKSPACE_INVITE_DECLINED");
+
+        Notification notification = notificationFactory.createWorkspaceNotification(event);
+
+        assertThat(notification.getType()).isEqualTo(NotificationType.WORKSPACE_INVITE_DECLINED);
+        assertThat(notification.getBody()).contains("Kate declined the invite");
+        assertThat(notification.getMetadata()).containsEntry("subjectDisplayName", "Kate");
+    }
+
+    @Test
     void createTaskNotification_unknownEvent_returnsNull() {
         assertThat(notificationFactory.createTaskNotification(taskEvent("UNKNOWN"))).isNull();
     }
