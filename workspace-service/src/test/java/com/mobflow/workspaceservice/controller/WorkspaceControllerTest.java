@@ -138,6 +138,19 @@ class WorkspaceControllerTest {
     }
 
     @Test
+    void declineInvite_authenticatedRequest_returnsUpdatedInvite() throws Exception {
+        UUID authId = UUID.randomUUID();
+        Workspace workspace = workspace(UUID.randomUUID());
+        WorkspaceInvite invite = workspaceInvite(workspace, authId, UUID.randomUUID(), InviteStatus.DECLINED);
+        when(workspaceService.declineInvite(UUID.fromString("11111111-1111-1111-1111-111111111111"), authId)).thenReturn(invite);
+
+        mockMvc.perform(post("/api/workspaces/invites/{inviteId}/decline", "11111111-1111-1111-1111-111111111111")
+                        .with(authentication(auth(authId))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DECLINED"));
+    }
+
+    @Test
     void updateMemberRole_authenticatedRequest_returnsUpdatedRole() throws Exception {
         UUID authId = UUID.randomUUID();
         UUID target = UUID.randomUUID();

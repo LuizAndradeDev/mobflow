@@ -54,7 +54,7 @@ class WorkspaceEventPublisherTest {
                         actorAuthId, new UserServiceClient.UserProfileResponse(actorAuthId, "john", null)
                 ));
 
-        workspaceEventPublisher.publish("WORKSPACE_INVITE", recipientId, actorAuthId, workspace, "invite-1", "MEMBER");
+        workspaceEventPublisher.publish("WORKSPACE_INVITE", recipientId, actorAuthId, recipientId, workspace, "invite-1", "MEMBER");
 
         ArgumentCaptor<String> payloadCaptor = ArgumentCaptor.forClass(String.class);
         verify(kafkaTemplate).send(eq("workspace-events"), eq(workspace.getId().toString()), payloadCaptor.capture());
@@ -68,7 +68,7 @@ class WorkspaceEventPublisherTest {
         Workspace workspace = workspace(UUID.randomUUID());
         when(userServiceClient.fetchProfilesBatch(any())).thenThrow(new RuntimeException("boom"));
 
-        workspaceEventPublisher.publish("WORKSPACE_INVITE", recipientId, UUID.randomUUID(), workspace, "invite-1", "MEMBER");
+        workspaceEventPublisher.publish("WORKSPACE_INVITE", recipientId, UUID.randomUUID(), recipientId, workspace, "invite-1", "MEMBER");
 
         verify(kafkaTemplate, never()).send(eq("workspace-events"), any(), any());
     }

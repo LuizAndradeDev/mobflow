@@ -34,6 +34,7 @@ import static com.mobflow.workspaceservice.testsupport.WorkspaceServiceTestFixtu
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -112,7 +113,40 @@ class WorkspaceServiceTest {
 
         assertThat(member.getAuthId()).isEqualTo(targetAuthId);
         assertThat(invite.getStatus()).isEqualTo(InviteStatus.ACCEPTED);
-        verify(workspaceEventPublisher).publish("WORKSPACE_INVITE_ACCEPTED", inviter, targetAuthId, workspace, invite.getId().toString(), WorkspaceRole.MEMBER.name());
+        verify(workspaceEventPublisher).publish(
+                "WORKSPACE_INVITE_ACCEPTED",
+                inviter,
+                targetAuthId,
+                targetAuthId,
+                workspace,
+                invite.getId().toString(),
+                WorkspaceRole.MEMBER.name()
+        );
+    }
+
+    @Test
+    void declineInvite_pendingInvite_marksInviteDeclinedAndPublishesEvent() {
+        UUID inviter = UUID.randomUUID();
+        UUID targetAuthId = UUID.randomUUID();
+        Workspace workspace = workspace(inviter);
+        WorkspaceInvite invite = workspaceInvite(workspace, targetAuthId, inviter, InviteStatus.PENDING);
+
+        when(workspaceInviteRepository.findByIdAndTargetAuthIdAndStatus(invite.getId(), targetAuthId, InviteStatus.PENDING))
+                .thenReturn(Optional.of(invite));
+        when(workspaceInviteRepository.save(any(WorkspaceInvite.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        WorkspaceInvite declinedInvite = workspaceService.declineInvite(invite.getId(), targetAuthId);
+
+        assertThat(declinedInvite.getStatus()).isEqualTo(InviteStatus.DECLINED);
+        verify(workspaceEventPublisher).publish(
+                "WORKSPACE_INVITE_DECLINED",
+                inviter,
+                targetAuthId,
+                targetAuthId,
+                workspace,
+                invite.getId().toString(),
+                null
+        );
     }
 
     @Test
