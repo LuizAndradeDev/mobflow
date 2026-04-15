@@ -6,7 +6,7 @@ import { UserProfileStateService } from './user-profile-state.service';
 
 @Injectable({ providedIn: 'root' })
 export class UserProfileService {
-  private readonly API = 'http://localhost:8081/api/users';
+  private readonly API = '/api/users';
 
   constructor(
     private http: HttpClient,

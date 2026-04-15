@@ -19,8 +19,8 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
-  private readonly API = 'http://localhost:8083/tasks/api';
-  private readonly INTERNAL_API = 'http://localhost:8083/tasks/internal/tasks';
+  private readonly API = '/tasks/api';
+  private readonly INTERNAL_API = '/tasks/internal/tasks';
   private readonly INTERNAL_SECRET = 'mobflow-internal-secret-2024';
 
   constructor(private http: HttpClient) {}
