@@ -7,7 +7,9 @@ import com.mobflow.workspaceservice.model.dto.request.UpdateWorkspaceDTO;
 import com.mobflow.workspaceservice.model.dto.response.WorkspaceMemberResponseDTO;
 import com.mobflow.workspaceservice.model.dto.response.WorkspaceMemberWithProfileDTO;
 import com.mobflow.workspaceservice.model.dto.response.WorkspaceResponseDTO;
+import com.mobflow.workspaceservice.model.dto.response.WorkspaceInviteResponseDTO;
 import com.mobflow.workspaceservice.model.entities.Workspace;
+import com.mobflow.workspaceservice.model.entities.WorkspaceInvite;
 import com.mobflow.workspaceservice.model.entities.WorkspaceMember;
 import com.mobflow.workspaceservice.service.WorkspaceService;
 import jakarta.validation.Valid;
@@ -96,6 +98,25 @@ public class WorkspaceController {
         WorkspaceMember member = workspaceService.addMemberByUsername(id, dto, extractAuthId(authentication));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(WorkspaceMemberWithProfileDTO.fromMember(member));
+    }
+
+    @PostMapping("/{id}/invites")
+    public ResponseEntity<WorkspaceInviteResponseDTO> inviteMember(
+            Authentication authentication,
+            @PathVariable UUID id,
+            @Valid @RequestBody AddMemberByUsernameDTO dto
+    ) {
+        WorkspaceInvite invite = workspaceService.inviteMemberByUsername(id, dto, extractAuthId(authentication));
+        return ResponseEntity.status(HttpStatus.CREATED).body(WorkspaceInviteResponseDTO.fromEntity(invite));
+    }
+
+    @PostMapping("/invites/{inviteId}/accept")
+    public ResponseEntity<WorkspaceMemberResponseDTO> acceptInvite(
+            Authentication authentication,
+            @PathVariable UUID inviteId
+    ) {
+        WorkspaceMember member = workspaceService.acceptInvite(inviteId, extractAuthId(authentication));
+        return ResponseEntity.ok(WorkspaceMemberResponseDTO.fromEntity(member));
     }
 
     @GetMapping("/{id}/members")

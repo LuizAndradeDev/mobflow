@@ -1,6 +1,7 @@
 package com.mobflow.workspaceservice.service;
 
 import com.mobflow.workspaceservice.config.UserServiceClient;
+import com.mobflow.workspaceservice.events.WorkspaceEventPublisher;
 import com.mobflow.workspaceservice.exception.*;
 import com.mobflow.workspaceservice.model.dto.request.AddMemberByUsernameDTO;
 import com.mobflow.workspaceservice.model.dto.request.CreateWorkspaceDTO;
@@ -8,8 +9,11 @@ import com.mobflow.workspaceservice.model.dto.request.UpdateMemberRoleDTO;
 import com.mobflow.workspaceservice.model.dto.request.UpdateWorkspaceDTO;
 import com.mobflow.workspaceservice.model.dto.response.WorkspaceMemberWithProfileDTO;
 import com.mobflow.workspaceservice.model.entities.Workspace;
+import com.mobflow.workspaceservice.model.entities.WorkspaceInvite;
 import com.mobflow.workspaceservice.model.entities.WorkspaceMember;
+import com.mobflow.workspaceservice.model.enums.InviteStatus;
 import com.mobflow.workspaceservice.model.enums.WorkspaceRole;
+import com.mobflow.workspaceservice.repository.WorkspaceInviteRepository;
 import com.mobflow.workspaceservice.repository.WorkspaceMemberRepository;
 import com.mobflow.workspaceservice.repository.WorkspaceRepository;
 import org.springframework.stereotype.Service;
@@ -29,17 +33,24 @@ public class WorkspaceService {
 
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final WorkspaceInviteRepository workspaceInviteRepository;
     private final UserServiceClient userServiceClient;
+    private final WorkspaceEventPublisher workspaceEventPublisher;
 
     public WorkspaceService(
             WorkspaceRepository workspaceRepository,
             WorkspaceMemberRepository workspaceMemberRepository,
-            UserServiceClient userServiceClient
+            WorkspaceInviteRepository workspaceInviteRepository,
+            UserServiceClient userServiceClient,
+            WorkspaceEventPublisher workspaceEventPublisher
     ) {
         this.workspaceRepository = workspaceRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
+        this.workspaceInviteRepository = workspaceInviteRepository;
         this.userServiceClient = userServiceClient;
+        this.workspaceEventPublisher = workspaceEventPublisher;
     }
+
 
     @Transactional
     public Workspace createWorkspace(CreateWorkspaceDTO dto, UUID ownerAuthId) {
@@ -103,7 +114,48 @@ public class WorkspaceService {
         if (workspaceMemberRepository.existsByWorkspaceIdAndAuthId(workspaceId, targetAuthId)) {
             throw new MemberAlreadyExistsException();
         }
-        return workspaceMemberRepository.save(WorkspaceMember.create(workspace, targetAuthId, WorkspaceRole.MEMBER));
+        WorkspaceMember member = workspaceMemberRepository.save(WorkspaceMember.create(workspace, targetAuthId, WorkspaceRole.MEMBER));
+        workspaceEventPublisher.publish("WORKSPACE_MEMBER_ADDED", targetAuthId, requestingAuthId, workspace, null, WorkspaceRole.MEMBER.name());
+        return member;
+    }
+
+    @Transactional
+    public WorkspaceInvite inviteMemberByUsername(UUID workspaceId, AddMemberByUsernameDTO dto, UUID requestingAuthId) {
+        Workspace workspace = findWorkspaceOrThrow(workspaceId);
+        ensureIsAdminOrOwner(workspaceId, requestingAuthId);
+        UUID targetAuthId = userServiceClient.resolveAuthIdByUsername(dto.getUsername());
+        if (targetAuthId == null) throw new MemberNotFoundException();
+        if (workspaceMemberRepository.existsByWorkspaceIdAndAuthId(workspaceId, targetAuthId)) {
+            throw new MemberAlreadyExistsException();
+        }
+        if (workspaceInviteRepository.existsByWorkspaceIdAndTargetAuthIdAndStatus(workspaceId, targetAuthId, InviteStatus.PENDING)) {
+            throw new MemberAlreadyExistsException();
+        }
+
+        WorkspaceInvite invite = workspaceInviteRepository.save(WorkspaceInvite.create(workspace, targetAuthId, requestingAuthId));
+        workspaceEventPublisher.publish("WORKSPACE_INVITE", targetAuthId, requestingAuthId, workspace, invite.getId().toString(), null);
+        return invite;
+    }
+
+    @Transactional
+    public WorkspaceMember acceptInvite(UUID inviteId, UUID authId) {
+        WorkspaceInvite invite = workspaceInviteRepository.findByIdAndTargetAuthId(inviteId, authId)
+                .orElseThrow(MemberNotFoundException::new);
+        if (invite.getStatus() != InviteStatus.PENDING) {
+            throw new MemberAlreadyExistsException();
+        }
+        if (workspaceMemberRepository.existsByWorkspaceIdAndAuthId(invite.getWorkspace().getId(), authId)) {
+            throw new MemberAlreadyExistsException();
+        }
+
+        WorkspaceMember member = workspaceMemberRepository.save(
+                WorkspaceMember.create(invite.getWorkspace(), authId, WorkspaceRole.MEMBER)
+        );
+        invite.setStatus(InviteStatus.ACCEPTED);
+        invite.setRespondedAt(java.time.LocalDateTime.now());
+        workspaceInviteRepository.save(invite);
+        workspaceEventPublisher.publish("WORKSPACE_INVITE_ACCEPTED", invite.getInvitedByAuthId(), authId, invite.getWorkspace(), invite.getId().toString(), WorkspaceRole.MEMBER.name());
+        return member;
     }
 
     public List<WorkspaceMemberWithProfileDTO> listMembersWithProfiles(UUID workspaceId, UUID authId) {
@@ -135,6 +187,7 @@ public class WorkspaceService {
                 .orElseThrow(MemberNotFoundException::new);
         if (member.getRole() == WorkspaceRole.OWNER) throw new CannotRemoveOwnerException();
         workspaceMemberRepository.delete(member);
+        workspaceEventPublisher.publish("WORKSPACE_MEMBER_REMOVED", targetAuthId, requestingAuthId, member.getWorkspace(), null, member.getRole().name());
     }
 
     @Transactional
@@ -146,7 +199,9 @@ public class WorkspaceService {
                 .orElseThrow(MemberNotFoundException::new);
         if (member.getRole() == WorkspaceRole.OWNER) throw new CannotRemoveOwnerException();
         member.setRole(dto.getRole());
-        return workspaceMemberRepository.save(member);
+        WorkspaceMember updatedMember = workspaceMemberRepository.save(member);
+        workspaceEventPublisher.publish("WORKSPACE_ROLE_CHANGED", targetAuthId, requestingAuthId, updatedMember.getWorkspace(), null, dto.getRole().name());
+        return updatedMember;
     }
 
     @Transactional
@@ -159,7 +214,7 @@ public class WorkspaceService {
         workspaceMemberRepository.delete(member);
     }
 
-    // ── helpers ──────────────────────────────────────────────────────────────
+
 
     private Workspace findWorkspaceOrThrow(UUID workspaceId) {
         return workspaceRepository.findById(workspaceId).orElseThrow(WorkspaceNotFoundException::new);
