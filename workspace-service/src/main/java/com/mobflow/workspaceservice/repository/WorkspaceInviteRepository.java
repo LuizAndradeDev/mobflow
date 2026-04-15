@@ -10,4 +10,5 @@ import java.util.UUID;
 public interface WorkspaceInviteRepository extends JpaRepository<WorkspaceInvite, UUID> {
     boolean existsByWorkspaceIdAndTargetAuthIdAndStatus(UUID workspaceId, UUID targetAuthId, InviteStatus status);
     Optional<WorkspaceInvite> findByIdAndTargetAuthId(UUID inviteId, UUID targetAuthId);
+    Optional<WorkspaceInvite> findByIdAndTargetAuthIdAndStatus(UUID inviteId, UUID targetAuthId, InviteStatus status);
 }

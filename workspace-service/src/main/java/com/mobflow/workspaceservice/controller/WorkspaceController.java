@@ -119,6 +119,15 @@ public class WorkspaceController {
         return ResponseEntity.ok(WorkspaceMemberResponseDTO.fromEntity(member));
     }
 
+    @PostMapping("/invites/{inviteId}/decline")
+    public ResponseEntity<WorkspaceInviteResponseDTO> declineInvite(
+            Authentication authentication,
+            @PathVariable UUID inviteId
+    ) {
+        WorkspaceInvite invite = workspaceService.declineInvite(inviteId, extractAuthId(authentication));
+        return ResponseEntity.ok(WorkspaceInviteResponseDTO.fromEntity(invite));
+    }
+
     @GetMapping("/{id}/members")
     public ResponseEntity<List<WorkspaceMemberWithProfileDTO>> listMembers(
             Authentication authentication,
