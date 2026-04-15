@@ -8,6 +8,7 @@ import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -45,6 +46,18 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleNotFound(NoResourceFoundException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setProperty("description", "The resource or endpoint does not exist");
+        return problem;
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
+        String detail = ex.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : "Validation failed")
+                .orElse("Validation failed");
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
+        problem.setProperty("description", "The request payload is invalid");
         return problem;
     }
 
