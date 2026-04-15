@@ -7,12 +7,15 @@ import com.mobflow.notificationservice.model.entities.Notification;
 import com.mobflow.notificationservice.model.enums.NotificationType;
 import com.mobflow.notificationservice.service.NotificationFactory;
 import com.mobflow.notificationservice.service.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AuthEventConsumer {
+    private static final Logger log = LoggerFactory.getLogger(AuthEventConsumer.class);
 
     private final ObjectMapper objectMapper;
     private final NotificationFactory notificationFactory;
@@ -39,6 +42,7 @@ public class AuthEventConsumer {
         try {
             AuthNotificationEvent event = objectMapper.readValue(payload, AuthNotificationEvent.class);
             if (!"EMAIL_CONFIRMATION".equals(event.eventType())) {
+                log.warn("Ignoring unsupported auth event type: {}", event.eventType());
                 return;
             }
 
@@ -47,7 +51,8 @@ public class AuthEventConsumer {
             if (persisted.getType() == NotificationType.EMAIL_CONFIRMATION) {
                 mailService.sendConfirmationEmail(persisted, event.confirmationUrl());
             }
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            log.warn("Failed to process auth event payload on topic {}: {}", authTopic, payload, exception);
         }
     }
 }

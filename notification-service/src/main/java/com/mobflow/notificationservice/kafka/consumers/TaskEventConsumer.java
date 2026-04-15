@@ -5,11 +5,14 @@ import com.mobflow.notificationservice.kafka.events.TaskNotificationEvent;
 import com.mobflow.notificationservice.model.entities.Notification;
 import com.mobflow.notificationservice.service.NotificationFactory;
 import com.mobflow.notificationservice.service.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TaskEventConsumer {
+    private static final Logger log = LoggerFactory.getLogger(TaskEventConsumer.class);
 
     private final ObjectMapper objectMapper;
     private final NotificationFactory notificationFactory;
@@ -32,8 +35,11 @@ public class TaskEventConsumer {
             Notification notification = notificationFactory.createTaskNotification(event);
             if (notification != null) {
                 notificationService.save(notification);
+            } else {
+                log.warn("No notification created for task event type: {}", event.eventType());
             }
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            log.warn("Failed to process task event payload: {}", payload, exception);
         }
     }
 }
