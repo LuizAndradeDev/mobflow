@@ -7,6 +7,8 @@ public record WorkspaceNotificationEvent(
         String recipientId,
         String recipientEmail,
         String recipientDisplayName,
+        String subjectAuthId,
+        String subjectDisplayName,
         String actorAuthId,
         String actorDisplayName,
         String workspaceId,
