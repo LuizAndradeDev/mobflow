@@ -3,6 +3,8 @@ package com.mobflow.notificationservice.mail;
 import com.mobflow.notificationservice.model.entities.Notification;
 import com.mobflow.notificationservice.service.NotificationService;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -12,6 +14,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 @Service
 public class MailService {
+    private static final Logger log = LoggerFactory.getLogger(MailService.class);
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
@@ -35,6 +38,7 @@ public class MailService {
 
     public void sendConfirmationEmail(Notification notification, String confirmationLink) {
         if (notification.getRecipientEmail() == null || notification.getRecipientEmail().isBlank()) {
+            log.warn("Skipping confirmation email because recipient email is missing for notification {}", notification.getId());
             return;
         }
 
@@ -51,6 +55,13 @@ public class MailService {
                 notificationService.markAsSent(notification.getId());
                 return;
             } catch (Exception exception) {
+                log.warn(
+                        "Failed to send confirmation email for notification {} on attempt {}/{}",
+                        notification.getId(),
+                        attempt,
+                        maxAttempts,
+                        exception
+                );
                 notificationService.incrementRetryCount(notification.getId());
             }
         }
