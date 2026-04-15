@@ -82,7 +82,10 @@ public class TaskService {
 
         taskRepository.save(task);
         if (task.getAssigneeAuthId() != null) {
-            taskEventPublisher.publish("TASK_ASSIGNED", task, authId, list.getBoard().getName());
+            taskEventPublisher.publish("TASK_CREATED", task, authId, list.getBoard().getName());
+            if (!task.getAssigneeAuthId().equals(authId)) {
+                taskEventPublisher.publish("TASK_ASSIGNED", task, authId, list.getBoard().getName());
+            }
         }
         return enrichSingle(task);
     }
@@ -117,11 +120,13 @@ public class TaskService {
         if (request.getCompletedByAuthId() != null) task.setCompletedByAuthId(request.getCompletedByAuthId());
 
         taskRepository.save(task);
-        if (task.getStatus() == com.mobflow.taskservice.model.enums.TaskStatus.COMPLETED) {
+        if (task.getStatus() == com.mobflow.taskservice.model.enums.TaskStatus.COMPLETED && task.getAssigneeAuthId() != null && !task.getAssigneeAuthId().equals(authId)) {
             taskEventPublisher.publish("TASK_COMPLETED", task, authId, task.getList().getBoard().getName());
         } else if (task.getAssigneeAuthId() != null && !task.getAssigneeAuthId().equals(previousAssigneeAuthId)) {
-            taskEventPublisher.publish("TASK_ASSIGNED", task, authId, task.getList().getBoard().getName());
-        } else if (task.getAssigneeAuthId() != null) {
+            if (!task.getAssigneeAuthId().equals(authId)) {
+                taskEventPublisher.publish("TASK_ASSIGNED", task, authId, task.getList().getBoard().getName());
+            }
+        } else if (task.getAssigneeAuthId() != null && !task.getAssigneeAuthId().equals(authId)) {
             taskEventPublisher.publish("TASK_UPDATED", task, authId, task.getList().getBoard().getName());
         }
         return enrichSingle(task);
