@@ -13,7 +13,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceService {
-  private readonly API = 'http://localhost:8082/api/workspaces';
+  private readonly API = '/api/workspaces';
 
   private _listCache$: Observable<Workspace[]> | null = null;
   private _memberCache = new Map<string, Observable<WorkspaceMember[]>>();

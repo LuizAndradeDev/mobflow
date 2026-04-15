@@ -4,7 +4,7 @@ import { NotificationItem, UnreadCountResponse } from '../models/notification.mo
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private readonly API = 'http://localhost:8084/api/notifications';
+  private readonly API = '/api/notifications';
 
   constructor(private http: HttpClient) {}
 
