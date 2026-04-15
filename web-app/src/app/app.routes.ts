@@ -12,6 +12,7 @@ import { WorkspaceListComponent } from './features/workspace/pages/workspace-lis
 import { WorkspaceDetailComponent } from './features/workspace/pages/workspace-detail/workspace-detail.component';
 import { TasksOverviewComponent } from './features/tasks/pages/tasks-overview/tasks-overview.component';
 import { WorkspaceTasksComponent } from './features/tasks/pages/workspace-tasks/workspace-tasks.component';
+import { NotificationsComponent } from './features/notifications/pages/notifications/notifications.component';
 import { MainLayoutComponent } from './shared/components/sidebar/main-layout.component';
 import { guestGuard } from './core/guards/guest.guard';
 import { authGuard } from './core/guards/auth.guard';
@@ -39,6 +40,7 @@ export const routes: Routes = [
       { path: 'workspaces/:id', component: WorkspaceDetailComponent, canActivate: [profileGuard] },
       { path: 'tasks', component: TasksOverviewComponent, canActivate: [profileGuard] },
       { path: 'tasks/:workspaceId', component: WorkspaceTasksComponent, canActivate: [profileGuard] },
+      { path: 'notifications', component: NotificationsComponent, canActivate: [profileGuard] },
     ],
   },
 
