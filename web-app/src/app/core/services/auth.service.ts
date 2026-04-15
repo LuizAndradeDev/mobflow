@@ -5,6 +5,7 @@ import { SignupRequest, LoginRequest, AuthResponse } from '../models/auth.model'
 import { UserStateService } from './user-state.service';
 import { UserProfileStateService } from './user-profile-state.service';
 import { UserProfileService } from './user-profile.service';
+import { NotificationStateService } from './notification-state.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -15,6 +16,7 @@ export class AuthService {
     private userState: UserStateService,
     private userProfileState: UserProfileStateService,
     private userProfileService: UserProfileService,
+    private notificationState: NotificationStateService,
   ) {}
 
   register(data: SignupRequest) {
@@ -26,6 +28,7 @@ export class AuthService {
       tap((response) => {
         localStorage.setItem('token', response.token);
         this.userState.set({ username: response.user.username, email: response.user.email });
+        this.notificationState.startPolling();
       }),
     );
   }
@@ -35,6 +38,7 @@ export class AuthService {
       tap((profile) => {
         this.userState.set(profile);
         this.userProfileService.getMyProfile().subscribe();
+        this.notificationState.startPolling();
       }),
     );
   }
@@ -43,5 +47,6 @@ export class AuthService {
     localStorage.removeItem('token');
     this.userState.clear();
     this.userProfileState.clear();
+    this.notificationState.clear();
   }
 }

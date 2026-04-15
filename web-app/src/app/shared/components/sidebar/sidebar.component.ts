@@ -6,6 +6,7 @@ import { UserProfileStateService } from '../../../core/services/user-profile-sta
 import { UserStateService } from '../../../core/services/user-state.service';
 import { WorkspaceService } from '../../../core/services/workspace.service';
 import { Workspace } from '../../../core/models/workspace.model';
+import { NotificationStateService } from '../../../core/services/notification-state.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -23,12 +24,14 @@ export class SidebarComponent implements OnInit {
   constructor(
     public userState: UserStateService,
     public userProfileState: UserProfileStateService,
+    public notificationState: NotificationStateService,
     private authService: AuthService,
     private workspaceService: WorkspaceService,
     private router: Router,
   ) {}
 
   ngOnInit() {
+    this.notificationState.startPolling();
     this.workspaceService.listMine().subscribe({
       next: (workspaces) => (this.workspaces = workspaces),
     });
