@@ -219,20 +219,20 @@ services:
       - .env
 
   # ============================================================================
-  # Reverse Proxy & Web Application
+  # Web Application
   # ============================================================================
 
   web-app:
     build:
       context: ./web-app
-      dockerfile: ../Dockerfile.webapp
+      dockerfile: Dockerfile
     container_name: mobflow-webapp
-    depends_on:
-      - nginx
     networks:
       - mobflow-network
-    volumes:
-      - webapp_data:/usr/share/nginx/html
+
+  # ============================================================================
+  # Reverse Proxy
+  # ============================================================================
 
   nginx:
     build:
@@ -247,18 +247,14 @@ services:
       - workspace-service
       - task-service
       - notification-service
-      - web-app
     networks:
       - mobflow-network
-    volumes:
-      - webapp_data:/usr/share/nginx/html:ro
 
 volumes:
   postgres_data:
   minio_data:
   redis_data:
   mongodb_data:
-  webapp_data:
 
 networks:
   mobflow-network:

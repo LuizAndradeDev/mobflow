@@ -2,16 +2,15 @@ FROM node:21-alpine AS builder
 
 WORKDIR /app
 
-COPY web-app/package*.json ./
+COPY package*.json ./
 RUN npm ci
 
-COPY web-app/ ./
+COPY . ./
 RUN npm run build
 
 FROM nginx:alpine
 
 COPY --from=builder /app/dist/web-app/browser /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 
