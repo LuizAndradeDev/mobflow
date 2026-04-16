@@ -217,18 +217,6 @@ services:
       - .env
 
   # ============================================================================
-  # Web Application
-  # ============================================================================
-
-  web-app:
-    build:
-      context: ./web-app
-      dockerfile: Dockerfile
-    container_name: mobflow-webapp
-    networks:
-      - mobflow-network
-
-  # ============================================================================
   # Reverse Proxy
   # ============================================================================
 
@@ -245,7 +233,6 @@ services:
       - workspace-service
       - task-service
       - notification-service
-      - web-app
     networks:
       - mobflow-network
 
