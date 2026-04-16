@@ -17,7 +17,7 @@ public class TaskContextService {
     }
 
     public TaskCommentContextResponseDTO getTaskCommentContext(UUID taskId) {
-        return taskRepository.findById(taskId)
+        return taskRepository.findTaskContextById(taskId)
                 .map(TaskCommentContextResponseDTO::fromEntity)
                 .orElseThrow(TaskServiceException::taskNotFound);
     }

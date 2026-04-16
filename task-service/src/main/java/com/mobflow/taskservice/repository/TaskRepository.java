@@ -11,6 +11,15 @@ import java.util.UUID;
 
 public interface TaskRepository extends JpaRepository<Task, UUID> {
 
+    @Query("""
+            SELECT t
+            FROM Task t
+            JOIN FETCH t.list taskList
+            JOIN FETCH taskList.board
+            WHERE t.id = :taskId
+            """)
+    java.util.Optional<Task> findTaskContextById(@Param("taskId") UUID taskId);
+
     List<Task> findByListIdOrderByPositionAsc(UUID listId);
 
     List<Task> findByWorkspaceIdOrderByCreatedAtDesc(UUID workspaceId);
