@@ -1,6 +1,8 @@
 package com.mobflow.taskservice.controller;
 
+import com.mobflow.taskservice.model.dto.response.TaskCommentContextResponseDTO;
 import com.mobflow.taskservice.model.dto.response.WorkspaceSummaryDTO;
+import com.mobflow.taskservice.service.TaskContextService;
 import com.mobflow.taskservice.service.WorkspaceSummaryService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +24,16 @@ public class InternalTaskController {
     private static final String INTERNAL_SECRET_HEADER = "X-Internal-Secret";
 
     private final WorkspaceSummaryService workspaceSummaryService;
+    private final TaskContextService taskContextService;
     private final String internalSecret;
 
     public InternalTaskController(
             WorkspaceSummaryService workspaceSummaryService,
+            TaskContextService taskContextService,
             @Value("${internal.secret}") String internalSecret
     ) {
         this.workspaceSummaryService = workspaceSummaryService;
+        this.taskContextService = taskContextService;
         this.internalSecret = internalSecret;
     }
 
@@ -52,6 +57,17 @@ public class InternalTaskController {
             return ResponseEntity.status(403).build();
         }
         return ResponseEntity.ok(workspaceSummaryService.getSummaries(workspaceIds));
+    }
+
+    @GetMapping("/{taskId}/context")
+    public ResponseEntity<TaskCommentContextResponseDTO> getTaskCommentContext(
+            @PathVariable UUID taskId,
+            @RequestHeader(INTERNAL_SECRET_HEADER) String secret
+    ) {
+        if (!hasValidSecret(secret)) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(taskContextService.getTaskCommentContext(taskId));
     }
 
     private boolean hasValidSecret(String secret) {
