@@ -20,8 +20,6 @@ import {
 @Injectable({ providedIn: 'root' })
 export class TaskService {
   private readonly apiPath = '/tasks/api';
-  private readonly internalApiPath = '/tasks/internal/tasks';
-  private readonly internalSecret = 'mobflow-internal-secret-2024';
 
   constructor(private readonly http: HttpClient) {}
 
@@ -86,15 +84,11 @@ export class TaskService {
   }
 
   getWorkspaceSummary(workspaceId: string): Observable<WorkspaceSummary> {
-    return this.http.get<WorkspaceSummary>(`${this.internalApiPath}/summary/${workspaceId}`, {
-      headers: this.internalHeaders(),
-    });
+    return this.http.get<WorkspaceSummary>(`${this.apiPath}/workspace-summaries/${workspaceId}`);
   }
 
   getBatchSummaries(workspaceIds: string[]): Observable<WorkspaceSummary[]> {
-    return this.http.post<WorkspaceSummary[]>(`${this.internalApiPath}/summaries`, workspaceIds, {
-      headers: this.internalHeaders(),
-    });
+    return this.http.post<WorkspaceSummary[]>(`${this.apiPath}/workspace-summaries/batch`, workspaceIds);
   }
   getWorkspaceAnalytics(workspaceId: string, authId: string): Observable<TaskAnalytics> {
     return this.http.get<TaskAnalytics>(`${this.apiPath}/task-analytics/workspace/${workspaceId}/user/${authId}`);
@@ -122,9 +116,5 @@ export class TaskService {
 
   private taskPath(workspaceId: string, taskId: string): string {
     return `${this.apiPath}/workspaces/${workspaceId}/tasks/${taskId}`;
-  }
-
-  private internalHeaders(): Record<string, string> {
-    return { 'X-Internal-Secret': this.internalSecret };
   }
 }
