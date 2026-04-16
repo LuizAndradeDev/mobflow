@@ -1,11 +1,20 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { WorkspaceService } from '../../../../core/services/workspace.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
 import { UserProfileStateService } from '../../../../core/services/user-profile-state.service';
-import { Workspace } from '../../../../core/models/workspace.model';
+import { CreateWorkspaceRequest, Workspace } from '../../../../core/models/workspace.model';
+
+interface JoinWorkspaceForm {
+  code: FormControl<string>;
+}
+
+interface CreateWorkspaceForm {
+  name: FormControl<string>;
+  description: FormControl<string>;
+}
 
 @Component({
   selector: 'app-workspace-list',
@@ -16,31 +25,31 @@ import { Workspace } from '../../../../core/models/workspace.model';
 export class WorkspaceListComponent implements OnInit {
   workspaces: Workspace[] = [];
   isLoading = true;
-  showModal = signal(false);
-  modalTab = signal<'join' | 'create'>('join');
+  readonly showModal = signal(false);
+  readonly modalTab = signal<'join' | 'create'>('join');
 
-  joinForm: FormGroup;
-  createForm: FormGroup;
+  readonly joinForm: FormGroup<JoinWorkspaceForm>;
+  readonly createForm: FormGroup<CreateWorkspaceForm>;
   isJoining = false;
   isCreating = false;
 
   constructor(
     public router: Router,
-    private workspaceService: WorkspaceService,
-    private alertService: AlertService,
-    private userProfileState: UserProfileStateService,
-    private fb: FormBuilder,
+    private readonly workspaceService: WorkspaceService,
+    private readonly alertService: AlertService,
+    private readonly userProfileState: UserProfileStateService,
+    private readonly formBuilder: NonNullableFormBuilder,
   ) {
-    this.joinForm = this.fb.group({
+    this.joinForm = this.formBuilder.group({
       code: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(8)]],
     });
-    this.createForm = this.fb.group({
+    this.createForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       description: ['', [Validators.maxLength(500)]],
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.workspaceService.listMine().subscribe({
       next: (data) => {
         this.workspaces = data;
@@ -60,15 +69,18 @@ export class WorkspaceListComponent implements OnInit {
     return workspace.ownerAuthId === this.currentAuthId;
   }
 
-  onJoin() {
-    if (this.joinForm.invalid || this.isJoining) return;
+  onJoin(): void {
+    if (this.joinForm.invalid || this.isJoining) {
+      return;
+    }
+
     this.isJoining = true;
-    this.workspaceService.joinByCode(this.joinForm.value.code).subscribe({
+    this.workspaceService.joinByCode(this.joinForm.getRawValue().code).subscribe({
       next: () => {
         this.alertService.success('You joined the workspace!', 'Joined');
         this.showModal.set(false);
-        this.joinForm.reset();
-        this.reloadWorkspaces();
+        this.joinForm.reset({ code: '' });
+        this.loadWorkspaces();
         this.isJoining = false;
       },
       error: () => {
@@ -77,14 +89,17 @@ export class WorkspaceListComponent implements OnInit {
     });
   }
 
-  onCreate() {
-    if (this.createForm.invalid || this.isCreating) return;
+  onCreate(): void {
+    if (this.createForm.invalid || this.isCreating) {
+      return;
+    }
+
     this.isCreating = true;
-    this.workspaceService.create(this.createForm.value).subscribe({
+    this.workspaceService.create(this.buildCreateRequest()).subscribe({
       next: (workspace) => {
         this.alertService.success(`"${workspace.name}" created!`, 'Workspace created');
         this.showModal.set(false);
-        this.createForm.reset();
+        this.createForm.reset({ description: '', name: '' });
         this.router.navigate(['/workspaces', workspace.id]);
       },
       error: () => {
@@ -93,12 +108,17 @@ export class WorkspaceListComponent implements OnInit {
     });
   }
 
-  private reloadWorkspaces() {
+  private loadWorkspaces(): void {
     this.workspaceService.invalidateListCache();
     this.workspaceService.listMine().subscribe({
       next: (data) => {
         this.workspaces = data;
       },
     });
+  }
+
+  private buildCreateRequest(): CreateWorkspaceRequest {
+    const { description, name } = this.createForm.getRawValue();
+    return { description, name };
   }
 }

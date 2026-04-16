@@ -1,14 +1,29 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { WorkspaceService } from '../../../../core/services/workspace.service';
 import { TaskService } from '../../../../core/services/task.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
 import { UserProfileStateService } from '../../../../core/services/user-profile-state.service';
-import { Workspace, WorkspaceMember, WorkspaceRole } from '../../../../core/models/workspace.model';
+import {
+  AddMemberRequest,
+  UpdateWorkspaceRequest,
+  Workspace,
+  WorkspaceMember,
+  WorkspaceRole,
+} from '../../../../core/models/workspace.model';
 import { Board } from '../../../../core/models/task.model';
+
+interface EditWorkspaceForm {
+  name: FormControl<string>;
+  description: FormControl<string>;
+}
+
+interface InviteMemberForm {
+  username: FormControl<string>;
+}
 
 @Component({
   selector: 'app-workspace-detail',
@@ -31,29 +46,29 @@ export class WorkspaceDetailComponent implements OnInit {
   showEditForm = false;
   showAddMember = false;
 
-  editForm: FormGroup;
-  addMemberForm: FormGroup;
+  readonly editForm: FormGroup<EditWorkspaceForm>;
+  readonly addMemberForm: FormGroup<InviteMemberForm>;
 
   constructor(
-    private route: ActivatedRoute,
+    private readonly route: ActivatedRoute,
     public router: Router,
-    private fb: FormBuilder,
-    private workspaceService: WorkspaceService,
-    private taskService: TaskService,
-    private alertService: AlertService,
+    private readonly formBuilder: NonNullableFormBuilder,
+    private readonly workspaceService: WorkspaceService,
+    private readonly taskService: TaskService,
+    private readonly alertService: AlertService,
     public userProfileState: UserProfileStateService,
-    private cdr: ChangeDetectorRef,
+    private readonly cdr: ChangeDetectorRef,
   ) {
-    this.editForm = this.fb.group({
+    this.editForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       description: ['', [Validators.maxLength(500)]],
     });
-    this.addMemberForm = this.fb.group({
+    this.addMemberForm = this.formBuilder.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
 
     forkJoin({
@@ -88,7 +103,7 @@ export class WorkspaceDetailComponent implements OnInit {
     });
   }
 
-  copyCode() {
+  copyCode(): void {
     if (!this.workspace?.publicCode) return;
     navigator.clipboard.writeText(this.workspace.publicCode);
     this.codeCopied = true;
@@ -113,10 +128,10 @@ export class WorkspaceDetailComponent implements OnInit {
     return this.currentUserRole === 'OWNER';
   }
 
-  onUpdate() {
+  onUpdate(): void {
     if (this.editForm.invalid || this.isUpdating || !this.workspace) return;
     this.isUpdating = true;
-    this.workspaceService.update(this.workspace.id, this.editForm.value).subscribe({
+    this.workspaceService.update(this.workspace.id, this.buildWorkspaceUpdateRequest()).subscribe({
       next: (updated) => {
         this.workspace = updated;
         this.showEditForm = false;
@@ -131,7 +146,7 @@ export class WorkspaceDetailComponent implements OnInit {
     });
   }
 
-  onDelete() {
+  onDelete(): void {
     if (!this.workspace || !confirm(`Delete "${this.workspace.name}"? This cannot be undone.`)) return;
     this.workspaceService.delete(this.workspace.id).subscribe({
       next: () => {
@@ -141,16 +156,16 @@ export class WorkspaceDetailComponent implements OnInit {
     });
   }
 
-  onAddMember() {
+  onAddMember(): void {
     if (this.addMemberForm.invalid || this.isAddingMember || !this.workspace) return;
     this.isAddingMember = true;
 
     this.workspaceService
-      .inviteMember(this.workspace.id, this.addMemberForm.value)
+      .inviteMember(this.workspace.id, this.buildInviteRequest())
       .subscribe({
         next: () => {
           this.isAddingMember = false;
-          this.addMemberForm.reset();
+          this.addMemberForm.reset({ username: '' });
           this.showAddMember = false;
           this.alertService.success('Invitation sent successfully.', 'Invite sent');
           this.cdr.markForCheck();
@@ -162,7 +177,7 @@ export class WorkspaceDetailComponent implements OnInit {
       });
   }
 
-  onRemoveMember(member: WorkspaceMember) {
+  onRemoveMember(member: WorkspaceMember): void {
     if (!this.workspace || !confirm(`Remove ${member.displayName}?`)) return;
     this.workspaceService.removeMember(this.workspace.id, member.authId).subscribe({
       next: () => {
@@ -173,7 +188,7 @@ export class WorkspaceDetailComponent implements OnInit {
     });
   }
 
-  onChangeRole(member: WorkspaceMember, newRole: WorkspaceRole) {
+  onChangeRole(member: WorkspaceMember, newRole: WorkspaceRole): void {
     if (!this.workspace || member.role === newRole) return;
     this.workspaceService.updateMemberRole(this.workspace.id, member.authId, { role: newRole }).subscribe({
       next: (updated) => {
@@ -182,6 +197,11 @@ export class WorkspaceDetailComponent implements OnInit {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  onRoleChange(member: WorkspaceMember, event: Event): void {
+    const role = (event.target as HTMLSelectElement).value as WorkspaceRole;
+    this.onChangeRole(member, role);
   }
 
   roleLabel(role: WorkspaceRole): string {
@@ -194,5 +214,15 @@ export class WorkspaceDetailComponent implements OnInit {
       ADMIN: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
       MEMBER: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
     }[role];
+  }
+
+  private buildInviteRequest(): AddMemberRequest {
+    const { username } = this.addMemberForm.getRawValue();
+    return { username };
+  }
+
+  private buildWorkspaceUpdateRequest(): UpdateWorkspaceRequest {
+    const { description, name } = this.editForm.getRawValue();
+    return { description, name };
   }
 }
