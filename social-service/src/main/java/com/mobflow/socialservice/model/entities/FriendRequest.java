@@ -47,6 +47,7 @@ public class FriendRequest {
             String targetUsername
     ) {
         return FriendRequest.builder()
+                .id(UUID.randomUUID())
                 .requesterId(requesterId)
                 .requesterUsername(requesterUsername)
                 .targetId(targetId)
