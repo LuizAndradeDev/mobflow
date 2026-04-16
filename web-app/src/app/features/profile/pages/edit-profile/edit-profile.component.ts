@@ -1,11 +1,17 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserProfileService } from '../../../../core/services/user-profile.service';
 import { UserProfileStateService } from '../../../../core/services/user-profile-state.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
 import { UpdateUserProfileRequest } from '../../../../core/models/user-profile.model';
+
+interface EditProfileForm {
+  displayName: FormControl<string>;
+  bio: FormControl<string>;
+  phone: FormControl<string>;
+}
 
 @Component({
   selector: 'app-edit-profile',
@@ -14,20 +20,20 @@ import { UpdateUserProfileRequest } from '../../../../core/models/user-profile.m
   templateUrl: './edit-profile.component.html',
 })
 export class EditProfileComponent implements OnInit {
-  profileForm: FormGroup;
+  readonly profileForm: FormGroup<EditProfileForm>;
   isLoading = false;
   isUploadingAvatar = false;
   avatarPreview: string | null = null;
 
   constructor(
-    private fb: FormBuilder,
-    private userProfileService: UserProfileService,
-    private userProfileState: UserProfileStateService,
-    private alertService: AlertService,
-    private router: Router,
-    private cdr: ChangeDetectorRef,
+    private readonly formBuilder: NonNullableFormBuilder,
+    private readonly userProfileService: UserProfileService,
+    private readonly userProfileState: UserProfileStateService,
+    private readonly alertService: AlertService,
+    private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef,
   ) {
-    this.profileForm = this.fb.group({
+    this.profileForm = this.formBuilder.group({
       displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       bio: ['', [Validators.maxLength(500)]],
       phone: ['', [Validators.maxLength(20)]],
@@ -46,11 +52,13 @@ export class EditProfileComponent implements OnInit {
     }
   }
 
-  onAvatarSelected(event: Event) {
+  onAvatarSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
+    const file = input.files?.[0];
 
-    const file = input.files[0];
+    if (!file) {
+      return;
+    }
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
@@ -85,13 +93,13 @@ export class EditProfileComponent implements OnInit {
     });
   }
 
-  onSubmit() {
-    if (this.profileForm.invalid || this.isLoading) return;
+  onSubmit(): void {
+    if (this.profileForm.invalid || this.isLoading) {
+      return;
+    }
 
     this.isLoading = true;
-    const payload = this.profileForm.value as UpdateUserProfileRequest;
-
-    this.userProfileService.updateMyProfile(payload).subscribe({
+    this.userProfileService.updateMyProfile(this.buildUpdateRequest()).subscribe({
       next: () => {
         this.alertService.success('Your profile has been updated!', 'Profile saved');
         this.router.navigate(['/home']);
@@ -102,7 +110,12 @@ export class EditProfileComponent implements OnInit {
     });
   }
 
-  goBack() {
+  goBack(): void {
     this.router.navigate(['/home']);
+  }
+
+  private buildUpdateRequest(): UpdateUserProfileRequest {
+    const { bio, displayName, phone } = this.profileForm.getRawValue();
+    return { bio, displayName, phone };
   }
 }
