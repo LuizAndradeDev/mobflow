@@ -43,6 +43,7 @@ public class Friendship {
             String userBUsername
     ) {
         return Friendship.builder()
+                .id(UUID.randomUUID())
                 .userA(userA)
                 .userAUsername(userAUsername)
                 .userB(userB)
