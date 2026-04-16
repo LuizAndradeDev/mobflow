@@ -57,18 +57,19 @@ public class NotificationService {
 
     @Transactional
     public long markAllAsRead(String recipientId) {
-        long unread = countUnread(recipientId);
-        if (unread == 0) {
+        long unreadCount = countUnread(recipientId);
+        if (unreadCount == 0) {
             return 0;
         }
 
+        Instant now = Instant.now();
         Query query = new Query(Criteria.where("recipientId").is(recipientId).and("read").is(false));
         Update update = new Update()
                 .set("read", true)
-                .set("readAt", Instant.now())
-                .set("updatedAt", Instant.now());
+                .set("readAt", now)
+                .set("updatedAt", now);
         mongoTemplate.updateMulti(query, update, Notification.class);
-        return unread;
+        return unreadCount;
     }
 
     @Transactional
