@@ -8,6 +8,7 @@ import com.mobflow.authservice.exceptions.GenericAplicationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,17 +28,13 @@ public class UserCredentialService {
     }
 
     public UserCredential SaveCredential(RegisterUserCredentialsDTO user) {
-        if (userCredentialRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new GenericAplicationException(ErrorTP.USERNAME_ALREADY_EXIST);
-        }
-        if (userCredentialRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new GenericAplicationException(ErrorTP.EMAIL_ALREADY_EXIST);
-        }
+        ensureUsernameIsAvailable(user.getUsername());
+        ensureEmailIsAvailable(user.getEmail());
         UserCredential userCredential = UserCredential.createUserCredential(
                 user.getUsername(), user.getEmail(), passwordEncoder.encode(user.getPassword())
         );
         userCredential.setConfirmationToken(UUID.randomUUID().toString());
-        userCredential.setConfirmationTokenExpiresAt(java.time.LocalDateTime.now().plusHours(CONFIRMATION_TOKEN_TTL_HOURS));
+        userCredential.setConfirmationTokenExpiresAt(LocalDateTime.now().plusHours(CONFIRMATION_TOKEN_TTL_HOURS));
         return userCredentialRepository.save(userCredential);
     }
 
@@ -57,15 +54,31 @@ public class UserCredentialService {
         UserCredential userCredential = userCredentialRepository.findByConfirmationToken(confirmationToken)
                 .orElseThrow(() -> new GenericAplicationException(ErrorTP.USER_NOT_FOUND));
 
-        if (userCredential.getConfirmationTokenExpiresAt() == null ||
-                userCredential.getConfirmationTokenExpiresAt().isBefore(java.time.LocalDateTime.now())) {
+        if (isConfirmationTokenExpired(userCredential)) {
             throw new GenericAplicationException(ErrorTP.GENERIC_ERROR);
         }
 
         userCredential.setEnabled(true);
-        userCredential.setEmailConfirmedAt(java.time.LocalDateTime.now());
+        userCredential.setEmailConfirmedAt(LocalDateTime.now());
         userCredential.setConfirmationToken(null);
         userCredential.setConfirmationTokenExpiresAt(null);
         return userCredentialRepository.save(userCredential);
+    }
+
+    private void ensureUsernameIsAvailable(String username) {
+        if (userCredentialRepository.findByUsername(username).isPresent()) {
+            throw new GenericAplicationException(ErrorTP.USERNAME_ALREADY_EXIST);
+        }
+    }
+
+    private void ensureEmailIsAvailable(String email) {
+        if (userCredentialRepository.findByEmail(email).isPresent()) {
+            throw new GenericAplicationException(ErrorTP.EMAIL_ALREADY_EXIST);
+        }
+    }
+
+    private boolean isConfirmationTokenExpired(UserCredential userCredential) {
+        return userCredential.getConfirmationTokenExpiresAt() == null
+                || userCredential.getConfirmationTokenExpiresAt().isBefore(LocalDateTime.now());
     }
 }

@@ -26,22 +26,24 @@ public class AuthenticationService {
     }
 
     public UserCredential register(RegisterUserCredentialsDTO input) {
-        UserCredential userCredential = userCredentialService.SaveCredential(input);
-        authEventPublisher.publishEmailConfirmation(userCredential);
-        return userCredential;
+        UserCredential createdCredential = userCredentialService.SaveCredential(input);
+        authEventPublisher.publishEmailConfirmation(createdCredential);
+        return createdCredential;
     }
 
     public UserCredential login(LoginUserDTO input) {
-        UserCredential user = userCredentialService.findUserCredentialByEmail(input.getEmail());
+        UserCredential userCredential = userCredentialService.findUserCredentialByEmail(input.getEmail());
+        authenticate(input, userCredential);
+        return userCredential;
+    }
 
+    private void authenticate(LoginUserDTO input, UserCredential userCredential) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        user.getUsername(),
+                        userCredential.getUsername(),
                         input.getPassword()
                 )
         );
-
-        return user;
     }
 
     public UserCredential confirmEmail(String token) {
