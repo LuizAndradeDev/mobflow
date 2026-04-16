@@ -1,11 +1,17 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
 import { SignupRequest } from '../../../../core/models/auth.model';
 import { HttpErrorResponse } from '@angular/common/http';
+
+interface RegisterForm {
+  username: FormControl<string>;
+  email: FormControl<string>;
+  password: FormControl<string>;
+}
 
 @Component({
   selector: 'app-register',
@@ -14,35 +20,38 @@ import { HttpErrorResponse } from '@angular/common/http';
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {
-  registerForm: FormGroup;
+  readonly registerForm: FormGroup<RegisterForm>;
   fieldErrors: { username?: string; email?: string } = {};
   registrationCompleted = false;
   confirmationEmail = '';
 
   constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private alertService: AlertService,
+    private readonly formBuilder: NonNullableFormBuilder,
+    private readonly authService: AuthService,
+    private readonly alertService: AlertService,
+    private readonly router: Router,
   ) {
-    this.registerForm = this.fb.group({
+    this.registerForm = this.formBuilder.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
 
-  onSubmit() {
-    if (this.registerForm.invalid) return;
+  onSubmit(): void {
+    if (this.registerForm.invalid) {
+      return;
+    }
+
     this.fieldErrors = {};
     this.registrationCompleted = false;
-
-    const payload = this.registerForm.value as SignupRequest;
+    const payload = this.buildSignupRequest();
     this.authService.register(payload).subscribe({
       next: () => {
         this.confirmationEmail = payload.email;
         this.registrationCompleted = true;
         this.alertService.success('Account created. Check your inbox to confirm your email.', 'Confirm your email');
-        this.registerForm.reset();
+        this.registerForm.reset({ username: '', email: '', password: '' });
       },
       error: (err: HttpErrorResponse) => {
         const errorType = err.error?.errorType;
@@ -55,5 +64,14 @@ export class RegisterComponent {
         }
       },
     });
+  }
+
+  goToLogin(): void {
+    this.router.navigate(['/login']);
+  }
+
+  private buildSignupRequest(): SignupRequest {
+    const { email, password, username } = this.registerForm.getRawValue();
+    return { email, password, username };
   }
 }
