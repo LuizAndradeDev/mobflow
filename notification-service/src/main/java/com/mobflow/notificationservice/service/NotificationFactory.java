@@ -1,6 +1,8 @@
 package com.mobflow.notificationservice.service;
 
 import com.mobflow.notificationservice.kafka.events.AuthNotificationEvent;
+import com.mobflow.notificationservice.kafka.events.CommentNotificationEvent;
+import com.mobflow.notificationservice.kafka.events.FriendRequestEvent;
 import com.mobflow.notificationservice.kafka.events.TaskNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.WorkspaceNotificationEvent;
 import com.mobflow.notificationservice.model.entities.Notification;
@@ -94,6 +96,58 @@ public class NotificationFactory {
                 .build();
     }
 
+    public Notification createCommentNotification(CommentNotificationEvent event) {
+        if (event.recipientId() == null || event.recipientId().isBlank()) {
+            return null;
+        }
+
+        NotificationType type = switch (event.eventType()) {
+            case "COMMENT_CREATED" -> NotificationType.COMMENT_CREATED;
+            case "USER_MENTIONED" -> NotificationType.USER_MENTIONED;
+            default -> null;
+        };
+
+        if (type == null) {
+            return null;
+        }
+
+        return Notification.builder()
+                .recipientId(event.recipientId())
+                .title(commentTitleFor(type, event))
+                .body(commentBodyFor(type, event))
+                .type(type)
+                .channel(NotificationChannel.IN_APP)
+                .priority(type == NotificationType.USER_MENTIONED ? NotificationPriority.HIGH : NotificationPriority.MEDIUM)
+                .metadata(commentMetadata(event))
+                .build();
+    }
+
+    public Notification createFriendRequestNotification(FriendRequestEvent event) {
+        if (event.recipientId() == null || event.recipientId().isBlank()) {
+            return null;
+        }
+
+        NotificationType type = switch (event.eventType()) {
+            case "FRIEND_REQUEST_SENT" -> NotificationType.FRIEND_REQUEST_SENT;
+            case "FRIEND_REQUEST_ACCEPTED" -> NotificationType.FRIEND_REQUEST_ACCEPTED;
+            default -> null;
+        };
+
+        if (type == null) {
+            return null;
+        }
+
+        return Notification.builder()
+                .recipientId(event.recipientId())
+                .title(friendRequestTitleFor(type))
+                .body(friendRequestBodyFor(type, event))
+                .type(type)
+                .channel(NotificationChannel.IN_APP)
+                .priority(NotificationPriority.MEDIUM)
+                .metadata(friendRequestMetadata(event))
+                .build();
+    }
+
     private String taskTitleFor(NotificationType type, TaskNotificationEvent event) {
         return switch (type) {
             case TASK_CREATED -> "Task created: " + safe(event.taskTitle());
@@ -146,6 +200,40 @@ public class NotificationFactory {
         };
     }
 
+    private String commentTitleFor(NotificationType type, CommentNotificationEvent event) {
+        return switch (type) {
+            case COMMENT_CREATED -> "New comment on task";
+            case USER_MENTIONED -> "You were mentioned in a comment";
+            default -> "Comment notification";
+        };
+    }
+
+    private String commentBodyFor(NotificationType type, CommentNotificationEvent event) {
+        String actor = blankFallback(event.actorUsername(), "A workspace member");
+        return switch (type) {
+            case COMMENT_CREATED -> actor + " commented on \"" + safe(event.taskTitle()) + "\".";
+            case USER_MENTIONED -> actor + " mentioned you in a comment on \"" + safe(event.taskTitle()) + "\".";
+            default -> "Comment update available.";
+        };
+    }
+
+    private String friendRequestTitleFor(NotificationType type) {
+        return switch (type) {
+            case FRIEND_REQUEST_SENT -> "New friend request";
+            case FRIEND_REQUEST_ACCEPTED -> "Friend request accepted";
+            default -> "Friendship update";
+        };
+    }
+
+    private String friendRequestBodyFor(NotificationType type, FriendRequestEvent event) {
+        String actor = blankFallback(event.actorUsername(), "A Mobflow user");
+        return switch (type) {
+            case FRIEND_REQUEST_SENT -> actor + " sent you a friend request.";
+            case FRIEND_REQUEST_ACCEPTED -> actor + " accepted your friend request.";
+            default -> "Friendship update available.";
+        };
+    }
+
     private Map<String, String> taskMetadata(TaskNotificationEvent event) {
         Map<String, String> metadata = new LinkedHashMap<>();
         metadata.put("taskId", safe(event.taskId()));
@@ -169,6 +257,29 @@ public class NotificationFactory {
         metadata.put("subjectAuthId", safe(event.subjectAuthId()));
         metadata.put("subjectDisplayName", safe(event.subjectDisplayName()));
         metadata.put("role", safe(event.role()));
+        return metadata;
+    }
+
+    private Map<String, String> commentMetadata(CommentNotificationEvent event) {
+        Map<String, String> metadata = new LinkedHashMap<>();
+        metadata.put("taskId", safe(event.taskId()));
+        metadata.put("workspaceId", safe(event.workspaceId()));
+        metadata.put("commentId", safe(event.commentId()));
+        metadata.put("taskTitle", safe(event.taskTitle()));
+        metadata.put("commentPreview", safe(event.commentPreview()));
+        metadata.put("actorAuthId", safe(event.actorAuthId()));
+        metadata.put("actorUsername", safe(event.actorUsername()));
+        metadata.put("mentionedUsername", safe(event.mentionedUsername()));
+        return metadata;
+    }
+
+    private Map<String, String> friendRequestMetadata(FriendRequestEvent event) {
+        Map<String, String> metadata = new LinkedHashMap<>();
+        metadata.put("requestId", safe(event.requestId()));
+        metadata.put("actorAuthId", safe(event.actorAuthId()));
+        metadata.put("actorUsername", safe(event.actorUsername()));
+        metadata.put("subjectAuthId", safe(event.subjectAuthId()));
+        metadata.put("subjectUsername", safe(event.subjectUsername()));
         return metadata;
     }
 
