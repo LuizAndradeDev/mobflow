@@ -18,31 +18,29 @@ import { guestGuard } from './core/guards/guest.guard';
 import { authGuard } from './core/guards/auth.guard';
 import { profileGuard } from './core/guards/profile.guard';
 
+const protectedRouteGuards = [profileGuard];
+
 export const routes: Routes = [
-  // Public routes
   { path: '', component: LandingComponent, canActivate: [guestGuard] },
   { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
   { path: 'signup', component: RegisterComponent, canActivate: [guestGuard] },
   { path: 'complete-profile', component: CompleteProfileComponent, canActivate: [authGuard] },
-
-  // Authenticated routes (with sidebar layout)
   {
     path: '',
     component: MainLayoutComponent,
     canActivate: [authGuard],
     children: [
-      { path: 'dashboard', component: DashboardComponent, canActivate: [profileGuard] },
-      { path: 'home', component: HomeComponent, canActivate: [profileGuard] },
-      { path: 'analytics', component: AnalyticsComponent, canActivate: [profileGuard] },
+      { path: 'dashboard', component: DashboardComponent, canActivate: protectedRouteGuards },
+      { path: 'home', component: HomeComponent, canActivate: protectedRouteGuards },
+      { path: 'analytics', component: AnalyticsComponent, canActivate: protectedRouteGuards },
       { path: 'settings', component: SettingsComponent },
-      { path: 'profile/edit', component: EditProfileComponent, canActivate: [profileGuard] },
-      { path: 'workspaces', component: WorkspaceListComponent, canActivate: [profileGuard] },
-      { path: 'workspaces/:id', component: WorkspaceDetailComponent, canActivate: [profileGuard] },
-      { path: 'tasks', component: TasksOverviewComponent, canActivate: [profileGuard] },
-      { path: 'tasks/:workspaceId', component: WorkspaceTasksComponent, canActivate: [profileGuard] },
-      { path: 'notifications', component: NotificationsComponent, canActivate: [profileGuard] },
+      { path: 'profile/edit', component: EditProfileComponent, canActivate: protectedRouteGuards },
+      { path: 'workspaces', component: WorkspaceListComponent, canActivate: protectedRouteGuards },
+      { path: 'workspaces/:id', component: WorkspaceDetailComponent, canActivate: protectedRouteGuards },
+      { path: 'tasks', component: TasksOverviewComponent, canActivate: protectedRouteGuards },
+      { path: 'tasks/:workspaceId', component: WorkspaceTasksComponent, canActivate: protectedRouteGuards },
+      { path: 'notifications', component: NotificationsComponent, canActivate: protectedRouteGuards },
     ],
   },
-
   { path: '**', redirectTo: '' },
 ];
