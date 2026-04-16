@@ -8,52 +8,50 @@ export interface AlertState extends AlertInterface {
 
 @Injectable({ providedIn: 'root' })
 export class AlertService {
-  private readonly MAX_ALERTS = 3;
-  private readonly AUTO_CLOSE_MS = 5000;
-  private readonly LEAVE_MS = 300;
+  private readonly maxAlerts = 3;
+  private readonly autoCloseMs = 5000;
+  private readonly leaveMs = 300;
 
-  alerts = signal<AlertState[]>([]);
+  readonly alerts = signal<AlertState[]>([]);
 
-  show(alert: Omit<AlertInterface, 'id'>) {
+  show(alert: Omit<AlertInterface, 'id'>): void {
     const id = crypto.randomUUID();
     const newAlert: AlertState = { ...alert, id, leaving: false };
 
     this.alerts.update((current) => {
       const updated = [newAlert, ...current];
-      return updated.slice(0, this.MAX_ALERTS);
+      return updated.slice(0, this.maxAlerts);
     });
 
-    setTimeout(() => this.dismiss(id), this.AUTO_CLOSE_MS);
+    setTimeout(() => this.dismiss(id), this.autoCloseMs);
   }
 
-  dismiss(id: string) {
-    // mark as leaving first — triggers CSS animation
+  dismiss(id: string): void {
     this.alerts.update((current) =>
       current.map((a) => (a.id === id ? { ...a, leaving: true } : a)),
     );
-    // remove after animation completes
     setTimeout(() => {
       this.alerts.update((current) => current.filter((a) => a.id !== id));
-    }, this.LEAVE_MS);
+    }, this.leaveMs);
   }
 
-  info(message: string, title = 'Info') {
+  info(message: string, title = 'Info'): void {
     this.show({ title, message, alertType: AlertType.info });
   }
 
-  success(message: string, title = 'Success!') {
+  success(message: string, title = 'Success!'): void {
     this.show({ title, message, alertType: AlertType.success });
   }
 
-  warning(message: string, title = 'Warning') {
+  warning(message: string, title = 'Warning'): void {
     this.show({ title, message, alertType: AlertType.warning });
   }
 
-  danger(message: string, title = 'Error!') {
+  danger(message: string, title = 'Error!'): void {
     this.show({ title, message, alertType: AlertType.error });
   }
 
-  clear() {
+  clear(): void {
     this.alerts.set([]);
   }
 }

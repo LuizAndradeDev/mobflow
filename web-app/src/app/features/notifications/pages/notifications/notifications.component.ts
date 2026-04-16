@@ -23,19 +23,19 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   private pollingSubscription: Subscription | null = null;
 
   constructor(
-    private notificationService: NotificationService,
-    private notificationState: NotificationStateService,
-    private workspaceService: WorkspaceService,
-    private alertService: AlertService,
-    private cdr: ChangeDetectorRef,
+    private readonly notificationService: NotificationService,
+    private readonly notificationState: NotificationStateService,
+    private readonly workspaceService: WorkspaceService,
+    private readonly alertService: AlertService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.loadNotifications();
     this.pollingSubscription = interval(10000).subscribe(() => this.loadNotifications(true));
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.pollingSubscription?.unsubscribe();
   }
 
@@ -43,7 +43,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     return this.notifications.filter((notification) => !notification.read).length;
   }
 
-  loadNotifications(silent = false) {
+  loadNotifications(silent = false): void {
     if (!silent) {
       this.isLoading = true;
     }
@@ -74,7 +74,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     return this.processingInviteIds.has(notification.id);
   }
 
-  acceptInvite(notification: NotificationItem) {
+  acceptInvite(notification: NotificationItem): void {
     const inviteId = notification.metadata['inviteId'];
     if (!inviteId || this.isProcessingInvite(notification)) {
       return;
@@ -94,7 +94,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     });
   }
 
-  declineInvite(notification: NotificationItem) {
+  declineInvite(notification: NotificationItem): void {
     const inviteId = notification.metadata['inviteId'];
     if (!inviteId || this.isProcessingInvite(notification)) {
       return;
@@ -113,7 +113,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     });
   }
 
-  markAsRead(notification: NotificationItem) {
+  markAsRead(notification: NotificationItem): void {
     if (notification.read) {
       return;
     }
@@ -129,7 +129,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     });
   }
 
-  markAllAsRead() {
+  markAllAsRead(): void {
     if (this.unreadCount === 0 || this.isMarkingAll) {
       return;
     }
@@ -163,7 +163,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     return classes[priority] ?? classes['MEDIUM'];
   }
 
-  private finishInviteAction(notification: NotificationItem) {
+  private finishInviteAction(notification: NotificationItem): void {
     this.processingInviteIds.delete(notification.id);
     if (notification.read) {
       this.loadNotifications(true);

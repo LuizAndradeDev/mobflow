@@ -7,7 +7,7 @@
     </div>
   } @else if (workspace) {
 
-    <!-- Header -->
+    
     <div class="flex items-start justify-between mb-8">
       <div class="flex items-center gap-3">
         <button (click)="router.navigate(['/workspaces'])"
@@ -25,7 +25,7 @@
       </div>
 
       <div class="flex gap-2">
-        <!-- Open kanban -->
+        
         <button (click)="router.navigate(['/tasks', workspace.id])"
           class="flex items-center gap-2 text-sm px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@
       </div>
     </div>
 
-    <!-- Invite code -->
+    
     <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-2xl px-5 py-4 mb-6 flex items-center justify-between gap-4">
       <div>
         <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-0.5">Invite code</p>
@@ -70,7 +70,7 @@
       </button>
     </div>
 
-    <!-- Edit form -->
+    
     @if (showEditForm) {
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 mb-6">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Edit workspace</h2>
@@ -97,10 +97,10 @@
       </div>
     }
 
-    <!-- Two-column layout: boards + members -->
+    
     <div class="grid grid-cols-2 gap-6">
 
-      <!-- Boards panel -->
+      
       <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-6">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
@@ -149,7 +149,7 @@
         }
       </div>
 
-      <!-- Members panel -->
+      
       <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-6">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
@@ -166,7 +166,7 @@
           }
         </div>
 
-        <!-- Add member form -->
+        
         @if (showAddMember) {
           <div class="bg-gray-50 dark:bg-gray-900/40 rounded-xl p-3 mb-4">
             <form [formGroup]="addMemberForm" (ngSubmit)="onAddMember()" class="flex gap-2">
@@ -222,7 +222,7 @@
                   @if (isOwner && member.role !== 'OWNER') {
                     <select
                       [value]="member.role"
-                      (change)="onChangeRole(member, $any($event.target).value)"
+                      (change)="onRoleChange(member, $event)"
                       class="text-xs font-medium px-2.5 py-1 rounded-full border-0 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none"
                       [ngClass]="roleBadgeClass(member.role)">
                       <option value="ADMIN">Admin</option>
