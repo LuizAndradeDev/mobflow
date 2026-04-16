@@ -8,20 +8,14 @@ import { ThemeService } from '../../core/services/theme.service';
   imports: [CommonModule],
   template: `
     <div class="p-8 max-w-2xl mx-auto">
-
       <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Settings</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage your preferences</p>
       </div>
-
-      <!-- Appearance -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
         <h2 class="font-semibold text-gray-800 dark:text-gray-100 mb-1">Appearance</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Choose how Mobflow looks to you</p>
-
         <div class="flex gap-4">
-
-          <!-- Light theme card -->
           <button
             (click)="themeService.setTheme('light')"
             class="flex-1 rounded-xl border-2 p-4 transition focus:outline-none"
@@ -30,7 +24,6 @@ import { ThemeService } from '../../core/services/theme.service';
             [class.dark:border-blue-500]="!themeService.isDark()"
             [class.dark:border-gray-600]="themeService.isDark()"
           >
-            <!-- Light preview -->
             <div class="rounded-lg overflow-hidden mb-3 border border-gray-200">
               <div class="h-6 bg-white flex items-center px-2 gap-1.5">
                 <div class="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
@@ -55,8 +48,6 @@ import { ThemeService } from '../../core/services/theme.service';
               }
             </div>
           </button>
-
-          <!-- Dark theme card -->
           <button
             (click)="themeService.setTheme('dark')"
             class="flex-1 rounded-xl border-2 p-4 transition focus:outline-none"
@@ -65,7 +56,6 @@ import { ThemeService } from '../../core/services/theme.service';
             [class.dark:border-blue-500]="themeService.isDark()"
             [class.dark:border-gray-600]="!themeService.isDark()"
           >
-            <!-- Dark preview -->
             <div class="rounded-lg overflow-hidden mb-3 border border-gray-700">
               <div class="h-6 bg-gray-900 flex items-center px-2 gap-1.5">
                 <div class="w-1.5 h-1.5 rounded-full bg-gray-600"></div>
@@ -90,10 +80,8 @@ import { ThemeService } from '../../core/services/theme.service';
               }
             </div>
           </button>
-
         </div>
       </div>
-
     </div>
   `,
 })

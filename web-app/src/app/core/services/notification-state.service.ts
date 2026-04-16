@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { Subscription, interval } from 'rxjs';
 import { AlertService } from '../../shared/components/alert/service/alert.service';
 import { NotificationService } from './notification.service';
+import { BrowserStorageService } from './browser-storage.service';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationStateService {
@@ -12,14 +13,14 @@ export class NotificationStateService {
   readonly unreadCount = this._unreadCount.asReadonly();
 
   constructor(
-    private notificationService: NotificationService,
-    private alertService: AlertService,
+    private readonly notificationService: NotificationService,
+    private readonly alertService: AlertService,
+    private readonly storage: BrowserStorageService,
   ) {}
 
   loadUnreadCount() {
-    if (!localStorage.getItem('token')) {
-      this.lastUnreadCount = 0;
-      this._unreadCount.set(0);
+    if (!this.storage.hasToken()) {
+      this.resetUnreadCount();
       return;
     }
 
@@ -28,8 +29,7 @@ export class NotificationStateService {
         this.updateUnreadCount(response.unreadCount, true);
       },
       error: () => {
-        this.lastUnreadCount = 0;
-        this._unreadCount.set(0);
+        this.resetUnreadCount();
       },
     });
   }
@@ -53,7 +53,7 @@ export class NotificationStateService {
   }
 
   startPolling(intervalMs = 10000) {
-    if (this.pollingSubscription || !localStorage.getItem('token')) {
+    if (this.pollingSubscription || !this.storage.hasToken()) {
       return;
     }
 
@@ -64,6 +64,11 @@ export class NotificationStateService {
   stopPolling() {
     this.pollingSubscription?.unsubscribe();
     this.pollingSubscription = null;
+  }
+
+  private resetUnreadCount(): void {
+    this.lastUnreadCount = 0;
+    this._unreadCount.set(0);
   }
 
   private updateUnreadCount(nextCount: number, showAlert: boolean) {

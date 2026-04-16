@@ -1,29 +1,24 @@
 import { Injectable, signal } from '@angular/core';
+import { BrowserStorageService } from './browser-storage.service';
 
 export type Theme = 'light' | 'dark';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  private readonly STORAGE_KEY = 'mobflow-theme';
-
-  private _theme = signal<Theme>(this.loadTheme());
+  private readonly _theme = signal<Theme>('light');
   readonly theme = this._theme.asReadonly();
 
-  private loadTheme(): Theme {
-    return (localStorage.getItem(this.STORAGE_KEY) as Theme) || 'light';
+  constructor(private readonly storage: BrowserStorageService) {
+    this._theme.set(this.storage.getTheme() ?? 'light');
   }
 
-  setTheme(theme: Theme) {
+  setTheme(theme: Theme): void {
     this._theme.set(theme);
-    localStorage.setItem(this.STORAGE_KEY, theme);
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    this.storage.setTheme(theme);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
   }
 
-  toggle() {
+  toggle(): void {
     this.setTheme(this._theme() === 'light' ? 'dark' : 'light');
   }
 
