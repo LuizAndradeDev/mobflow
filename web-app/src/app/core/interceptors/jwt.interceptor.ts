@@ -1,15 +1,17 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { BrowserStorageService } from '../services/browser-storage.service';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = localStorage.getItem('token');
+  const storage = inject(BrowserStorageService);
+  const token = storage.getToken();
 
   if (token) {
-    const cloned = req.clone({
+    return next(req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,
       },
-    });
-    return next(cloned);
+    }));
   }
 
   return next(req);

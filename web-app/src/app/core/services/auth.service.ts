@@ -6,27 +6,29 @@ import { UserStateService } from './user-state.service';
 import { UserProfileStateService } from './user-profile-state.service';
 import { UserProfileService } from './user-profile.service';
 import { NotificationStateService } from './notification-state.service';
+import { BrowserStorageService } from './browser-storage.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly API = '/api/auth';
+  private readonly apiPath = '/api/auth';
 
   constructor(
-    private http: HttpClient,
-    private userState: UserStateService,
-    private userProfileState: UserProfileStateService,
-    private userProfileService: UserProfileService,
-    private notificationState: NotificationStateService,
+    private readonly http: HttpClient,
+    private readonly userState: UserStateService,
+    private readonly userProfileState: UserProfileStateService,
+    private readonly userProfileService: UserProfileService,
+    private readonly notificationState: NotificationStateService,
+    private readonly storage: BrowserStorageService,
   ) {}
 
   register(data: SignupRequest) {
-    return this.http.post<{ username: string; email: string }>(`${this.API}/signup`, data);
+    return this.http.post<{ username: string; email: string }>(`${this.apiPath}/signup`, data);
   }
 
   login(data: LoginRequest) {
-    return this.http.post<AuthResponse>(`${this.API}/login`, data).pipe(
+    return this.http.post<AuthResponse>(`${this.apiPath}/login`, data).pipe(
       tap((response) => {
-        localStorage.setItem('token', response.token);
+        this.storage.setToken(response.token);
         this.userState.set({ username: response.user.username, email: response.user.email });
         this.notificationState.startPolling();
       }),
@@ -34,7 +36,7 @@ export class AuthService {
   }
 
   getProfile() {
-    return this.http.get<{ username: string; email: string }>(`${this.API}/profile`).pipe(
+    return this.http.get<{ username: string; email: string }>(`${this.apiPath}/profile`).pipe(
       tap((profile) => {
         this.userState.set(profile);
         this.userProfileService.getMyProfile().subscribe();
@@ -44,7 +46,7 @@ export class AuthService {
   }
 
   logout() {
-    localStorage.removeItem('token');
+    this.storage.clearToken();
     this.userState.clear();
     this.userProfileState.clear();
     this.notificationState.clear();
