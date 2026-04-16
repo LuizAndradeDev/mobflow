@@ -7,6 +7,7 @@ import { TaskService } from '../../../../core/services/task.service';
 import { WorkspaceService } from '../../../../core/services/workspace.service';
 import { BoardSummary, WorkspaceSummary } from '../../../../core/models/task.model';
 import { Workspace } from '../../../../core/models/workspace.model';
+import { getBoardTaskCount, getPriorityDotClass } from '../../../../core/utils/task-board.util';
 
 interface WorkspaceBlock {
   workspace: Workspace;
@@ -26,18 +27,17 @@ export class TasksOverviewComponent implements OnInit {
   isLoading = true;
 
   constructor(
-    private taskService: TaskService,
-    private workspaceService: WorkspaceService,
+    private readonly taskService: TaskService,
+    private readonly workspaceService: WorkspaceService,
     public router: Router,
-    private cdr: ChangeDetectorRef,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.workspaceService.listMine().subscribe({
       next: (workspaces) => {
         if (workspaces.length === 0) {
-          this.isLoading = false;
-          this.cdr.markForCheck();
+          this.finishLoading();
           return;
         }
 
@@ -50,7 +50,7 @@ export class TasksOverviewComponent implements OnInit {
 
         const ids = workspaces.map((ws) => ws.id);
         this.taskService.getBatchSummaries(ids).pipe(
-          catchError(() => of([] as WorkspaceSummary[]))
+          catchError(() => of([] as WorkspaceSummary[])),
         ).subscribe({
           next: (summaries) => {
             const summaryMap = new Map(summaries.map((s) => [s.workspaceId, s]));
@@ -59,19 +59,16 @@ export class TasksOverviewComponent implements OnInit {
               summary: summaryMap.get(block.workspace.id) ?? null,
               loading: false,
             }));
-            this.isLoading = false;
-            this.cdr.markForCheck();
+            this.finishLoading();
           },
           error: () => {
             this.blocks = this.blocks.map((b) => ({ ...b, loading: false }));
-            this.isLoading = false;
-            this.cdr.markForCheck();
+            this.finishLoading();
           },
         });
       },
       error: () => {
-        this.isLoading = false;
-        this.cdr.markForCheck();
+        this.finishLoading();
       },
     });
   }
@@ -85,20 +82,19 @@ export class TasksOverviewComponent implements OnInit {
   }
 
   boardTotalTasks(board: BoardSummary): number {
-    return board.lists.reduce((acc, l) => acc + l.taskCount, 0);
+    return getBoardTaskCount(board);
   }
 
-  priorityColor(priority: string): string {
-    const map: Record<string, string> = {
-      URGENT: 'bg-red-500',
-      HIGH: 'bg-orange-400',
-      MEDIUM: 'bg-blue-400',
-      LOW: 'bg-gray-300 dark:bg-gray-600',
-    };
-    return map[priority] ?? 'bg-gray-300';
+  priorityColor(priority: BoardSummary['lists'][number]['previewTasks'][number]['priority']): string {
+    return getPriorityDotClass(priority);
   }
 
-  navigateToWorkspace(workspaceId: string) {
+  navigateToWorkspace(workspaceId: string): void {
     this.router.navigate(['/tasks', workspaceId]);
+  }
+
+  private finishLoading(): void {
+    this.isLoading = false;
+    this.cdr.markForCheck();
   }
 }
