@@ -87,8 +87,6 @@ export interface MoveTaskRequest {
   position: number;
 }
 
-// ---- Workspace Summary (masonry overview) ----
-
 export interface TaskCardPreview {
   id: string;
   title: string;
@@ -117,8 +115,6 @@ export interface WorkspaceSummary {
   workspaceId: string;
   boards: BoardSummary[];
 }
-
-// ---- Analytics ----
 
 export interface TaskAnalytics {
   totalTasks: number;

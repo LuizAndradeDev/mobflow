@@ -19,137 +19,112 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
-  private readonly API = '/tasks/api';
-  private readonly INTERNAL_API = '/tasks/internal/tasks';
-  private readonly INTERNAL_SECRET = 'mobflow-internal-secret-2024';
+  private readonly apiPath = '/tasks/api';
+  private readonly internalApiPath = '/tasks/internal/tasks';
+  private readonly internalSecret = 'mobflow-internal-secret-2024';
 
-  constructor(private http: HttpClient) {}
-
-  // ---- Boards ----
+  constructor(private readonly http: HttpClient) {}
 
   listBoards(workspaceId: string): Observable<Board[]> {
-    return this.http.get<Board[]>(`${this.API}/workspaces/${workspaceId}/boards`);
+    return this.http.get<Board[]>(this.workspaceBoardsPath(workspaceId));
   }
 
   getBoard(workspaceId: string, boardId: string): Observable<Board> {
-    return this.http.get<Board>(`${this.API}/workspaces/${workspaceId}/boards/${boardId}`);
+    return this.http.get<Board>(`${this.workspaceBoardsPath(workspaceId)}/${boardId}`);
   }
 
   createBoard(workspaceId: string, data: CreateBoardRequest): Observable<Board> {
-    return this.http.post<Board>(`${this.API}/workspaces/${workspaceId}/boards`, data);
+    return this.http.post<Board>(this.workspaceBoardsPath(workspaceId), data);
   }
 
   updateBoard(workspaceId: string, boardId: string, data: UpdateBoardRequest): Observable<Board> {
-    return this.http.put<Board>(`${this.API}/workspaces/${workspaceId}/boards/${boardId}`, data);
+    return this.http.put<Board>(`${this.workspaceBoardsPath(workspaceId)}/${boardId}`, data);
   }
 
   deleteBoard(workspaceId: string, boardId: string): Observable<void> {
-    return this.http.delete<void>(`${this.API}/workspaces/${workspaceId}/boards/${boardId}`);
+    return this.http.delete<void>(`${this.workspaceBoardsPath(workspaceId)}/${boardId}`);
   }
 
-  // ---- Task Lists ----
-
   createList(workspaceId: string, boardId: string, data: CreateTaskListRequest): Observable<TaskList> {
-    return this.http.post<TaskList>(
-      `${this.API}/workspaces/${workspaceId}/boards/${boardId}/lists`,
-      data,
-    );
+    return this.http.post<TaskList>(this.boardListsPath(workspaceId, boardId), data);
   }
 
   updateList(workspaceId: string, boardId: string, listId: string, data: UpdateTaskListRequest): Observable<TaskList> {
-    return this.http.put<TaskList>(
-      `${this.API}/workspaces/${workspaceId}/boards/${boardId}/lists/${listId}`,
-      data,
-    );
+    return this.http.put<TaskList>(`${this.boardListsPath(workspaceId, boardId)}/${listId}`, data);
   }
 
   deleteList(workspaceId: string, boardId: string, listId: string): Observable<void> {
-    return this.http.delete<void>(
-      `${this.API}/workspaces/${workspaceId}/boards/${boardId}/lists/${listId}`,
-    );
+    return this.http.delete<void>(`${this.boardListsPath(workspaceId, boardId)}/${listId}`);
   }
 
   reorderLists(workspaceId: string, boardId: string, data: ReorderListsRequest): Observable<void> {
-    return this.http.patch<void>(
-      `${this.API}/workspaces/${workspaceId}/boards/${boardId}/lists/reorder`,
-      data,
-    );
+    return this.http.patch<void>(`${this.boardListsPath(workspaceId, boardId)}/reorder`, data);
   }
 
-  // ---- Tasks ----
-
   listTasks(workspaceId: string, listId: string): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.API}/workspaces/${workspaceId}/lists/${listId}/tasks`);
+    return this.http.get<Task[]>(this.listTasksPath(workspaceId, listId));
   }
 
   getTask(workspaceId: string, taskId: string): Observable<Task> {
-    return this.http.get<Task>(`${this.API}/workspaces/${workspaceId}/tasks/${taskId}`);
+    return this.http.get<Task>(this.taskPath(workspaceId, taskId));
   }
 
   createTask(workspaceId: string, listId: string, data: CreateTaskRequest): Observable<Task> {
-    return this.http.post<Task>(
-      `${this.API}/workspaces/${workspaceId}/lists/${listId}/tasks`,
-      data,
-    );
+    return this.http.post<Task>(this.listTasksPath(workspaceId, listId), data);
   }
 
   updateTask(workspaceId: string, taskId: string, data: UpdateTaskRequest): Observable<Task> {
-    return this.http.put<Task>(`${this.API}/workspaces/${workspaceId}/tasks/${taskId}`, data);
+    return this.http.put<Task>(this.taskPath(workspaceId, taskId), data);
   }
 
   moveTask(workspaceId: string, taskId: string, data: MoveTaskRequest): Observable<Task> {
-    return this.http.patch<Task>(
-      `${this.API}/workspaces/${workspaceId}/tasks/${taskId}/move`,
-      data,
-    );
+    return this.http.patch<Task>(`${this.taskPath(workspaceId, taskId)}/move`, data);
   }
 
   deleteTask(workspaceId: string, taskId: string): Observable<void> {
-    return this.http.delete<void>(`${this.API}/workspaces/${workspaceId}/tasks/${taskId}`);
+    return this.http.delete<void>(this.taskPath(workspaceId, taskId));
   }
 
-  // ---- Summaries (overview page) ----
-
   getWorkspaceSummary(workspaceId: string): Observable<WorkspaceSummary> {
-    return this.http.get<WorkspaceSummary>(`${this.INTERNAL_API}/summary/${workspaceId}`, {
-      headers: { 'X-Internal-Secret': this.INTERNAL_SECRET },
+    return this.http.get<WorkspaceSummary>(`${this.internalApiPath}/summary/${workspaceId}`, {
+      headers: this.internalHeaders(),
     });
   }
 
   getBatchSummaries(workspaceIds: string[]): Observable<WorkspaceSummary[]> {
-    return this.http.post<WorkspaceSummary[]>(`${this.INTERNAL_API}/summaries`, workspaceIds, {
-      headers: { 'X-Internal-Secret': this.INTERNAL_SECRET },
+    return this.http.post<WorkspaceSummary[]>(`${this.internalApiPath}/summaries`, workspaceIds, {
+      headers: this.internalHeaders(),
     });
   }
-
-  // ---- Analytics ----
-
-  /**
-   * Analytics de um workspace específico para o usuário autenticado.
-   * GET /api/task-analytics/workspace/{workspaceId}/user/{authId}
-   */
   getWorkspaceAnalytics(workspaceId: string, authId: string): Observable<TaskAnalytics> {
-    return this.http.get<TaskAnalytics>(
-      `${this.API}/task-analytics/workspace/${workspaceId}/user/${authId}`,
-    );
+    return this.http.get<TaskAnalytics>(`${this.apiPath}/task-analytics/workspace/${workspaceId}/user/${authId}`);
   }
 
-  /**
-   * Analytics do usuário em múltiplos workspaces.
-   * POST /api/task-analytics/user/{authId}/workspaces
-   */
   getUserAnalyticsAcrossWorkspaces(authId: string, workspaceIds: string[]): Observable<TaskAnalytics> {
-    return this.http.post<TaskAnalytics>(
-      `${this.API}/task-analytics/user/${authId}/workspaces`,
-      workspaceIds,
-    );
+    return this.http.post<TaskAnalytics>(`${this.apiPath}/task-analytics/user/${authId}/workspaces`, workspaceIds);
   }
 
-  /**
-   * Analytics globais do usuário (todos os workspaces).
-   * GET /api/task-analytics/user/{authId}
-   */
   getUserAnalytics(authId: string): Observable<TaskAnalytics> {
-    return this.http.get<TaskAnalytics>(`${this.API}/task-analytics/user/${authId}`);
+    return this.http.get<TaskAnalytics>(`${this.apiPath}/task-analytics/user/${authId}`);
+  }
+
+  private workspaceBoardsPath(workspaceId: string): string {
+    return `${this.apiPath}/workspaces/${workspaceId}/boards`;
+  }
+
+  private boardListsPath(workspaceId: string, boardId: string): string {
+    return `${this.workspaceBoardsPath(workspaceId)}/${boardId}/lists`;
+  }
+
+  private listTasksPath(workspaceId: string, listId: string): string {
+    return `${this.apiPath}/workspaces/${workspaceId}/lists/${listId}/tasks`;
+  }
+
+  private taskPath(workspaceId: string, taskId: string): string {
+    return `${this.apiPath}/workspaces/${workspaceId}/tasks/${taskId}`;
+  }
+
+  private internalHeaders(): Record<string, string> {
+    return { 'X-Internal-Secret': this.internalSecret };
   }
 }
