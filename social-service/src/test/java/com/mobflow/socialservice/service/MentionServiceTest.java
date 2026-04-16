@@ -44,4 +44,36 @@ class MentionServiceTest {
                         new MentionService.ResolvedMention(carlosId, "carlos123")
                 );
     }
+
+    @Test
+    void resolveMentions_duplicateMentions_returnsUniqueMentionsInOriginalOrder() {
+        UUID anaId = UUID.randomUUID();
+
+        when(authServiceClient.resolveByUsernames(List.of("ana_dev", "carlos123")))
+                .thenReturn(Map.of(
+                        "ana_dev", new AuthServiceClient.AuthUserSummaryResponse(anaId, "ana_dev")
+                ));
+
+        List<MentionService.ResolvedMention> mentions = mentionService.resolveMentions(
+                "@ana_dev talked to @carlos123 and again to @ana_dev"
+        );
+
+        assertThat(mentions)
+                .containsExactly(new MentionService.ResolvedMention(anaId, "ana_dev"));
+    }
+
+    @Test
+    void resolveMentions_invalidPatterns_returnsEmptyList() {
+        List<MentionService.ResolvedMention> mentions = mentionService.resolveMentions(
+                "@ab invalid @@double invalid @name-with-dash invalid"
+        );
+
+        assertThat(mentions).isEmpty();
+    }
+
+    @Test
+    void resolveMentions_emptyOrNullContent_returnsEmptyList() {
+        assertThat(mentionService.resolveMentions("   ")).isEmpty();
+        assertThat(mentionService.resolveMentions(null)).isEmpty();
+    }
 }
