@@ -48,6 +48,7 @@ public class Comment {
             List<String> mentions
     ) {
         return Comment.builder()
+                .id(UUID.randomUUID())
                 .taskId(taskId)
                 .workspaceId(workspaceId)
                 .authorId(authorId)
