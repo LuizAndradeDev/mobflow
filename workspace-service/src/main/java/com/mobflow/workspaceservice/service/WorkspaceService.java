@@ -110,29 +110,11 @@ public class WorkspaceService {
         Workspace workspace = findWorkspaceOrThrow(workspaceId);
         ensureIsAdminOrOwner(workspaceId, requestingAuthId);
         UUID targetAuthId = userServiceClient.resolveAuthIdByUsername(dto.getUsername());
-        if (targetAuthId == null) throw new MemberNotFoundException();
-        if (workspaceMemberRepository.existsByWorkspaceIdAndAuthId(workspaceId, targetAuthId)) {
-            throw new MemberAlreadyExistsException();
-        }
+        ensureResolvedAuthId(targetAuthId);
+        ensureMemberDoesNotExist(workspaceId, targetAuthId);
         WorkspaceMember member = workspaceMemberRepository.save(WorkspaceMember.create(workspace, targetAuthId, WorkspaceRole.MEMBER));
-        workspaceEventPublisher.publish(
-                "WORKSPACE_MEMBER_ADDED",
-                targetAuthId,
-                requestingAuthId,
-                targetAuthId,
-                workspace,
-                null,
-                WorkspaceRole.MEMBER.name()
-        );
-        notifyCurrentMembers(
-                workspaceId,
-                targetAuthId,
-                requestingAuthId,
-                "WORKSPACE_MEMBER_ADDED",
-                workspace,
-                null,
-                WorkspaceRole.MEMBER.name()
-        );
+        publishWorkspaceEvent("WORKSPACE_MEMBER_ADDED", targetAuthId, requestingAuthId, targetAuthId, workspace, null, WorkspaceRole.MEMBER.name());
+        notifyCurrentMembers(workspaceId, targetAuthId, requestingAuthId, "WORKSPACE_MEMBER_ADDED", workspace, null, WorkspaceRole.MEMBER.name());
         return member;
     }
 
@@ -141,24 +123,14 @@ public class WorkspaceService {
         Workspace workspace = findWorkspaceOrThrow(workspaceId);
         ensureIsAdminOrOwner(workspaceId, requestingAuthId);
         UUID targetAuthId = userServiceClient.resolveAuthIdByUsername(dto.getUsername());
-        if (targetAuthId == null) throw new MemberNotFoundException();
-        if (workspaceMemberRepository.existsByWorkspaceIdAndAuthId(workspaceId, targetAuthId)) {
-            throw new MemberAlreadyExistsException();
-        }
+        ensureResolvedAuthId(targetAuthId);
+        ensureMemberDoesNotExist(workspaceId, targetAuthId);
         if (workspaceInviteRepository.existsByWorkspaceIdAndTargetAuthIdAndStatus(workspaceId, targetAuthId, InviteStatus.PENDING)) {
             throw new MemberAlreadyExistsException();
         }
 
         WorkspaceInvite invite = workspaceInviteRepository.save(WorkspaceInvite.create(workspace, targetAuthId, requestingAuthId));
-        workspaceEventPublisher.publish(
-                "WORKSPACE_INVITE",
-                targetAuthId,
-                requestingAuthId,
-                targetAuthId,
-                workspace,
-                invite.getId().toString(),
-                null
-        );
+        publishWorkspaceEvent("WORKSPACE_INVITE", targetAuthId, requestingAuthId, targetAuthId, workspace, invite.getId().toString(), null);
         return invite;
     }
 
@@ -176,27 +148,9 @@ public class WorkspaceService {
         WorkspaceMember member = workspaceMemberRepository.save(
                 WorkspaceMember.create(invite.getWorkspace(), authId, WorkspaceRole.MEMBER)
         );
-        invite.setStatus(InviteStatus.ACCEPTED);
-        invite.setRespondedAt(java.time.LocalDateTime.now());
-        workspaceInviteRepository.save(invite);
-        workspaceEventPublisher.publish(
-                "WORKSPACE_INVITE_ACCEPTED",
-                invite.getInvitedByAuthId(),
-                authId,
-                authId,
-                invite.getWorkspace(),
-                invite.getId().toString(),
-                WorkspaceRole.MEMBER.name()
-        );
-        notifyCurrentMembers(
-                invite.getWorkspace().getId(),
-                authId,
-                authId,
-                "WORKSPACE_MEMBER_ADDED",
-                invite.getWorkspace(),
-                invite.getId().toString(),
-                WorkspaceRole.MEMBER.name()
-        );
+        updateInviteStatus(invite, InviteStatus.ACCEPTED);
+        publishWorkspaceEvent("WORKSPACE_INVITE_ACCEPTED", invite.getInvitedByAuthId(), authId, authId, invite.getWorkspace(), invite.getId().toString(), WorkspaceRole.MEMBER.name());
+        notifyCurrentMembers(invite.getWorkspace().getId(), authId, authId, "WORKSPACE_MEMBER_ADDED", invite.getWorkspace(), invite.getId().toString(), WorkspaceRole.MEMBER.name());
         return member;
     }
 
@@ -205,18 +159,8 @@ public class WorkspaceService {
         WorkspaceInvite invite = workspaceInviteRepository.findByIdAndTargetAuthIdAndStatus(inviteId, authId, InviteStatus.PENDING)
                 .orElseThrow(MemberNotFoundException::new);
 
-        invite.setStatus(InviteStatus.DECLINED);
-        invite.setRespondedAt(java.time.LocalDateTime.now());
-        WorkspaceInvite updatedInvite = workspaceInviteRepository.save(invite);
-        workspaceEventPublisher.publish(
-                "WORKSPACE_INVITE_DECLINED",
-                invite.getInvitedByAuthId(),
-                authId,
-                authId,
-                invite.getWorkspace(),
-                invite.getId().toString(),
-                null
-        );
+        WorkspaceInvite updatedInvite = updateInviteStatus(invite, InviteStatus.DECLINED);
+        publishWorkspaceEvent("WORKSPACE_INVITE_DECLINED", invite.getInvitedByAuthId(), authId, authId, invite.getWorkspace(), invite.getId().toString(), null);
         return updatedInvite;
     }
 
@@ -250,15 +194,7 @@ public class WorkspaceService {
         if (member.getRole() == WorkspaceRole.OWNER) throw new CannotRemoveOwnerException();
         Workspace workspace = member.getWorkspace();
         workspaceMemberRepository.delete(member);
-        workspaceEventPublisher.publish(
-                "WORKSPACE_MEMBER_REMOVED",
-                targetAuthId,
-                requestingAuthId,
-                targetAuthId,
-                workspace,
-                null,
-                member.getRole().name()
-        );
+        publishWorkspaceEvent("WORKSPACE_MEMBER_REMOVED", targetAuthId, requestingAuthId, targetAuthId, workspace, null, member.getRole().name());
         notifyCurrentMembers(
                 workspaceId,
                 targetAuthId,
@@ -280,15 +216,7 @@ public class WorkspaceService {
         if (member.getRole() == WorkspaceRole.OWNER) throw new CannotRemoveOwnerException();
         member.setRole(dto.getRole());
         WorkspaceMember updatedMember = workspaceMemberRepository.save(member);
-        workspaceEventPublisher.publish(
-                "WORKSPACE_ROLE_CHANGED",
-                targetAuthId,
-                requestingAuthId,
-                targetAuthId,
-                updatedMember.getWorkspace(),
-                null,
-                dto.getRole().name()
-        );
+        publishWorkspaceEvent("WORKSPACE_ROLE_CHANGED", targetAuthId, requestingAuthId, targetAuthId, updatedMember.getWorkspace(), null, dto.getRole().name());
         notifyCurrentMembers(
                 workspaceId,
                 targetAuthId,
@@ -337,6 +265,44 @@ public class WorkspaceService {
             throw new UnauthorizedWorkspaceActionException();
     }
 
+    private void ensureResolvedAuthId(UUID authId) {
+        if (authId == null) {
+            throw new MemberNotFoundException();
+        }
+    }
+
+    private void ensureMemberDoesNotExist(UUID workspaceId, UUID authId) {
+        if (workspaceMemberRepository.existsByWorkspaceIdAndAuthId(workspaceId, authId)) {
+            throw new MemberAlreadyExistsException();
+        }
+    }
+
+    private WorkspaceInvite updateInviteStatus(WorkspaceInvite invite, InviteStatus status) {
+        invite.setStatus(status);
+        invite.setRespondedAt(java.time.LocalDateTime.now());
+        return workspaceInviteRepository.save(invite);
+    }
+
+    private void publishWorkspaceEvent(
+            String eventType,
+            UUID recipientAuthId,
+            UUID actorAuthId,
+            UUID subjectAuthId,
+            Workspace workspace,
+            String inviteId,
+            String role
+    ) {
+        workspaceEventPublisher.publish(
+                eventType,
+                recipientAuthId,
+                actorAuthId,
+                subjectAuthId,
+                workspace,
+                inviteId,
+                role
+        );
+    }
+
     private String generateUniqueCode() {
         String code;
         do { code = generateCode(); } while (workspaceRepository.existsByPublicCode(code));
@@ -362,7 +328,7 @@ public class WorkspaceService {
         workspaceMemberRepository.findAllByWorkspaceId(workspaceId).stream()
                 .map(WorkspaceMember::getAuthId)
                 .filter(memberAuthId -> !memberAuthId.equals(excludedAuthId))
-                .forEach(recipientAuthId -> workspaceEventPublisher.publish(
+                .forEach(recipientAuthId -> publishWorkspaceEvent(
                         eventType,
                         recipientAuthId,
                         actorAuthId,
