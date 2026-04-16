@@ -1,11 +1,12 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { BrowserStorageService } from '../services/browser-storage.service';
 
 export const guestGuard: CanActivateFn = () => {
   const router = inject(Router);
-  const token = localStorage.getItem('token');
+  const storage = inject(BrowserStorageService);
 
-  if (token) {
+  if (storage.hasToken()) {
     router.navigate(['/home']);
     return false;
   }
