@@ -9,11 +9,6 @@ import org.springframework.web.client.RestClient;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-/**
- * HTTP client for internal communication with user-service.
- * Resolves display names and avatar URLs for a batch of authIds.
- */
 @Component
 public class UserServiceClient {
 
