@@ -1,9 +1,4 @@
 services:
-
-  # ============================================================================
-  # Infrastructure Services
-  # ============================================================================
-
   mongodb:
     image: mongo:latest
     container_name: moblfow-mongo
@@ -72,10 +67,6 @@ services:
     networks:
       - mobflow-network
 
-  # ============================================================================
-  # Database Services
-  # ============================================================================
-
   postgres:
     image: postgres:16
     container_name: mobflow-postgres
@@ -131,9 +122,6 @@ services:
       timeout: 5s
       retries: 10
 
-  # ============================================================================
-  # Microservices
-  # ============================================================================
 
   auth-service:
     build: ./auth-service
@@ -216,9 +204,27 @@ services:
     env_file:
       - .env
 
-  # ============================================================================
-  # Reverse Proxy
-  # ============================================================================
+  social-service:
+    build: ./social-service
+    container_name: mobflow-social
+    ports:
+      - "8085:8085"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      workspace-service:
+        condition: service_started
+      task-service:
+        condition: service_started
+    networks:
+      - mobflow-network
+    env_file:
+      - .env
+
 
   nginx:
     build:
@@ -233,6 +239,7 @@ services:
       - workspace-service
       - task-service
       - notification-service
+      - social-service
     networks:
       - mobflow-network
 
