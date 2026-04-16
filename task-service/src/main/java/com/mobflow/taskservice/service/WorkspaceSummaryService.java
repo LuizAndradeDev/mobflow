@@ -1,6 +1,5 @@
 package com.mobflow.taskservice.service;
 
-import com.mobflow.taskservice.client.UserServiceClient;
 import com.mobflow.taskservice.model.dto.response.WorkspaceSummaryDTO;
 import com.mobflow.taskservice.model.entities.Board;
 import com.mobflow.taskservice.model.entities.Task;
@@ -8,6 +7,7 @@ import com.mobflow.taskservice.model.entities.TaskList;
 import com.mobflow.taskservice.repository.BoardRepository;
 import com.mobflow.taskservice.repository.TaskListRepository;
 import com.mobflow.taskservice.repository.TaskRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,83 +23,45 @@ public class WorkspaceSummaryService {
     private final BoardRepository boardRepository;
     private final TaskListRepository taskListRepository;
     private final TaskRepository taskRepository;
-    private final UserServiceClient userServiceClient;
+    private final TaskProfileService taskProfileService;
+
+    @Autowired
+    public WorkspaceSummaryService(
+            BoardRepository boardRepository,
+            TaskListRepository taskListRepository,
+            TaskRepository taskRepository,
+            TaskProfileService taskProfileService
+    ) {
+        this.boardRepository = boardRepository;
+        this.taskListRepository = taskListRepository;
+        this.taskRepository = taskRepository;
+        this.taskProfileService = taskProfileService;
+    }
 
     public WorkspaceSummaryService(
             BoardRepository boardRepository,
             TaskListRepository taskListRepository,
             TaskRepository taskRepository,
-            UserServiceClient userServiceClient
+            com.mobflow.taskservice.client.UserServiceClient userServiceClient
     ) {
-        this.boardRepository = boardRepository;
-        this.taskListRepository = taskListRepository;
-        this.taskRepository = taskRepository;
-        this.userServiceClient = userServiceClient;
+        this(
+                boardRepository,
+                taskListRepository,
+                taskRepository,
+                new TaskProfileService(userServiceClient)
+        );
     }
 
-    /**
-     * Returns a compact summary of all boards in a single workspace.
-     * Each list includes a preview of up to 3 tasks (no full task payload).
-     */
     public WorkspaceSummaryDTO getSummary(UUID workspaceId) {
         List<Board> boards = boardRepository.findByWorkspaceIdOrderByPositionAsc(workspaceId);
-
-        // Collect all tasks for this workspace in one query to avoid N+1
         List<Task> allTasks = taskRepository.findByWorkspaceIdOrderByCreatedAtDesc(workspaceId);
         Map<UUID, List<Task>> tasksByListId = allTasks.stream()
-                .collect(Collectors.groupingBy(t -> t.getList().getId()));
+                .collect(Collectors.groupingBy(task -> task.getList().getId()));
+        Map<UUID, String> avatarUrlsByAuthId = taskProfileService.avatarUrlsByAuthId(allTasks);
 
-        // Resolve assignee avatars for preview tasks
-        List<UUID> assigneeIds = allTasks.stream()
-                .map(Task::getAssigneeAuthId)
-                .filter(id -> id != null)
-                .distinct()
+        List<WorkspaceSummaryDTO.BoardSummaryDTO> boardSummaries = boards.stream()
+                .map(board -> buildBoardSummary(board, tasksByListId, avatarUrlsByAuthId))
                 .toList();
-
-        Map<UUID, String> avatarByAuthId = userServiceClient.fetchProfiles(assigneeIds).stream()
-                .collect(Collectors.toMap(
-                        UserServiceClient.UserProfileResponse::authId,
-                        p -> p.avatarUrl() != null ? p.avatarUrl() : ""
-                ));
-
-        List<WorkspaceSummaryDTO.BoardSummaryDTO> boardSummaries = boards.stream().map(board -> {
-            List<TaskList> lists = taskListRepository.findByBoardIdOrderByPositionAsc(board.getId());
-
-            List<WorkspaceSummaryDTO.ListSummaryDTO> listSummaries = lists.stream().map(list -> {
-                List<Task> listTasks = tasksByListId.getOrDefault(list.getId(), List.of());
-
-                List<WorkspaceSummaryDTO.TaskCardDTO> preview = listTasks.stream()
-                        .limit(MAX_PREVIEW_TASKS)
-                        .map(t -> WorkspaceSummaryDTO.TaskCardDTO.builder()
-                                .id(t.getId())
-                                .title(t.getTitle())
-                                .priority(t.getPriority().name())
-                                .dueDate(t.getDueDate() != null ? t.getDueDate().toString() : null)
-                                .assigneeAvatarUrl(
-                                        t.getAssigneeAuthId() != null
-                                                ? avatarByAuthId.get(t.getAssigneeAuthId())
-                                                : null
-                                )
-                                .build())
-                        .toList();
-
-                return WorkspaceSummaryDTO.ListSummaryDTO.builder()
-                        .id(list.getId())
-                        .name(list.getName())
-                        .position(list.getPosition())
-                        .taskCount(listTasks.size())
-                        .previewTasks(preview)
-                        .build();
-            }).toList();
-
-            return WorkspaceSummaryDTO.BoardSummaryDTO.builder()
-                    .id(board.getId())
-                    .name(board.getName())
-                    .color(board.getColor())
-                    .position(board.getPosition())
-                    .lists(listSummaries)
-                    .build();
-        }).toList();
 
         return WorkspaceSummaryDTO.builder()
                 .workspaceId(workspaceId)
@@ -107,12 +69,66 @@ public class WorkspaceSummaryService {
                 .build();
     }
 
-    /**
-     * Returns summaries for multiple workspaces at once (used by the overview page).
-     */
     public List<WorkspaceSummaryDTO> getSummaries(List<UUID> workspaceIds) {
         return workspaceIds.stream()
                 .map(this::getSummary)
                 .toList();
+    }
+
+    private WorkspaceSummaryDTO.BoardSummaryDTO buildBoardSummary(
+            Board board,
+            Map<UUID, List<Task>> tasksByListId,
+            Map<UUID, String> avatarUrlsByAuthId
+    ) {
+        List<WorkspaceSummaryDTO.ListSummaryDTO> listSummaries = taskListRepository.findByBoardIdOrderByPositionAsc(board.getId()).stream()
+                .map(taskList -> buildListSummary(taskList, tasksByListId, avatarUrlsByAuthId))
+                .toList();
+
+        return WorkspaceSummaryDTO.BoardSummaryDTO.builder()
+                .id(board.getId())
+                .name(board.getName())
+                .color(board.getColor())
+                .position(board.getPosition())
+                .lists(listSummaries)
+                .build();
+    }
+
+    private WorkspaceSummaryDTO.ListSummaryDTO buildListSummary(
+            TaskList taskList,
+            Map<UUID, List<Task>> tasksByListId,
+            Map<UUID, String> avatarUrlsByAuthId
+    ) {
+        List<Task> listTasks = tasksByListId.getOrDefault(taskList.getId(), List.of());
+
+        return WorkspaceSummaryDTO.ListSummaryDTO.builder()
+                .id(taskList.getId())
+                .name(taskList.getName())
+                .position(taskList.getPosition())
+                .taskCount(listTasks.size())
+                .previewTasks(buildPreviewTasks(listTasks, avatarUrlsByAuthId))
+                .build();
+    }
+
+    private List<WorkspaceSummaryDTO.TaskCardDTO> buildPreviewTasks(
+            List<Task> tasks,
+            Map<UUID, String> avatarUrlsByAuthId
+    ) {
+        return tasks.stream()
+                .limit(MAX_PREVIEW_TASKS)
+                .map(task -> WorkspaceSummaryDTO.TaskCardDTO.builder()
+                        .id(task.getId())
+                        .title(task.getTitle())
+                        .priority(task.getPriority().name())
+                        .dueDate(task.getDueDate() == null ? null : task.getDueDate().toString())
+                        .assigneeAvatarUrl(resolveAvatarUrl(task.getAssigneeAuthId(), avatarUrlsByAuthId))
+                        .build())
+                .toList();
+    }
+
+    private String resolveAvatarUrl(UUID assigneeAuthId, Map<UUID, String> avatarUrlsByAuthId) {
+        if (assigneeAuthId == null) {
+            return null;
+        }
+        return avatarUrlsByAuthId.get(assigneeAuthId);
     }
 }

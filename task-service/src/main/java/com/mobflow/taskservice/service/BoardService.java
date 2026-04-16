@@ -1,28 +1,25 @@
 package com.mobflow.taskservice.service;
 
-import com.mobflow.taskservice.client.UserServiceClient;
 import com.mobflow.taskservice.client.WorkspaceClient;
 import com.mobflow.taskservice.exception.TaskServiceException;
 import com.mobflow.taskservice.model.dto.request.CreateBoardRequest;
 import com.mobflow.taskservice.model.dto.request.UpdateBoardRequest;
 import com.mobflow.taskservice.model.dto.response.BoardResponseDTO;
 import com.mobflow.taskservice.model.dto.response.TaskListResponseDTO;
-import com.mobflow.taskservice.model.dto.response.TaskResponseDTO;
 import com.mobflow.taskservice.model.entities.Board;
 import com.mobflow.taskservice.model.entities.Task;
 import com.mobflow.taskservice.model.entities.TaskList;
 import com.mobflow.taskservice.repository.BoardRepository;
 import com.mobflow.taskservice.repository.TaskListRepository;
 import com.mobflow.taskservice.repository.TaskRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class BoardService {
@@ -31,20 +28,37 @@ public class BoardService {
     private final TaskListRepository taskListRepository;
     private final TaskRepository taskRepository;
     private final WorkspaceClient workspaceClient;
-    private final UserServiceClient userServiceClient;
+    private final TaskProfileService taskProfileService;
+
+    @Autowired
+    public BoardService(
+            BoardRepository boardRepository,
+            TaskListRepository taskListRepository,
+            TaskRepository taskRepository,
+            WorkspaceClient workspaceClient,
+            TaskProfileService taskProfileService
+    ) {
+        this.boardRepository = boardRepository;
+        this.taskListRepository = taskListRepository;
+        this.taskRepository = taskRepository;
+        this.workspaceClient = workspaceClient;
+        this.taskProfileService = taskProfileService;
+    }
 
     public BoardService(
             BoardRepository boardRepository,
             TaskListRepository taskListRepository,
             TaskRepository taskRepository,
             WorkspaceClient workspaceClient,
-            UserServiceClient userServiceClient
+            com.mobflow.taskservice.client.UserServiceClient userServiceClient
     ) {
-        this.boardRepository = boardRepository;
-        this.taskListRepository = taskListRepository;
-        this.taskRepository = taskRepository;
-        this.workspaceClient = workspaceClient;
-        this.userServiceClient = userServiceClient;
+        this(
+                boardRepository,
+                taskListRepository,
+                taskRepository,
+                workspaceClient,
+                new TaskProfileService(userServiceClient)
+        );
     }
 
     @Cacheable(value = "boards", key = "#workspaceId")
@@ -101,50 +115,21 @@ public class BoardService {
         boardRepository.delete(board);
     }
 
-    // -----------------------------------------------------------------------
-    // Helpers
-    // -----------------------------------------------------------------------
-
     private BoardResponseDTO buildBoardResponse(Board board, boolean includeTasks) {
-        List<TaskList> lists = taskListRepository.findByBoardIdOrderByPositionAsc(board.getId());
-
-        List<TaskListResponseDTO> listDTOs = lists.stream().map(list -> {
-            if (!includeTasks) {
-                return TaskListResponseDTO.fromEntityWithoutTasks(list);
-            }
-
-            List<Task> tasks = taskRepository.findByListIdOrderByPositionAsc(list.getId());
-            Map<UUID, UserServiceClient.UserProfileResponse> profileMap = resolveProfiles(tasks);
-
-            List<TaskResponseDTO> taskDTOs = tasks.stream()
-                    .map(task -> {
-                        if (task.getAssigneeAuthId() != null) {
-                            UserServiceClient.UserProfileResponse profile = profileMap.get(task.getAssigneeAuthId());
-                            String displayName = profile != null ? profile.displayName() : null;
-                            String avatarUrl = profile != null ? profile.avatarUrl() : null;
-                            return TaskResponseDTO.fromEntity(task, displayName, avatarUrl);
-                        }
-                        return TaskResponseDTO.fromEntity(task);
-                    })
-                    .toList();
-
-            return TaskListResponseDTO.fromEntity(list, taskDTOs);
-        }).toList();
-
-        return BoardResponseDTO.fromEntity(board, listDTOs);
-    }
-
-    private Map<UUID, UserServiceClient.UserProfileResponse> resolveProfiles(List<Task> tasks) {
-        List<UUID> assigneeIds = tasks.stream()
-                .map(Task::getAssigneeAuthId)
-                .filter(id -> id != null)
-                .distinct()
+        List<TaskListResponseDTO> listResponses = taskListRepository.findByBoardIdOrderByPositionAsc(board.getId()).stream()
+                .map(taskList -> buildTaskListResponse(taskList, includeTasks))
                 .toList();
 
-        if (assigneeIds.isEmpty()) return Map.of();
+        return BoardResponseDTO.fromEntity(board, listResponses);
+    }
 
-        return userServiceClient.fetchProfiles(assigneeIds).stream()
-                .collect(Collectors.toMap(UserServiceClient.UserProfileResponse::authId, p -> p));
+    private TaskListResponseDTO buildTaskListResponse(TaskList taskList, boolean includeTasks) {
+        if (!includeTasks) {
+            return TaskListResponseDTO.fromEntityWithoutTasks(taskList);
+        }
+
+        List<Task> tasks = taskRepository.findByListIdOrderByPositionAsc(taskList.getId());
+        return TaskListResponseDTO.fromEntity(taskList, taskProfileService.toTaskResponses(tasks));
     }
 
     private void requireOwnerOrAdmin(UUID workspaceId, UUID authId) {
