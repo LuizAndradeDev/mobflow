@@ -1,5 +1,6 @@
 package com.mobflow.authservice.services;
 
+import com.mobflow.authservice.model.dtos.response.InternalUserLookupResponseDTO;
 import com.mobflow.authservice.model.dtos.request.RegisterUserCredentialsDTO;
 import com.mobflow.authservice.model.entities.UserCredential;
 import com.mobflow.authservice.model.enums.ErrorTP;
@@ -9,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,6 +46,23 @@ public class UserCredentialService {
 
     public UserCredential findUserCredentialByUsername(String username) {
         return userCredentialRepository.findByUsername(username).orElseThrow(() -> new GenericAplicationException(ErrorTP.USER_NOT_FOUND));
+    }
+
+    public InternalUserLookupResponseDTO getUserByUsername(String username) {
+        return InternalUserLookupResponseDTO.fromEntity(findUserCredentialByUsername(username));
+    }
+
+    public List<InternalUserLookupResponseDTO> resolveUsersByUsername(List<String> usernames) {
+        if (usernames == null || usernames.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return usernames.stream()
+                .distinct()
+                .map(userCredentialRepository::findByUsername)
+                .flatMap(java.util.Optional::stream)
+                .map(InternalUserLookupResponseDTO::fromEntity)
+                .toList();
     }
 
     public List<UserCredential> allUsers() {
