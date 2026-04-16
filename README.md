@@ -1,0 +1,229 @@
+# Mobflow
+
+## Overview
+
+Mobflow is a productivity and collaboration SaaS for teams that need a structured workspace model, task execution visibility, and event-driven notifications without collapsing all responsibilities into a single deployable unit. The project is implemented as a monorepo with independent Spring Boot microservices and an Angular frontend. It is designed to demonstrate production-grade engineering concerns: stateless authentication with JWT, asynchronous messaging with Kafka, polyglot persistence with PostgreSQL and MongoDB, Redis-backed caching, object storage with MinIO, and full containerized local orchestration with Docker Compose.
+
+The platform is intended for engineering teams, product teams, and portfolio reviewers who want to inspect a realistic microservice-based collaboration system rather than a simplified CRUD sample. Each service owns a bounded slice of the domain and persists its own data store, while the frontend consumes the public HTTP APIs with Bearer authentication.
+
+## Architecture
+
+```text
+Browser
+  |
+  v
+web-app (Angular 21)
+  |
+  +--> auth-service (8080) --------> PostgreSQL: mobflow_auth
+  |
+  +--> user-service (8081) --------> PostgreSQL: mobflow_users
+  |                                   |
+  |                                   +--> Redis 7 (profile cache)
+  |                                   |
+  |                                   +--> MinIO (avatar objects)
+  |
+  +--> workspace-service (8082) ----> PostgreSQL: mobflow_workspaces
+  |          |
+  |          +--> user-service /internal/users/by-username/{username}
+  |          +--> user-service /internal/users/batch
+  |          +--> Kafka topic: workspace.events
+  |
+  +--> task-service (8083, context-path /tasks) -> PostgreSQL: mobflow_tasks
+             |
+             +--> workspace-service /internal/workspaces/{id}/members/{authId}/role
+             +--> user-service /internal/users/batch
+             +--> Kafka topic: task.events
+
+auth-service
+  |
+  +--> Kafka topic: auth.events
+
+notification-service (8084)
+  |
+  +--> consumes task.events
+  +--> consumes workspace.events
+  +--> consumes auth.events
+  +--> MongoDB database: notifications
+  +--> JavaMailSender + Thymeleaf
+```
+
+### Internal Communication Model
+
+- Frontend to services: JWT Bearer token on public `/api/**` endpoints.
+- Synchronous service-to-service calls: `/internal/**` endpoints protected by the `X-Internal-Secret` header.
+- Asynchronous service-to-service communication: Kafka topics `task.events`, `workspace.events`, and `auth.events`.
+
+## Technology Stack
+
+| Layer | Technologies |
+| --- | --- |
+| Backend | Java 21, Spring Boot 3.5.x, Spring Security, JJWT 0.11.5, Spring Data JPA, Spring Data MongoDB, Spring Kafka, Spring Cache, Flyway, Validation, Lombok, Actuator, Thymeleaf, Maven Wrapper |
+| Frontend | Angular 21, TypeScript 5.9 in strict mode, RxJS 7.8, Tailwind CSS 4 |
+| Infrastructure | Docker, Docker Compose, PostgreSQL 16, MongoDB, Redis 7 Alpine, MinIO, Apache Kafka (Confluent 7.6), Zookeeper |
+
+## Repository Structure
+
+```text
+mobflow/
+├── auth-service/           # Authentication, account confirmation, JWT issuance
+├── user-service/           # User profiles, avatar upload, profile caching
+├── workspace-service/      # Workspaces, membership, invite lifecycle, join codes
+├── task-service/           # Boards, lists, tasks, drag-and-drop ordering, analytics
+├── notification-service/   # Kafka consumer, notification persistence, email delivery
+├── web-app/                # Angular frontend with public and authenticated pages
+├── docker-compose.yaml     # Full local orchestration for infra and applications
+├── .env                    # Centralized runtime configuration for all containers
+├── init-db.sql             # PostgreSQL database bootstrap for service isolation
+├── nginx.conf              # HTTP server configuration used in container deployment
+├── web-app.conf            # Frontend/static/proxy server block configuration
+└── Dockerfile.nginx        # Build pipeline for the frontend container image
+```
+
+## Prerequisites
+
+- Docker Desktop `24+`
+- Node.js `20.19+`
+- npm
+
+Java and Maven do not need to be installed locally because all backend services are built inside Docker images with their own wrappers and toolchains.
+
+## Environment Configuration
+
+All containers use the root `.env` file. The following variables are required.
+
+```dotenv
+# PostgreSQL connection shared settings
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+
+# Dedicated PostgreSQL databases, one per service
+AUTH_DB=mobflow_auth
+USER_DB=mobflow_users
+WORKSPACE_DB=mobflow_workspaces
+TASK_DB=mobflow_tasks
+
+# Stateless JWT configuration shared by every service
+# JWT_SECRET must be a Base64-encoded 256-bit key
+JWT_SECRET=replace_with_base64_256_bit_secret
+JWT_EXPIRATION=86400000
+
+# Shared secret for synchronous service-to-service /internal/** calls
+INTERNAL_SECRET=replace_with_internal_secret
+
+# Redis cache used by user-service
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# MinIO object storage used by user-service avatar uploads
+MINIO_ENDPOINT=http://minio:9000
+MINIO_PUBLIC_URL=http://localhost:9000
+MINIO_ROOT_USER=minio
+MINIO_ROOT_PASSWORD=minio123
+MINIO_BUCKET=mobflow-avatars
+
+# MongoDB credentials used by notification-service
+MONGO_USER=mobflow
+MONGO_PASSWORD=mobflow
+
+# Kafka bootstrap server used by event producers and consumers
+KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+# Service base URLs used for synchronous internal requests
+WORKSPACE_SERVICE_URL=http://workspace-service:8082
+USER_SERVICE_URL=http://user-service:8081
+
+# SMTP configuration used by notification-service email delivery
+MAIL_HOST=mailhog
+MAIL_PORT=1025
+MAIL_USERNAME=
+MAIL_PASSWORD=
+
+# Public base URL used in generated links such as email confirmation flows
+APP_BASE_URL=http://localhost
+```
+
+## PostgreSQL Bootstrap
+
+`init-db.sql` must create the four isolated PostgreSQL databases used by the relational services.
+
+```sql
+CREATE DATABASE mobflow_auth;
+CREATE DATABASE mobflow_users;
+CREATE DATABASE mobflow_workspaces;
+CREATE DATABASE mobflow_tasks;
+```
+
+This file is mounted into the PostgreSQL container during local startup so each service can run Flyway migrations against its own schema boundary.
+
+## Running the Platform
+
+### Start the Full Stack
+
+```bash
+docker compose up --build
+```
+
+### Start the Frontend in Development Mode
+
+```bash
+cd web-app
+npm install
+npm start
+```
+
+### Verification Commands
+
+```bash
+docker compose ps
+curl http://localhost:8080/actuator/health
+curl http://localhost:8081/actuator/health
+curl http://localhost:8082/actuator/health
+curl http://localhost:8083/tasks/actuator/health
+curl http://localhost:8084/actuator/health
+```
+
+## Service Catalog
+
+| Service | Port | Database / State | Description |
+| --- | --- | --- | --- |
+| `auth-service` | `8080` | PostgreSQL `mobflow_auth` | Issues JWTs, stores credentials, confirms accounts by token, and exposes the authenticated profile identity. |
+| `user-service` | `8081` | PostgreSQL `mobflow_users`, Redis, MinIO | Manages profile metadata, avatar uploads, and cached profile reads consumed by both frontend and internal services. |
+| `workspace-service` | `8082` | PostgreSQL `mobflow_workspaces` | Owns workspace creation, member roles, invite lifecycle, and public join-code access. |
+| `task-service` | `8083` | PostgreSQL `mobflow_tasks` | Owns boards, task lists, tasks, drag-and-drop ordering, workspace summaries, and authenticated analytics endpoints. |
+| `notification-service` | `8084` | MongoDB `notifications` | Persists in-app notifications, computes unread counters, marks notifications as read, and sends email notifications from Kafka events. |
+| `web-app` | `4200` | Browser state | Angular client with landing, onboarding, workspace, task, analytics, profile, and settings flows. |
+
+## Authentication Model
+
+Mobflow uses stateless JWT authentication. The `auth-service` authenticates credentials and signs a token whose standard subject is the username and whose custom `authId` claim is the canonical user identifier shared across the platform. Every backend service validates the token independently using the same `JWT_SECRET`, extracts `authId`, and uses that value as the actor identity for authorization decisions and data ownership.
+
+Account creation is a two-step flow:
+
+1. A new account is created in `auth-service` with `enabled=false`.
+2. A UUID confirmation token with a 24-hour expiration window is generated and published as an `EMAIL_CONFIRMATION` event.
+3. The `notification-service` sends the confirmation email.
+4. Once the confirmation endpoint is called with the token, the account is enabled and can authenticate normally.
+
+## Event-Driven Messaging
+
+Kafka is used for cross-service notifications. Producers serialize self-contained event payloads with `KafkaTemplate<String, String>` and `ObjectMapper`. The `notification-service` consumes `String` payloads, deserializes them manually, and discards malformed events after logging them instead of rethrowing.
+
+### Topics and Event Types
+
+| Topic | Produced By | Event Types |
+| --- | --- | --- |
+| `task.events` | `task-service` | `TASK_CREATED`, `TASK_ASSIGNED`, `TASK_UPDATED`, `TASK_DELETED`, `TASK_COMPLETED`, `TASK_DUE_SOON` |
+| `workspace.events` | `workspace-service` | `WORKSPACE_INVITE`, `WORKSPACE_MEMBER_ADDED`, `WORKSPACE_MEMBER_REMOVED`, `WORKSPACE_ROLE_CHANGED` |
+| `auth.events` | `auth-service` | `EMAIL_CONFIRMATION` |
+
+All event payloads are self-contained. The `notification-service` does not call upstream services to enrich notification content after consuming an event.
+
+## Service Documentation
+
+- [auth-service README](auth-service/README.md)
+- [user-service README](user-service/README.md)
+- [workspace-service README](workspace-service/README.md)
+- [task-service README](task-service/README.md)
+- [notification-service README](notification-service/README.md)
