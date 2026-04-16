@@ -11,7 +11,7 @@ import java.util.UUID;
 @Service
 public class StorageService {
 
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
     private static final Set<String> ALLOWED_TYPES = Set.of(
             "image/jpeg", "image/png", "image/webp"
     );
@@ -32,7 +32,7 @@ public class StorageService {
         validateFile(file);
         ensureBucketExists();
 
-        String objectName = "avatars/" + UUID.randomUUID() + getExtension(file.getOriginalFilename());
+        String objectName = buildObjectName(file.getOriginalFilename());
 
         try {
             minioClient.putObject(
@@ -51,7 +51,9 @@ public class StorageService {
     }
 
     public void deleteAvatar(String avatarUrl) {
-        if (avatarUrl == null || avatarUrl.isBlank()) return;
+        if (avatarUrl == null || avatarUrl.isBlank()) {
+            return;
+        }
 
         try {
             String objectName = avatarUrl.substring(avatarUrl.indexOf("/avatars/"));
@@ -80,20 +82,16 @@ public class StorageService {
 
     private void ensureBucketExists() {
         try {
-            boolean exists = minioClient.bucketExists(
-                    BucketExistsArgs.builder().bucket(bucket).build()
-            );
-            if (!exists) {
-                minioClient.makeBucket(
-                        MakeBucketArgs.builder().bucket(bucket).build()
-                );
-                minioClient.setBucketPolicy(
-                        SetBucketPolicyArgs.builder()
-                                .bucket(bucket)
-                                .config(buildPublicReadPolicy(bucket))
-                                .build()
-                );
+            if (bucketExists()) {
+                return;
             }
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
+            minioClient.setBucketPolicy(
+                    SetBucketPolicyArgs.builder()
+                            .bucket(bucket)
+                            .config(buildPublicReadPolicy(bucket))
+                            .build()
+            );
         } catch (Exception e) {
             throw new RuntimeException("Failed to ensure bucket exists", e);
         }
@@ -116,7 +114,17 @@ public class StorageService {
     }
 
     private String getExtension(String filename) {
-        if (filename == null || !filename.contains(".")) return ".jpg";
+        if (filename == null || !filename.contains(".")) {
+            return ".jpg";
+        }
         return filename.substring(filename.lastIndexOf("."));
+    }
+
+    private boolean bucketExists() throws Exception {
+        return minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
+    }
+
+    private String buildObjectName(String filename) {
+        return "avatars/" + UUID.randomUUID() + getExtension(filename);
     }
 }

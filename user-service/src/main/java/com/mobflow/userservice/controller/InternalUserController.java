@@ -2,11 +2,16 @@ package com.mobflow.userservice.controller;
 
 import com.mobflow.userservice.model.dto.response.BatchUserResponseDTO;
 import com.mobflow.userservice.model.dto.response.UserProfileResponseDTO;
-import com.mobflow.userservice.model.entities.UserProfile;
 import com.mobflow.userservice.services.UserProfileService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,49 +38,24 @@ public class InternalUserController {
             @PathVariable String username,
             @RequestHeader(INTERNAL_SECRET_HEADER) String secret
     ) {
-        if (!internalSecret.equals(secret)) return ResponseEntity.status(403).build();
-
-        UserProfileResponseDTO profile = userProfileService.getProfileByUsername(username);
-        return ResponseEntity.ok(profile);
+        if (!hasValidSecret(secret)) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(userProfileService.getProfileByUsername(username));
     }
 
-    /**
-     * Batch endpoint: receives a list of authIds and returns profiles.
-     * Each individual profile lookup goes through @Cacheable in UserProfileService,
-     * so repeated calls for the same authId are served from Redis without hitting PostgreSQL.
-     *
-     * Flow:
-     *   workspace-service calls this with [uuid1, uuid2, uuid3]
-     *   → for each uuid: check Redis → HIT: return cached / MISS: query DB, cache, return
-     *   → total DB queries = only for uncached profiles
-     */
     @PostMapping("/batch")
     public ResponseEntity<List<BatchUserResponseDTO>> getBatch(
             @RequestBody List<UUID> authIds,
             @RequestHeader(INTERNAL_SECRET_HEADER) String secret
     ) {
-        if (!internalSecret.equals(secret)) return ResponseEntity.status(403).build();
+        if (!hasValidSecret(secret)) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(userProfileService.getBatchProfiles(authIds));
+    }
 
-        List<BatchUserResponseDTO> result = authIds.stream()
-                .map(authId -> {
-                    try {
-                        UserProfile profile = userProfileService.getProfileByAuthId(authId);
-                        return BatchUserResponseDTO.builder()
-                                .authId(profile.getAuthId())
-                                .displayName(profile.getDisplayName())
-                                .avatarUrl(profile.getAvatarUrl())
-                                .build();
-                    } catch (Exception e) {
-                        // profile not found — return minimal fallback so member list still renders
-                        return BatchUserResponseDTO.builder()
-                                .authId(authId)
-                                .displayName(authId.toString().substring(0, 8))
-                                .avatarUrl(null)
-                                .build();
-                    }
-                })
-                .toList();
-
-        return ResponseEntity.ok(result);
+    private boolean hasValidSecret(String secret) {
+        return internalSecret.equals(secret);
     }
 }
