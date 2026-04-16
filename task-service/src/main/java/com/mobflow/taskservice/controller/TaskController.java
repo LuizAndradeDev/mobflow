@@ -9,7 +9,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,9 +30,6 @@ public class TaskController {
         this.taskService = taskService;
     }
 
-    /**
-     * List all tasks inside a specific list (column).
-     */
     @GetMapping("/api/workspaces/{workspaceId}/lists/{listId}/tasks")
     public ResponseEntity<List<TaskResponseDTO>> listTasks(
             @PathVariable UUID workspaceId,
@@ -34,9 +38,6 @@ public class TaskController {
         return ResponseEntity.ok(taskService.listTasksByList(listId));
     }
 
-    /**
-     * Get a single task by ID.
-     */
     @GetMapping("/api/workspaces/{workspaceId}/tasks/{taskId}")
     public ResponseEntity<TaskResponseDTO> getTask(
             @PathVariable UUID workspaceId,
@@ -45,9 +46,6 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getTask(taskId));
     }
 
-    /**
-     * Create a task inside a list.
-     */
     @PostMapping("/api/workspaces/{workspaceId}/lists/{listId}/tasks")
     public ResponseEntity<TaskResponseDTO> createTask(
             @PathVariable UUID workspaceId,
@@ -55,14 +53,10 @@ public class TaskController {
             @Valid @RequestBody CreateTaskRequest request,
             Authentication authentication
     ) {
-        UUID authId = (UUID) authentication.getCredentials();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(taskService.createTask(workspaceId, listId, authId, request));
+                .body(taskService.createTask(workspaceId, listId, currentAuthId(authentication), request));
     }
 
-    /**
-     * Update task fields (title, description, priority, assignee, dueDate, status).
-     */
     @PutMapping("/api/workspaces/{workspaceId}/tasks/{taskId}")
     public ResponseEntity<TaskResponseDTO> updateTask(
             @PathVariable UUID workspaceId,
@@ -70,14 +64,9 @@ public class TaskController {
             @Valid @RequestBody UpdateTaskRequest request,
             Authentication authentication
     ) {
-        UUID authId = (UUID) authentication.getCredentials();
-        return ResponseEntity.ok(taskService.updateTask(workspaceId, taskId, authId, request));
+        return ResponseEntity.ok(taskService.updateTask(workspaceId, taskId, currentAuthId(authentication), request));
     }
 
-    /**
-     * Move a task to a different list / position (drag-and-drop).
-     * Requires OWNER or ADMIN role.
-     */
     @PatchMapping("/api/workspaces/{workspaceId}/tasks/{taskId}/move")
     public ResponseEntity<TaskResponseDTO> moveTask(
             @PathVariable UUID workspaceId,
@@ -85,21 +74,20 @@ public class TaskController {
             @Valid @RequestBody MoveTaskRequest request,
             Authentication authentication
     ) {
-        UUID authId = (UUID) authentication.getCredentials();
-        return ResponseEntity.ok(taskService.moveTask(workspaceId, taskId, authId, request));
+        return ResponseEntity.ok(taskService.moveTask(workspaceId, taskId, currentAuthId(authentication), request));
     }
 
-    /**
-     * Delete a task. Requires OWNER or ADMIN role.
-     */
     @DeleteMapping("/api/workspaces/{workspaceId}/tasks/{taskId}")
     public ResponseEntity<Void> deleteTask(
             @PathVariable UUID workspaceId,
             @PathVariable UUID taskId,
             Authentication authentication
     ) {
-        UUID authId = (UUID) authentication.getCredentials();
-        taskService.deleteTask(workspaceId, taskId, authId);
+        taskService.deleteTask(workspaceId, taskId, currentAuthId(authentication));
         return ResponseEntity.noContent().build();
+    }
+
+    private UUID currentAuthId(Authentication authentication) {
+        return (UUID) authentication.getCredentials();
     }
 }
