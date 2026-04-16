@@ -6,13 +6,6 @@ import { SidebarComponent } from './sidebar.component';
   selector: 'app-main-layout',
   standalone: true,
   imports: [RouterOutlet, SidebarComponent],
-  template: `
-    <div class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
-      <app-sidebar></app-sidebar>
-      <main class="flex-1 overflow-y-auto">
-        <router-outlet></router-outlet>
-      </main>
-    </div>
-  `,
+  templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent {}

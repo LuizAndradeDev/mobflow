@@ -1,19 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { AlertComponent } from './shared/components/alert/alert.component';
 import { AuthService } from './core/services/auth.service';
 import { UserStateService } from './core/services/user-state.service';
-import { CommonModule } from '@angular/common';
 import { BrowserStorageService } from './core/services/browser-storage.service';
 import { ThemeService } from './core/services/theme.service';
+import { AlertComponent } from './shared/components/alert/alert.component';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, AlertComponent, CommonModule],
-  template: `
-    <app-alert></app-alert>
-    <router-outlet></router-outlet>
-  `,
+  imports: [RouterOutlet, AlertComponent],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
 export class App implements OnInit {
   constructor(
