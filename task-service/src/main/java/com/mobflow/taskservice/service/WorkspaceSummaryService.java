@@ -1,5 +1,6 @@
 package com.mobflow.taskservice.service;
 
+import com.mobflow.taskservice.client.WorkspaceClient;
 import com.mobflow.taskservice.model.dto.response.WorkspaceSummaryDTO;
 import com.mobflow.taskservice.model.entities.Board;
 import com.mobflow.taskservice.model.entities.Task;
@@ -23,6 +24,7 @@ public class WorkspaceSummaryService {
     private final BoardRepository boardRepository;
     private final TaskListRepository taskListRepository;
     private final TaskRepository taskRepository;
+    private final WorkspaceClient workspaceClient;
     private final TaskProfileService taskProfileService;
 
     @Autowired
@@ -30,11 +32,13 @@ public class WorkspaceSummaryService {
             BoardRepository boardRepository,
             TaskListRepository taskListRepository,
             TaskRepository taskRepository,
+            WorkspaceClient workspaceClient,
             TaskProfileService taskProfileService
     ) {
         this.boardRepository = boardRepository;
         this.taskListRepository = taskListRepository;
         this.taskRepository = taskRepository;
+        this.workspaceClient = workspaceClient;
         this.taskProfileService = taskProfileService;
     }
 
@@ -42,17 +46,40 @@ public class WorkspaceSummaryService {
             BoardRepository boardRepository,
             TaskListRepository taskListRepository,
             TaskRepository taskRepository,
+            WorkspaceClient workspaceClient,
             com.mobflow.taskservice.client.UserServiceClient userServiceClient
     ) {
         this(
                 boardRepository,
                 taskListRepository,
                 taskRepository,
+                workspaceClient,
                 new TaskProfileService(userServiceClient)
         );
     }
 
+    public WorkspaceSummaryDTO getSummary(UUID workspaceId, UUID authId) {
+        workspaceClient.getMemberRole(workspaceId, authId);
+        return buildSummary(workspaceId);
+    }
+
     public WorkspaceSummaryDTO getSummary(UUID workspaceId) {
+        return buildSummary(workspaceId);
+    }
+
+    public List<WorkspaceSummaryDTO> getSummaries(List<UUID> workspaceIds, UUID authId) {
+        return workspaceIds.stream()
+                .map(workspaceId -> getSummary(workspaceId, authId))
+                .toList();
+    }
+
+    public List<WorkspaceSummaryDTO> getSummaries(List<UUID> workspaceIds) {
+        return workspaceIds.stream()
+                .map(this::getSummary)
+                .toList();
+    }
+
+    private WorkspaceSummaryDTO buildSummary(UUID workspaceId) {
         List<Board> boards = boardRepository.findByWorkspaceIdOrderByPositionAsc(workspaceId);
         List<Task> allTasks = taskRepository.findByWorkspaceIdOrderByCreatedAtDesc(workspaceId);
         Map<UUID, List<Task>> tasksByListId = allTasks.stream()
@@ -67,12 +94,6 @@ public class WorkspaceSummaryService {
                 .workspaceId(workspaceId)
                 .boards(boardSummaries)
                 .build();
-    }
-
-    public List<WorkspaceSummaryDTO> getSummaries(List<UUID> workspaceIds) {
-        return workspaceIds.stream()
-                .map(this::getSummary)
-                .toList();
     }
 
     private WorkspaceSummaryDTO.BoardSummaryDTO buildBoardSummary(
