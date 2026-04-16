@@ -1,6 +1,6 @@
 package com.mobflow.userservice.model.dto.response;
 
-import com.mobflow.userservice.exception.enums.ErrorType;
+import com.mobflow.userservice.exceptions.enums.ErrorType;
 import lombok.Builder;
 import lombok.Data;
 
