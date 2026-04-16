@@ -13,6 +13,7 @@ import { WorkspaceService } from '../../core/services/workspace.service';
 import { TaskService } from '../../core/services/task.service';
 import { Workspace } from '../../core/models/workspace.model';
 import { TaskAnalytics } from '../../core/models/task.model';
+import { calculateCompletionPercentage, EMPTY_TASK_ANALYTICS } from '../../core/utils/task-analytics.util';
 
 @Component({
   selector: 'app-home',
@@ -21,16 +22,12 @@ import { TaskAnalytics } from '../../core/models/task.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="p-8 max-w-5xl mx-auto">
-
-      <!-- Welcome header -->
       <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
           Welcome back, {{ profile?.displayName || 'there' }} 👋
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Here's what's happening across your teams</p>
       </div>
-
-      <!-- KPI cards -->
       @if (isLoading) {
         <div class="grid grid-cols-4 gap-4 mb-8">
           @for (i of [1,2,3,4]; track i) {
@@ -66,11 +63,7 @@ import { TaskAnalytics } from '../../core/models/task.model';
           </div>
         </div>
       }
-
-      <!-- Content grid -->
       <div class="grid grid-cols-3 gap-6">
-
-        <!-- Created Tasks -->
         <div class="col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
           <div class="flex items-center justify-between mb-5">
             <h2 class="font-semibold text-gray-800 dark:text-gray-100">My Activity</h2>
@@ -128,8 +121,6 @@ import { TaskAnalytics } from '../../core/models/task.model';
             </a>
           }
         </div>
-
-        <!-- My Teams -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
           <h2 class="font-semibold text-gray-800 dark:text-gray-100 mb-5">My Teams</h2>
           @if (isLoading) {
@@ -175,9 +166,9 @@ export class HomeComponent implements OnInit {
 
   constructor(
     public userProfileState: UserProfileStateService,
-    private workspaceService: WorkspaceService,
-    private taskService: TaskService,
-    private cdr: ChangeDetectorRef,
+    private readonly workspaceService: WorkspaceService,
+    private readonly taskService: TaskService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   get profile() {
@@ -185,17 +176,20 @@ export class HomeComponent implements OnInit {
   }
 
   get completionPct(): number {
-    if (!this.analytics) return 0;
-    const assigned = this.analytics.assignedTasks;
-    const completed = this.analytics.completedTasks;
-    return assigned > 0 ? Math.round((completed / assigned) * 100) : 0;
+    if (!this.analytics) {
+      return 0;
+    }
+
+    return calculateCompletionPercentage(
+      this.analytics.completedTasks,
+      this.analytics.assignedTasks,
+    );
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     const profile = this.userProfileState.profile();
     if (!profile) {
-      this.isLoading = false;
-      this.cdr.markForCheck();
+      this.finishLoading();
       return;
     }
 
@@ -204,25 +198,22 @@ export class HomeComponent implements OnInit {
     forkJoin({
       workspaces: this.workspaceService.listMine().pipe(catchError(() => of([] as Workspace[]))),
       analytics: this.taskService.getUserAnalytics(authId).pipe(
-        catchError(() => of<TaskAnalytics>({
-          totalTasks: 0,
-          completedTasks: 0,
-          createdTasks: 0,
-          assignedTasks: 0,
-          overdueTasks: 0,
-        })),
+        catchError(() => of(EMPTY_TASK_ANALYTICS)),
       ),
     }).subscribe({
       next: ({ workspaces, analytics }) => {
         this.workspaces = workspaces;
         this.analytics = analytics;
-        this.isLoading = false;
-        this.cdr.markForCheck();
+        this.finishLoading();
       },
       error: () => {
-        this.isLoading = false;
-        this.cdr.markForCheck();
+        this.finishLoading();
       },
     });
+  }
+
+  private finishLoading(): void {
+    this.isLoading = false;
+    this.cdr.markForCheck();
   }
 }
