@@ -1,343 +1,214 @@
 <app-navbar-public></app-navbar-public>
 
-<div class="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-
-  
-  <section class="relative pt-36 pb-28 px-6 overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-950 dark:to-blue-950 -z-10"></div>
-    <div class="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-400/10 dark:bg-blue-500/5 rounded-full blur-3xl -z-10"></div>
-    <div class="max-w-4xl mx-auto text-center">
-      <span class="inline-block px-4 py-1.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-full mb-6 tracking-wider uppercase">Open Source · Work in Progress</span>
-      <h1 class="text-6xl font-black tracking-tight mb-6 leading-tight">
-        The productivity platform<br>
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">built for developers</span>
-      </h1>
-      <p class="text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-        Mobflow is a full-stack SaaS for team collaboration — workspaces, tasks, analytics and real-time chat. Built with Java Spring Boot, Angular and modern cloud infrastructure.
-      </p>
-      <div class="flex items-center justify-center gap-4">
-        <a
-          routerLink="/signup"
-          class="px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-500/25"
-        >
-          Get started free
-        </a>
-        <a
-          href="https://github.com"
-          target="_blank"
-          class="px-8 py-3.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-semibold rounded-xl transition flex items-center gap-2"
-        >
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-          </svg>
-          GitHub
-        </a>
-      </div>
-    </div>
-  </section>
-
-  
-  <section class="py-24 px-6 bg-gray-50 dark:bg-gray-900">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold mb-4">What is Mobflow?</h2>
-        <p class="text-gray-500 dark:text-gray-400 text-lg max-w-2xl mx-auto">A real-world SaaS built to demonstrate professional-grade software engineering — from architecture to deployment.</p>
-      </div>
-      <div class="grid grid-cols-3 gap-6">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
-          <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center mb-4">
-            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-            </svg>
-          </div>
-          <h3 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Team Workspaces</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Organize your work in collaborative workspaces. Invite teammates, assign roles and manage projects together.</p>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
-          <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/40 rounded-xl flex items-center justify-center mb-4">
-            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-          </div>
-          <h3 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Task Management</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Boards, lists and tasks with priorities, deadlines and assignments. Everything your team needs to stay on track.</p>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
-          <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/40 rounded-xl flex items-center justify-center mb-4">
-            <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
-          </div>
-          <h3 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Real-time Chat</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Team chat with direct messages and channels. Built with WebSocket for instant communication. Coming soon.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  
-  <section class="py-24 px-6">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold mb-4">Current Stack</h2>
-        <p class="text-gray-500 dark:text-gray-400 text-lg">Production-ready technologies powering Mobflow today</p>
-      </div>
-      <div class="grid grid-cols-2 gap-6">
-        <div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
-          <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-4">Backend</h3>
-          <div class="space-y-3">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span class="text-orange-600 font-bold text-xs">J</span>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Java 21</p>
-                <p class="text-xs text-gray-400">Modern Java with records, sealed classes and virtual threads</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span class="text-green-600 font-bold text-xs">SB</span>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Spring Boot 3.5</p>
-                <p class="text-xs text-gray-400">Web, Security, Data JPA, Validation, Actuator</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span class="text-blue-600 font-bold text-xs">PG</span>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">PostgreSQL 16</p>
-                <p class="text-xs text-gray-400">Relational database for all structured data with Flyway migrations</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span class="text-red-600 font-bold text-xs">JWT</span>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">JWT Authentication</p>
-                <p class="text-xs text-gray-400">Stateless auth with role-based access control</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
-          <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-4">Frontend & Infrastructure</h3>
-          <div class="space-y-3">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span class="text-red-600 font-bold text-xs">NG</span>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Angular 21</p>
-                <p class="text-xs text-gray-400">Standalone components, signals, typed forms and interceptors</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span class="text-cyan-600 font-bold text-xs">TW</span>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Tailwind CSS 4</p>
-                <p class="text-xs text-gray-400">Utility-first CSS with dark mode and responsive design</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span class="text-blue-600 font-bold text-xs">DC</span>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Docker & Compose</p>
-                <p class="text-xs text-gray-400">Containerized microservices with isolated networks</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span class="text-yellow-600 font-bold text-xs">S3</span>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">MinIO Object Storage</p>
-                <p class="text-xs text-gray-400">S3-compatible storage for avatars and file uploads</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  
-  <section class="py-24 px-6 bg-gray-50 dark:bg-gray-900">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold mb-4">Roadmap</h2>
-        <p class="text-gray-500 dark:text-gray-400 text-lg">Technologies and features coming to Mobflow</p>
-      </div>
-      <div class="grid grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 text-center">
-          <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <span class="text-orange-600 font-bold text-sm">K</span>
-          </div>
-          <p class="font-semibold text-sm text-gray-800 dark:text-gray-100">Apache Kafka</p>
-          <p class="text-xs text-gray-400 mt-1">Event-driven notifications between services</p>
-          <span class="mt-3 inline-block text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">Planned</span>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 text-center">
-          <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <span class="text-green-600 font-bold text-sm">M</span>
-          </div>
-          <p class="font-semibold text-sm text-gray-800 dark:text-gray-100">MongoDB</p>
-          <p class="text-xs text-gray-400 mt-1">Chat messages and notification logs</p>
-          <span class="mt-3 inline-block text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">Planned</span>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 text-center">
-          <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <span class="text-red-600 font-bold text-sm">R</span>
-          </div>
-          <p class="font-semibold text-sm text-gray-800 dark:text-gray-100">Redis</p>
-          <p class="text-xs text-gray-400 mt-1">Session caching and rate limiting</p>
-          <span class="mt-3 inline-block text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">Planned</span>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 text-center">
-          <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <span class="text-blue-600 font-bold text-sm">WS</span>
-          </div>
-          <p class="font-semibold text-sm text-gray-800 dark:text-gray-100">WebSocket</p>
-          <p class="text-xs text-gray-400 mt-1">Real-time chat and live updates</p>
-          <span class="mt-3 inline-block text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">Planned</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  
-  <section class="py-24 px-6">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold mb-4">Microservices Architecture</h2>
-        <p class="text-gray-500 dark:text-gray-400 text-lg">Each service is independently deployable with its own database</p>
-      </div>
-      <div class="grid grid-cols-3 gap-4">
-        <div class="relative rounded-2xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-5">
-          <span class="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">Live</span>
-          <p class="font-semibold text-gray-800 dark:text-gray-100 mb-1">auth-service</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">JWT auth, credentials, roles · Port 8080</p>
-        </div>
-        <div class="relative rounded-2xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-5">
-          <span class="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">Live</span>
-          <p class="font-semibold text-gray-800 dark:text-gray-100 mb-1">user-service</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">Profiles, avatars, MinIO · Port 8081</p>
-        </div>
-        <div class="relative rounded-2xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-5">
-          <span class="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">Live</span>
-          <p class="font-semibold text-gray-800 dark:text-gray-100 mb-1">workspace-service</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">Teams, members, roles · Port 8082</p>
-        </div>
-        <div class="relative rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-5">
-          <span class="absolute -top-3 left-4 bg-gray-400 text-white text-xs font-bold px-2 py-0.5 rounded-full">Soon</span>
-          <p class="font-semibold text-gray-700 dark:text-gray-300 mb-1">task-service</p>
-          <p class="text-xs text-gray-400">Boards, tasks, deadlines · Port 8083</p>
-        </div>
-        <div class="relative rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-5">
-          <span class="absolute -top-3 left-4 bg-gray-400 text-white text-xs font-bold px-2 py-0.5 rounded-full">Soon</span>
-          <p class="font-semibold text-gray-700 dark:text-gray-300 mb-1">notification-service</p>
-          <p class="text-xs text-gray-400">Kafka + MongoDB · Port 8084</p>
-        </div>
-        <div class="relative rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-5">
-          <span class="absolute -top-3 left-4 bg-gray-400 text-white text-xs font-bold px-2 py-0.5 rounded-full">Soon</span>
-          <p class="font-semibold text-gray-700 dark:text-gray-300 mb-1">chat-service</p>
-          <p class="text-xs text-gray-400">WebSocket + MongoDB · Port 8085</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  
-  <section class="py-24 px-6 bg-gradient-to-br from-blue-600 to-indigo-700">
-    <div class="max-w-3xl mx-auto text-center">
-      <h2 class="text-4xl font-bold text-white mb-4">Ready to get started?</h2>
-      <p class="text-blue-100 text-lg mb-8">Create your account and start building with your team today.</p>
-      <a
-        routerLink="/signup"
-        class="inline-block px-10 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition shadow-xl"
-      >
-        Create free account
-      </a>
-    </div>
-  </section>
-
-  
-  <footer class="bg-gray-950 text-gray-400 py-16 px-6">
-    <div class="max-w-5xl mx-auto">
-      <div class="grid grid-cols-4 gap-8 mb-12">
+<div class="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe_0%,#f8fafc_42%,#ffffff_100%)] text-slate-900 dark:bg-[radial-gradient(circle_at_top,#0f172a_0%,#020617_50%,#020617_100%)] dark:text-slate-100">
+  <section class="relative overflow-hidden px-5 pb-20 pt-28 sm:px-8 lg:px-12 lg:pt-36">
+    <div class="mx-auto max-w-6xl">
+      <div class="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span class="text-white font-bold text-sm">M</span>
-            </div>
-            <span class="font-bold text-white text-lg">Mobflow</span>
+          <span class="inline-flex items-center rounded-full border border-sky-200 bg-white/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700 shadow-sm dark:border-sky-900 dark:bg-slate-900/70 dark:text-sky-300">
+            Java + Angular Microservices Platform
+          </span>
+          <h1 class="mt-6 text-4xl font-black tracking-tight text-slate-950 dark:text-white sm:text-5xl lg:text-7xl">
+            Mobflow
+            <span class="mt-2 block text-balance bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              colaboração, tasks e analytics em arquitetura real
+            </span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-base leading-8 text-slate-600 dark:text-slate-300 sm:text-lg">
+            Plataforma full stack construída com Angular, Spring Boot e microservices independentes.
+            Hoje já entrega autenticação, perfis, workspaces, kanban, analytics e notificações.
+          </p>
+
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a
+              routerLink="/signup"
+              class="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:bg-sky-700"
+            >
+              Criar conta
+            </a>
+            <a
+              href="https://github.com/LuizAndradeDev"
+              target="_blank"
+              rel="noreferrer"
+              class="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-6 py-3.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:border-slate-700"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://www.linkedin.com/in/luizsouzandrade"
+              target="_blank"
+              rel="noreferrer"
+              class="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-6 py-3.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:border-slate-700"
+            >
+              LinkedIn
+            </a>
           </div>
-          <p class="text-sm leading-relaxed">A modern SaaS portfolio project built with professional-grade engineering practices.</p>
+
+          <div class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            @for (metric of heroMetrics; track metric.label) {
+              <div class="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/75">
+                <p class="text-2xl font-black text-slate-950 dark:text-white">{{ metric.value }}</p>
+                <p class="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">{{ metric.label }}</p>
+              </div>
+            }
+          </div>
         </div>
-        <div>
-          <h4 class="text-white font-semibold mb-4 text-sm">Product</h4>
-          <ul class="space-y-2 text-sm">
-            <li><a routerLink="/signup" class="hover:text-white transition">Get started</a></li>
-            <li><a routerLink="/login" class="hover:text-white transition">Sign in</a></li>
-            <li><span class="opacity-50">Roadmap</span></li>
-            <li><span class="opacity-50">Changelog</span></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="text-white font-semibold mb-4 text-sm">Tech Stack</h4>
-          <ul class="space-y-2 text-sm">
-            <li><span>Java 21 + Spring Boot 3.5</span></li>
-            <li><span>Angular 21 + Tailwind</span></li>
-            <li><span>PostgreSQL + Flyway</span></li>
-            <li><span>Docker + MinIO</span></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="text-white font-semibold mb-4 text-sm">Connect</h4>
-          <ul class="space-y-2 text-sm">
-            <li>
-              <a href="https://github.com" target="_blank" class="flex items-center gap-2 hover:text-white transition">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://discord.com" target="_blank" class="flex items-center gap-2 hover:text-white transition">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="mailto:contact@mobflow.dev" class="flex items-center gap-2 hover:text-white transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                Email
-              </a>
-            </li>
-            <li>
-              <a href="https://linkedin.com" target="_blank" class="flex items-center gap-2 hover:text-white transition">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                LinkedIn
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="border-t border-gray-800 pt-8 flex items-center justify-between text-sm">
-        <p>&copy; 2025 Mobflow. All rights reserved.</p>
-        <div class="flex gap-6">
-          <span class="opacity-50">Privacy Policy</span>
-          <span class="opacity-50">Terms of Service</span>
+
+        <div class="rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-2xl shadow-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 dark:shadow-black/30">
+          <div class="grid gap-4 sm:grid-cols-2">
+            @for (highlight of highlights; track highlight.title) {
+              <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">{{ highlight.kicker }}</p>
+                <h2 class="mt-2 text-lg font-bold text-slate-900 dark:text-white">{{ highlight.title }}</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ highlight.description }}</p>
+              </article>
+            }
+          </div>
+          <div class="mt-4 rounded-2xl bg-slate-950 p-5 text-white dark:bg-slate-900">
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Current delivery</p>
+            <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+              @for (feature of currentCapabilities; track feature) {
+                <li class="flex items-center gap-2 text-sm text-slate-100">
+                  <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+                  <span>{{ feature }}</span>
+                </li>
+              }
+            </ul>
+          </div>
         </div>
       </div>
     </div>
-  </footer>
+  </section>
 
+  <section class="px-5 py-18 sm:px-8 lg:px-12">
+    <div class="mx-auto max-w-6xl">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600 dark:text-sky-300">Stack atual</p>
+          <h2 class="mt-2 text-3xl font-black text-slate-950 dark:text-white sm:text-4xl">Tecnologias que já estão em uso</h2>
+        </div>
+        <p class="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+          O objetivo aqui não é vender mockup: é mostrar o stack que realmente está sustentando o projeto hoje.
+        </p>
+      </div>
+
+      <div class="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        @for (technology of technologies; track technology.name) {
+          <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 items-center justify-center rounded-2xl text-sm font-black text-white" [style.background]="technology.accent">
+                {{ technology.badge }}
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ technology.name }}</h3>
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ technology.group }}</p>
+              </div>
+            </div>
+            <p class="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ technology.description }}</p>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="border-y border-slate-200 bg-slate-50 px-5 py-18 dark:border-slate-800 dark:bg-slate-950/70 sm:px-8 lg:px-12">
+    <div class="mx-auto max-w-6xl">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600 dark:text-sky-300">Serviços</p>
+          <h2 class="mt-2 text-3xl font-black text-slate-950 dark:text-white sm:text-4xl">Microservices já concluídos</h2>
+        </div>
+        <p class="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+          Estes são os serviços efetivamente presentes no repositório e integrados no ambiente atual.
+        </p>
+      </div>
+
+      <div class="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        @for (service of services; track service.name) {
+          <article class="rounded-3xl border p-5 shadow-sm" [class.bg-white]="service.status === 'Live'" [class.border-slate-200]="service.status === 'Live'" [class.dark:bg-slate-900]="service.status === 'Live'" [class.dark:border-slate-800]="service.status === 'Live'" [class.bg-slate-950]="service.status !== 'Live'" [class.border-slate-900]="service.status !== 'Live'">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-lg font-bold" [class.text-slate-900]="service.status === 'Live'" [class.dark:text-white]="service.status === 'Live'" [class.text-white]="service.status !== 'Live'">{{ service.name }}</p>
+                <p class="mt-1 text-xs font-semibold uppercase tracking-[0.2em]" [class.text-emerald-600]="service.status === 'Live'" [class.dark:text-emerald-300]="service.status === 'Live'" [class.text-cyan-300]="service.status !== 'Live'">{{ service.status }}</p>
+              </div>
+              <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold" [class.bg-emerald-100]="service.status === 'Live'" [class.text-emerald-700]="service.status === 'Live'" [class.dark:bg-emerald-950]="service.status === 'Live'" [class.dark:text-emerald-300]="service.status === 'Live'" [class.bg-slate-800]="service.status !== 'Live'" [class.text-cyan-300]="service.status !== 'Live'">
+                {{ service.port }}
+              </span>
+            </div>
+            <p class="mt-4 text-sm leading-6" [class.text-slate-600]="service.status === 'Live'" [class.dark:text-slate-300]="service.status === 'Live'" [class.text-slate-300]="service.status !== 'Live'">
+              {{ service.description }}
+            </p>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="px-5 py-18 sm:px-8 lg:px-12">
+    <div class="mx-auto max-w-6xl">
+      <div class="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+        <article class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p class="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600 dark:text-sky-300">Infra & operação</p>
+          <h2 class="mt-3 text-3xl font-black text-slate-950 dark:text-white">Ambiente de desenvolvimento completo</h2>
+          <div class="mt-6 grid gap-3 sm:grid-cols-2">
+            @for (item of infrastructure; track item.name) {
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
+                <p class="text-sm font-bold text-slate-900 dark:text-white">{{ item.name }}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ item.description }}</p>
+              </div>
+            }
+          </div>
+        </article>
+
+        <article class="rounded-[2rem] bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/10 dark:bg-slate-900">
+          <p class="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-300">Próximos passos</p>
+          <h2 class="mt-3 text-3xl font-black">Roadmap técnico planejado</h2>
+          <div class="mt-6 space-y-4">
+            @for (item of roadmap; track item.title) {
+              <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <p class="font-semibold">{{ item.title }}</p>
+                  <span class="rounded-full bg-cyan-400/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">{{ item.status }}</span>
+                </div>
+                <p class="mt-2 text-sm leading-6 text-slate-300">{{ item.description }}</p>
+              </div>
+            }
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="px-5 pb-20 sm:px-8 lg:px-12">
+    <div class="mx-auto max-w-6xl rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+      <div class="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600 dark:text-sky-300">Projeto</p>
+          <h2 class="mt-3 text-3xl font-black text-slate-950 dark:text-white sm:text-4xl">Código, arquitetura e evolução pública</h2>
+          <p class="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+            O projeto continua evoluindo com foco em código limpo, arquitetura modular e entrega incremental real.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <a
+            href="https://github.com/LuizAndradeDev"
+            target="_blank"
+            rel="noreferrer"
+            class="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+          >
+            Ver GitHub
+          </a>
+          <a
+            href="https://www.linkedin.com/in/luizsouzandrade"
+            target="_blank"
+            rel="noreferrer"
+            class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            Ver LinkedIn
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
