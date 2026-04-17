@@ -65,10 +65,13 @@ class SocialSecurityIntegrationTest extends AbstractSocialIntegrationTest {
                         WORKSPACE_ID,
                         UUID.randomUUID(),
                         UUID.randomUUID(),
+                        UUID.randomUUID(),
                         "Prepare roadmap"
                 ));
         when(workspaceServiceClient.requireMembership(eq(WORKSPACE_ID), org.mockito.ArgumentMatchers.any(UUID.class)))
                 .thenReturn(WorkspaceRole.MEMBER);
+        when(workspaceServiceClient.isWorkspaceMember(eq(WORKSPACE_ID), org.mockito.ArgumentMatchers.any(UUID.class)))
+                .thenReturn(true);
         when(authServiceClient.resolveByUsernames(anyList())).thenReturn(java.util.Map.of());
     }
 

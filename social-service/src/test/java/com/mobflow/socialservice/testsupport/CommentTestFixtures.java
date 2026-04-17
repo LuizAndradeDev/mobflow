@@ -17,6 +17,7 @@ public final class CommentTestFixtures {
 
     public static final UUID TASK_ID = UUID.fromString("10000000-0000-0000-0000-000000000001");
     public static final UUID WORKSPACE_ID = UUID.fromString("20000000-0000-0000-0000-000000000001");
+    public static final UUID BOARD_ID = UUID.fromString("21000000-0000-0000-0000-000000000001");
     public static final UUID AUTHOR_ID = UUID.fromString("30000000-0000-0000-0000-000000000001");
     public static final UUID TASK_CREATOR_ID = UUID.fromString("40000000-0000-0000-0000-000000000001");
     public static final UUID TASK_ASSIGNEE_ID = UUID.fromString("50000000-0000-0000-0000-000000000001");
@@ -77,6 +78,7 @@ public final class CommentTestFixtures {
         return new TaskServiceClient.TaskCommentContextResponse(
                 TASK_ID,
                 WORKSPACE_ID,
+                BOARD_ID,
                 TASK_CREATOR_ID,
                 TASK_ASSIGNEE_ID,
                 "Prepare roadmap"
