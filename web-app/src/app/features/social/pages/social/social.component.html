@@ -1,30 +1,33 @@
 <div class="flex h-full min-h-full overflow-hidden bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-  <app-social-sidebar
-    [username]="currentUsername"
-    [userAvatarUrl]="currentUserAvatarUrl"
-    [friendSearch]="friendSearch"
-    [conversations]="filteredConversationItems"
-    [friends]="filteredFriends"
-    [sidebarMode]="sidebarMode"
-    [conversationCount]="conversations.length"
-    [totalUnreadCount]="totalUnreadCount"
-    [selectedConversationId]="selectedConversationId"
-    [selectedFriendId]="selectedFriendId"
-    [isLoadingConversations]="isLoading"
-    [isLoadingFriends]="isLoading"
-    (addFriend)="openAddFriendModal()"
-    (openPendingRequests)="openPendingRequestsModal()"
-    (changeMode)="changeSidebarMode($event)"
-    (selectConversation)="selectConversation($event)"
-    (selectFriend)="selectFriend($event)"
-  />
+  @if (!isMobile() || !selectedConversation) {
+    <app-social-sidebar
+      [username]="currentUsername"
+      [userAvatarUrl]="currentUserAvatarUrl"
+      [friendSearch]="friendSearch"
+      [conversations]="filteredConversationItems"
+      [friends]="filteredFriends"
+      [sidebarMode]="sidebarMode"
+      [conversationCount]="conversations.length"
+      [totalUnreadCount]="totalUnreadCount"
+      [selectedConversationId]="selectedConversationId"
+      [selectedFriendId]="selectedFriendId"
+      [isLoadingConversations]="isLoading"
+      [isLoadingFriends]="isLoading"
+      (addFriend)="openAddFriendModal()"
+      (openPendingRequests)="openPendingRequestsModal()"
+      (changeMode)="changeSidebarMode($event)"
+      (selectConversation)="selectConversation($event)"
+      (selectFriend)="selectFriend($event)"
+    />
+  }
 
-  <main class="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-gradient-to-br from-white via-blue-50/60 to-gray-100 dark:from-[#111827] dark:via-[#0f172a] dark:to-[#0a0f18]">
-    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.14),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(34,197,94,0.06),_transparent_24%)] dark:bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.18),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(34,197,94,0.08),_transparent_24%)]"></div>
+  @if (!isMobile() || selectedConversation) {
+    <main class="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-gradient-to-br from-white via-blue-50/60 to-gray-100 dark:from-[#111827] dark:via-[#0f172a] dark:to-[#0a0f18]">
+      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.14),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(34,197,94,0.06),_transparent_24%)] dark:bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.18),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(34,197,94,0.08),_transparent_24%)]"></div>
 
-    @if (selectedConversation) {
-      <section class="relative flex h-full min-h-0 flex-col">
-        <header class="flex items-center justify-between gap-4 border-b border-gray-200/80 bg-white/55 px-6 py-5 backdrop-blur-sm dark:border-white/10 dark:bg-transparent">
+      @if (selectedConversation) {
+        <section class="relative flex h-full min-h-0 flex-col">
+          <header class="flex flex-col gap-4 border-b border-gray-200/80 bg-white/55 px-4 py-4 backdrop-blur-sm dark:border-white/10 dark:bg-transparent sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
           <div class="flex min-w-0 items-center gap-4">
             @if (selectedConversationAvatarUrl) {
               <img
@@ -71,24 +74,24 @@
             </div>
           </div>
 
-          <button
-            type="button"
-            (click)="clearSelectedConversation()"
-            class="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10"
-          >
-            Back
-          </button>
-        </header>
+            <button
+              type="button"
+              (click)="clearSelectedConversation()"
+              class="w-full rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10 sm:w-auto"
+            >
+              Back
+            </button>
+          </header>
 
-        @if (chatPanelError || connectionState === 'reconnecting' || connectionState === 'error') {
-          <div class="border-b border-amber-500/10 bg-amber-500/10 px-6 py-3 text-sm text-amber-800 dark:text-amber-200">
-            {{ chatPanelError ?? (connectionState === 'error' ? 'Chat connection failed.' : 'Reconnecting to chat...') }}
-          </div>
-        }
+          @if (chatPanelError || connectionState === 'reconnecting' || connectionState === 'error') {
+            <div class="border-b border-amber-500/10 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200 sm:px-6">
+              {{ chatPanelError ?? (connectionState === 'error' ? 'Chat connection failed.' : 'Reconnecting to chat...') }}
+            </div>
+          }
 
-        <div class="relative flex min-h-0 flex-1 flex-col">
-          <div #messageViewport class="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
-            <div class="mx-auto flex w-full max-w-4xl flex-col gap-4">
+          <div class="relative flex min-h-0 flex-1 flex-col">
+            <div #messageViewport class="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+              <div class="mx-auto flex w-full max-w-4xl flex-col gap-4">
               @if (hasMoreMessages) {
                 <div class="flex justify-center">
                   <button
@@ -128,14 +131,14 @@
                 @for (message of messages; track message.id) {
                   <div class="flex" [class.justify-end]="isOwnMessage(message)" [class.justify-start]="!isOwnMessage(message)">
                     <article
-                      class="max-w-[85%] rounded-[1.75rem] px-4 py-3 shadow-sm sm:max-w-[70%]"
+                      class="max-w-[92%] rounded-[1.75rem] px-4 py-3 shadow-sm sm:max-w-[70%]"
                       [class.bg-blue-600]="isOwnMessage(message)"
                       [class.text-white]="isOwnMessage(message)"
                       [class.dark:bg-blue-500]="isOwnMessage(message)"
                       [class.bg-white]="!isOwnMessage(message)"
                       [class.text-gray-900]="!isOwnMessage(message)"
-                      [class.dark:bg-white/[0.05]]="!isOwnMessage(message)"
-                      [class.dark:text-gray-100]="!isOwnMessage(message)"
+                      [class.dark:bg-slate-800]="!isOwnMessage(message)"
+                      [class.dark:text-slate-100]="!isOwnMessage(message)"
                       [class.ring-1]="message.sendState === 'failed'"
                       [class.ring-red-500/30]="message.sendState === 'failed'"
                     >
@@ -143,6 +146,7 @@
                       <div class="mt-2 flex items-center justify-end gap-2 text-[11px]"
                         [class.text-blue-100]="isOwnMessage(message)"
                         [class.text-gray-400]="!isOwnMessage(message)"
+                        [class.dark:text-slate-400]="!isOwnMessage(message)"
                       >
                         <span>{{ message.createdAt | date: 'shortTime' }}</span>
                         @if (isOwnMessage(message)) {
@@ -174,68 +178,69 @@
                   </div>
                 }
               }
+              </div>
             </div>
-          </div>
 
-          <footer class="border-t border-gray-200/80 bg-white/70 px-4 py-4 backdrop-blur-sm dark:border-white/10 dark:bg-[#0f172a]/80 sm:px-6">
-            <div class="mx-auto flex w-full max-w-4xl items-end gap-3">
-              <label class="relative block flex-1">
-                <textarea
-                  [formControl]="messageControl"
-                  rows="1"
-                  placeholder="Write a message"
-                  [disabled]="composerDisabled"
-                  class="max-h-32 min-h-12 w-full resize-none rounded-[1.75rem] border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500 disabled:cursor-not-allowed disabled:opacity-60"
-                  (keydown.enter)="onComposerKeydown($event)"
-                ></textarea>
-              </label>
-              <button
-                type="button"
-                (click)="sendMessage()"
-                [disabled]="composerDisabled || messageControl.invalid || isSendingMessage"
-                class="rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {{ isSendingMessage ? 'Sending...' : 'Send' }}
-              </button>
+            <footer class="border-t border-gray-200/80 bg-white/70 px-4 py-4 backdrop-blur-sm dark:border-white/10 dark:bg-[#0f172a]/80 sm:px-6">
+              <div class="mx-auto flex w-full max-w-4xl flex-col items-stretch gap-3 sm:flex-row sm:items-end">
+                <label class="relative block flex-1">
+                  <textarea
+                    [formControl]="messageControl"
+                    rows="1"
+                    placeholder="Write a message"
+                    [disabled]="composerDisabled"
+                    class="max-h-32 min-h-12 w-full resize-none rounded-[1.75rem] border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    (keydown.enter)="onComposerKeydown($event)"
+                  ></textarea>
+                </label>
+                <button
+                  type="button"
+                  (click)="sendMessage()"
+                  [disabled]="composerDisabled || messageControl.invalid || isSendingMessage"
+                  class="rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                >
+                  {{ isSendingMessage ? 'Sending...' : 'Send' }}
+                </button>
+              </div>
+            </footer>
+          </div>
+        </section>
+      } @else {
+        <section class="relative flex h-full min-h-0 flex-1 items-center justify-center px-6 py-10">
+          <div class="w-full max-w-xl text-center">
+            <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-[2rem] border border-gray-200 bg-white/80 text-blue-600 shadow-xl shadow-blue-100/80 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.05] dark:text-blue-300 dark:shadow-none">
+              <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 8h10M7 12h7m-7 4h4m12-8v9a2 2 0 01-2 2H8l-5 3V5a2 2 0 012-2h14a2 2 0 012 2z" />
+              </svg>
             </div>
-          </footer>
-        </div>
-      </section>
-    } @else {
-      <section class="relative flex h-full min-h-0 flex-1 items-center justify-center px-6 py-10">
-        <div class="w-full max-w-xl text-center">
-          <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-[2rem] border border-gray-200 bg-white/80 text-blue-600 shadow-xl shadow-blue-100/80 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.05] dark:text-blue-300 dark:shadow-none">
-            <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 8h10M7 12h7m-7 4h4m12-8v9a2 2 0 01-2 2H8l-5 3V5a2 2 0 012-2h14a2 2 0 012 2z" />
-            </svg>
+            <h1 class="mt-6 text-3xl font-semibold text-gray-900 dark:text-white">Your chat inbox</h1>
+            <p class="mx-auto mt-3 max-w-lg text-base leading-7 text-gray-500 dark:text-gray-400">
+              Open an existing conversation or start a new one from your friends list. Messages sync in real time and unread counts update automatically.
+            </p>
+            <div class="mt-8 inline-flex items-center gap-3 rounded-full border border-gray-200 bg-white/80 px-4 py-2 text-sm font-medium text-gray-600 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-gray-300 dark:shadow-none">
+              <span class="inline-flex h-2.5 w-2.5 rounded-full"
+                [class.bg-emerald-500]="connectionState === 'connected'"
+                [class.bg-amber-500]="connectionState === 'connecting' || connectionState === 'reconnecting'"
+                [class.bg-red-500]="connectionState === 'error'"
+                [class.bg-gray-400]="connectionState === 'disconnected'"
+              ></span>
+              {{
+                connectionState === 'connected'
+                  ? 'Chat connected'
+                  : connectionState === 'reconnecting'
+                    ? 'Chat reconnecting'
+                    : connectionState === 'connecting'
+                      ? 'Connecting chat'
+                      : connectionState === 'error'
+                        ? 'Chat unavailable'
+                        : 'Chat offline'
+              }}
+            </div>
           </div>
-          <h1 class="mt-6 text-3xl font-semibold text-gray-900 dark:text-white">Your chat inbox</h1>
-          <p class="mx-auto mt-3 max-w-lg text-base leading-7 text-gray-500 dark:text-gray-400">
-            Open an existing conversation or start a new one from your friends list. Messages sync in real time and unread counts update automatically.
-          </p>
-          <div class="mt-8 inline-flex items-center gap-3 rounded-full border border-gray-200 bg-white/80 px-4 py-2 text-sm font-medium text-gray-600 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-gray-300 dark:shadow-none">
-            <span class="inline-flex h-2.5 w-2.5 rounded-full"
-              [class.bg-emerald-500]="connectionState === 'connected'"
-              [class.bg-amber-500]="connectionState === 'connecting' || connectionState === 'reconnecting'"
-              [class.bg-red-500]="connectionState === 'error'"
-              [class.bg-gray-400]="connectionState === 'disconnected'"
-            ></span>
-            {{
-              connectionState === 'connected'
-                ? 'Chat connected'
-                : connectionState === 'reconnecting'
-                  ? 'Chat reconnecting'
-                  : connectionState === 'connecting'
-                    ? 'Connecting chat'
-                    : connectionState === 'error'
-                      ? 'Chat unavailable'
-                      : 'Chat offline'
-            }}
-          </div>
-        </div>
-      </section>
-    }
-  </main>
+        </section>
+      }
+    </main>
+  }
 </div>
 
 @if (showAddFriendModal) {

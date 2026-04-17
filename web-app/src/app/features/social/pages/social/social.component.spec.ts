@@ -298,6 +298,32 @@ describe('SocialComponent', () => {
 
     expect(alertService.info).toHaveBeenCalledWith('New message from @friend.', 'Messages');
   });
+
+  it('aplica contraste legivel para mensagens recebidas no dark mode', () => {
+    const fixture = TestBed.createComponent(SocialComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.selectConversation(conversation);
+    component.messages = [
+      {
+        ...createMessage({
+          id: 'message-incoming',
+          content: 'Readable message',
+          senderId: friend.authId,
+          ownMessage: false,
+        }),
+        clientId: null,
+        sendState: 'sent',
+      },
+    ];
+    fixture.detectChanges();
+
+    const messageBubble = fixture.nativeElement.querySelector('article');
+
+    expect(messageBubble.className).toContain('dark:bg-slate-800');
+    expect(messageBubble.className).toContain('dark:text-slate-100');
+  });
 });
 
 function createMessage(overrides: Partial<Message> = {}): Message {

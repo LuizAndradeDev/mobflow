@@ -3,8 +3,10 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  HostListener,
   OnDestroy,
   OnInit,
+  signal,
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -70,6 +72,7 @@ export class SocialComponent implements OnInit, OnDestroy {
     validators: [Validators.required, Validators.maxLength(4000)],
   });
   readonly sendFriendRequestForm: FormGroup<SendFriendRequestForm>;
+  readonly isMobile = signal(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
 
   sidebarMode: SocialSidebarMode = 'conversations';
   isLoading = true;
@@ -121,6 +124,11 @@ export class SocialComponent implements OnInit, OnDestroy {
     this.selectedConversationSubscription?.unsubscribe();
     this.subscriptions.unsubscribe();
     this.chatRealtime.disconnect();
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.isMobile.set(window.innerWidth < 768);
   }
 
   get incomingRequests(): FriendRequest[] {

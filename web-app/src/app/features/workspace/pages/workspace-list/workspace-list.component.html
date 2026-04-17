@@ -1,4 +1,4 @@
-<div class="p-8">
+<div class="px-4 py-6 sm:p-8">
 
   <div class="mb-6">
     <h1 class="text-xl font-bold text-gray-800 dark:text-gray-100">My Teams</h1>
@@ -6,7 +6,7 @@
   </div>
 
   @if (isLoading) {
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       @for (i of [1,2,3,4,5,6]; track i) {
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden animate-pulse">
           <div class="h-20 bg-gray-100 dark:bg-gray-700"></div>
@@ -18,7 +18,7 @@
       }
     </div>
   } @else {
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
       @for (workspace of workspaces; track workspace.id) {
         <div
@@ -89,7 +89,7 @@
           <form [formGroup]="joinForm" (ngSubmit)="onJoin()" class="space-y-4">
             <input formControlName="code" type="text" maxlength="8" placeholder="e.g. aB3xK9mZ"
                    class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono text-center text-lg tracking-widest"/>
-            <div class="flex gap-3">
+            <div class="flex flex-col gap-3 sm:flex-row">
               <button type="button" (click)="showModal.set(false)" class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">Cancel</button>
               <button type="submit" [disabled]="joinForm.invalid || isJoining" class="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50">
                 {{ isJoining ? 'Joining...' : 'Join team' }}
@@ -110,7 +110,7 @@
               <textarea formControlName="description" rows="2" placeholder="What is this team for?"
                         class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
             </div>
-            <div class="flex gap-3">
+            <div class="flex flex-col gap-3 sm:flex-row">
               <button type="button" (click)="showModal.set(false)" class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">Cancel</button>
               <button type="submit" [disabled]="createForm.invalid || isCreating" class="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50">
                 {{ isCreating ? 'Creating...' : 'Create team' }}

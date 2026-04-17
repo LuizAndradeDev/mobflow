@@ -1,4 +1,4 @@
-<div class="p-8 max-w-5xl">
+<div class="mx-auto max-w-5xl px-4 py-6 sm:p-8">
 
   @if (isLoading) {
     <div class="animate-pulse space-y-4">
@@ -8,7 +8,7 @@
   } @else if (workspace) {
 
     
-    <div class="flex items-start justify-between mb-8">
+    <div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div class="flex items-center gap-3">
         <button (click)="router.navigate(['/workspaces'])"
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition cursor-pointer">
@@ -24,7 +24,7 @@
         </div>
       </div>
 
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         
         <button (click)="router.navigate(['/tasks', workspace.id])"
           class="flex items-center gap-2 text-sm px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer">
@@ -50,7 +50,7 @@
     </div>
 
     
-    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-2xl px-5 py-4 mb-6 flex items-center justify-between gap-4">
+    <div class="mb-6 flex flex-col gap-4 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 dark:border-blue-800 dark:bg-blue-900/20 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-0.5">Invite code</p>
         <span class="font-mono text-xl font-bold text-blue-700 dark:text-blue-300 tracking-widest">
@@ -58,7 +58,7 @@
         </span>
       </div>
       <button (click)="copyCode()"
-        class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition cursor-pointer">
+        class="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto">
         @if (codeCopied) {
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -85,7 +85,7 @@
             <textarea formControlName="description" rows="2"
               class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
           </div>
-          <div class="flex gap-3 justify-end">
+          <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button type="button" (click)="showEditForm = false"
               class="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition cursor-pointer">Cancel</button>
             <button type="submit" [disabled]="editForm.invalid || isUpdating"
@@ -98,7 +98,7 @@
     }
 
     
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
 
       
       <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-6">
@@ -169,7 +169,7 @@
         
         @if (showAddMember) {
           <div class="bg-gray-50 dark:bg-gray-900/40 rounded-xl p-3 mb-4">
-            <form [formGroup]="addMemberForm" (ngSubmit)="onAddMember()" class="flex gap-2">
+            <form [formGroup]="addMemberForm" (ngSubmit)="onAddMember()" class="flex flex-col gap-2 sm:flex-row">
               <input formControlName="username" type="text" placeholder="username"
                 class="flex-1 p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
               <button type="submit" [disabled]="addMemberForm.invalid || isAddingMember"
@@ -202,7 +202,7 @@
         } @else {
           <ul class="divide-y divide-gray-100 dark:divide-gray-700">
             @for (member of members; track member.id) {
-              <li class="flex items-center justify-between py-3">
+              <li class="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-full overflow-hidden bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center">
                     @if (member.avatarUrl) {
@@ -218,7 +218,7 @@
                     <p class="text-xs text-gray-400">Joined {{ member.joinedAt | date: 'mediumDate' }}</p>
                   </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                   @if (isOwner && member.role !== 'OWNER') {
                     <select
                       [value]="member.role"

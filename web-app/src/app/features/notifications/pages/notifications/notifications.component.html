@@ -1,4 +1,4 @@
-<div class="p-8 max-w-5xl mx-auto">
+<div class="mx-auto max-w-5xl px-4 py-6 sm:p-8">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
     <div>
       <p class="text-xs font-semibold uppercase tracking-[0.24em] text-red-500">Inbox</p>
@@ -8,8 +8,8 @@
       </p>
     </div>
 
-    <div class="flex items-center gap-3">
-      <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 shadow-sm">
+    <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+      <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <p class="text-xs text-gray-400 uppercase tracking-wide">Unread</p>
         <p class="text-xl font-semibold text-gray-900 dark:text-gray-100">{{ unreadCount }}</p>
       </div>
@@ -17,7 +17,7 @@
       <button
         (click)="markAllAsRead()"
         [disabled]="unreadCount === 0 || isMarkingAll"
-        class="rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
+        class="w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white sm:w-auto"
       >
         {{ isMarkingAll ? 'Updating...' : 'Mark all as read' }}
       </button>
@@ -100,7 +100,7 @@
               </div>
             </div>
 
-            <div class="flex shrink-0 items-center gap-2">
+            <div class="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
               @if (canRespondToInvite(notification)) {
                 <button
                   (click)="declineInvite(notification); $event.stopPropagation()"
