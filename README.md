@@ -12,7 +12,9 @@ The platform is intended for engineering teams, product teams, and portfolio rev
 Browser
   |
   v
-web-app (Angular 21)
+nginx (80)
+  |
+  +--> static Angular web-app (Angular 21 production build)
   |
   +--> auth-service (8080) --------> PostgreSQL: mobflow_auth
   |
@@ -89,22 +91,22 @@ mobflow/
 ├── social-service/         # Friend graph, social interactions, task comments
 ├── chat-service/           # Private conversations, realtime messaging, read receipts
 ├── notification-service/   # Kafka consumer, notification persistence, email delivery
-├── web-app/                # Angular frontend with public and authenticated pages
+├── web-app/                # Angular frontend source code
 ├── docker-compose.yaml     # Full local orchestration for infra and applications
 ├── .env                    # Centralized runtime configuration for all containers
 ├── init-db.sql             # PostgreSQL database bootstrap for service isolation
-├── nginx.conf              # HTTP server configuration used in container deployment
+├── nginx.conf              # Shared Nginx configuration
 ├── web-app.conf            # Frontend/static/proxy server block configuration
-└── Dockerfile.nginx        # Build pipeline for the frontend container image
+└── Dockerfile.nginx        # Multi-stage Angular build + Nginx runtime image
 ```
 
 ## Prerequisites
 
 - Docker Desktop `24+`
-- Node.js `20.19+`
-- npm
 
-Java and Maven do not need to be installed locally because all backend services are built inside Docker images with their own wrappers and toolchains.
+Java, Maven, Node.js, and npm do not need to be installed locally to run the full platform. All application images, including the Angular frontend, are built inside Docker.
+
+If you want to work on the Angular frontend outside Docker, use Node.js `20.19+` and npm `11+`.
 
 ## Environment Configuration
 
@@ -186,7 +188,9 @@ This file is mounted into the PostgreSQL container during local startup so each 
 docker compose up --build
 ```
 
-### Start the Frontend in Development Mode
+The platform is then available on `http://localhost`, served by the edge Nginx container. Nginx delivers the production Angular build, handles SPA route refreshes, and proxies HTTP and WebSocket traffic to the backend containers.
+
+### Optional: Start the Frontend in Development Mode
 
 ```bash
 cd web-app
@@ -194,10 +198,13 @@ npm install
 npm start
 ```
 
+Development mode is optional and intended only for frontend iteration. It is not required to run Mobflow locally.
+
 ### Verification Commands
 
 ```bash
 docker compose ps
+curl http://localhost/health
 curl http://localhost:8080/actuator/health
 curl http://localhost:8081/actuator/health
 curl http://localhost:8082/actuator/health
@@ -216,7 +223,8 @@ curl http://localhost:8084/actuator/health
 | `social-service` | `8085` | MongoDB `social` | Owns friendships, friend requests, task comments, comment mentions, and social notification event publication. |
 | `chat-service` | `8086` | MongoDB `chat` | Owns private conversations, paginated message history, read receipts, WebSocket delivery, and chat notification publication. |
 | `notification-service` | `8084` | MongoDB `notifications` | Persists in-app notifications, computes unread counters, marks notifications as read, and sends email notifications from Kafka events. |
-| `web-app` | `4200` | Browser state | Angular client with landing, onboarding, workspace, task, analytics, profile, and settings flows. |
+| `nginx` | `80` | Static Angular assets + reverse proxy | Serves the production Angular build, handles SPA route refreshes, and proxies HTTP/WebSocket traffic to backend services. |
+| `web-app` | `n/a (built into nginx)` | Browser state | Angular client with landing, onboarding, workspace, task, analytics, profile, and settings flows. |
 
 ## Authentication Model
 
