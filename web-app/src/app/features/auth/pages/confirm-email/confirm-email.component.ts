@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NavbarPublicComponent } from '../../../../shared/components/navbar-public/navbar-public.component';
-import { catchError, of, timeout } from 'rxjs';
 
 type ConfirmationState = 'loading' | 'success' | 'error';
 
@@ -15,7 +15,7 @@ type ConfirmationState = 'loading' | 'success' | 'error';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfirmEmailComponent implements OnInit {
-  private static readonly CONFIRMATION_TIMEOUT_MS = 15000;
+  private readonly destroyRef = inject(DestroyRef);
 
   state: ConfirmationState = 'loading';
   title = 'Confirming your email';
@@ -24,6 +24,7 @@ export class ConfirmEmailComponent implements OnInit {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly authService: AuthService,
+    private readonly changeDetectorRef: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -35,19 +36,17 @@ export class ConfirmEmailComponent implements OnInit {
     }
 
     this.authService.confirmEmail(token).pipe(
-      timeout(ConfirmEmailComponent.CONFIRMATION_TIMEOUT_MS),
-      catchError(() => {
-        this.setError('Confirmation failed', 'This confirmation link is invalid, has expired, or could not be verified right now. Request a new email confirmation to activate your account.');
-        return of(null);
-      }),
-    ).subscribe((response) => {
-      if (response === null) {
-        return;
-      }
-
-      this.state = 'success';
-      this.title = 'Email confirmed';
-      this.message = 'Your account is now active and ready to sign in.';
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: () => {
+        this.state = 'success';
+        this.title = 'Email confirmed';
+        this.message = 'Your account is now active and ready to sign in.';
+        this.changeDetectorRef.markForCheck();
+      },
+      error: () => {
+        this.setError('Confirmation failed', 'This confirmation link is invalid or has expired. Request a new email confirmation to activate your account.');
+      },
     });
   }
 
@@ -55,5 +54,6 @@ export class ConfirmEmailComponent implements OnInit {
     this.state = 'error';
     this.title = title;
     this.message = message;
+    this.changeDetectorRef.markForCheck();
   }
 }
