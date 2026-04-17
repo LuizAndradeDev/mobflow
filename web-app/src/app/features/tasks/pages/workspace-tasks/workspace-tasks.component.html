@@ -120,7 +120,6 @@
             [class.ring-2]="dragOverListId() === list.id"
             [class.ring-blue-400]="dragOverListId() === list.id"
             (dragover)="onDragOver($event, list.id, list.tasks.length)"
-            (dragleave)="onDrop($event, list.id, list.tasks.length)"
             (drop)="onDropOnList($event, list.id)">
 
             
@@ -351,7 +350,7 @@
 @if (activeTask()) {
   <div class="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4"
     (click)="closeTaskDetail()">
-    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"
+    <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col"
       (click)="$event.stopPropagation()">
 
       
@@ -391,71 +390,78 @@
       </div>
 
       
-      <div class="flex-1 overflow-y-auto">
-        <form [formGroup]="editTaskForm" (ngSubmit)="onSaveTask()" class="p-6 space-y-4">
+      <div class="flex-1 overflow-y-auto p-6">
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <form [formGroup]="editTaskForm" (ngSubmit)="onSaveTask()" class="space-y-4">
 
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Title *</label>
-            <input formControlName="title" type="text"
-              class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"/>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Description</label>
-            <textarea formControlName="description" rows="4" placeholder="Add more context..."
-              class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 resize-none">
-            </textarea>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Priority</label>
-              <select formControlName="priority"
-                class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="LOW">🟢 Low</option>
-                <option value="MEDIUM">🔵 Medium</option>
-                <option value="HIGH">🟠 High</option>
-                <option value="URGENT">🔴 Urgent</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Due date</label>
-              <input formControlName="dueDate" type="date"
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Title *</label>
+              <input formControlName="title" type="text"
                 class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"/>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Assignee</label>
-            <select formControlName="assigneeAuthId"
-              class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-              <option [ngValue]="null">— Unassigned —</option>
-              @for (member of members; track member.authId) {
-                <option [value]="member.authId">{{ member.displayName }}</option>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Description</label>
+              <textarea formControlName="description" rows="4" placeholder="Add more context..."
+                class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 resize-none">
+              </textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Priority</label>
+                <select formControlName="priority"
+                  class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="LOW">🟢 Low</option>
+                  <option value="MEDIUM">🔵 Medium</option>
+                  <option value="HIGH">🟠 High</option>
+                  <option value="URGENT">🔴 Urgent</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Due date</label>
+                <input formControlName="dueDate" type="date"
+                  class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"/>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Assignee</label>
+              <select formControlName="assigneeAuthId"
+                class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                <option [ngValue]="null">— Unassigned —</option>
+                @for (member of members; track member.authId) {
+                  <option [value]="member.authId">{{ member.displayName }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="flex items-center gap-4 text-xs text-gray-400 pt-1">
+              <span>Created {{ activeTask()!.createdAt | date: 'MMM d, y' }}</span>
+              @if (activeTask()!.updatedAt !== activeTask()!.createdAt) {
+                <span>· Updated {{ activeTask()!.updatedAt | date: 'MMM d, y' }}</span>
               }
-            </select>
-          </div>
+            </div>
 
-          
-          <div class="flex items-center gap-4 text-xs text-gray-400 pt-1">
-            <span>Created {{ activeTask()!.createdAt | date: 'MMM d, y' }}</span>
-            @if (activeTask()!.updatedAt !== activeTask()!.createdAt) {
-              <span>· Updated {{ activeTask()!.updatedAt | date: 'MMM d, y' }}</span>
-            }
-          </div>
+            <div class="flex gap-3 pt-2">
+              <button type="button" (click)="closeTaskDetail()"
+                class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                Close
+              </button>
+              <button type="submit" [disabled]="editTaskForm.invalid || isSavingTask"
+                class="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50">
+                {{ isSavingTask ? 'Saving...' : 'Save changes' }}
+              </button>
+            </div>
 
-          <div class="flex gap-3 pt-2">
-            <button type="button" (click)="closeTaskDetail()"
-              class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-              Close
-            </button>
-            <button type="submit" [disabled]="editTaskForm.invalid || isSavingTask"
-              class="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50">
-              {{ isSavingTask ? 'Saving...' : 'Save changes' }}
-            </button>
-          </div>
+          </form>
 
-        </form>
+          <app-task-comments
+            [taskId]="activeTask()!.id"
+            [currentAuthId]="userProfileState.profile()?.authId ?? null"
+            [highlightedCommentId]="highlightedCommentId"
+          />
+        </div>
       </div>
     </div>
   </div>

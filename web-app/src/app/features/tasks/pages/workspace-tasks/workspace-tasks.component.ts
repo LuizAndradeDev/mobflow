@@ -19,6 +19,7 @@ import { TaskService } from '../../../../core/services/task.service';
 import { WorkspaceService } from '../../../../core/services/workspace.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
 import { UserProfileStateService } from '../../../../core/services/user-profile-state.service';
+import { TaskCommentsComponent } from '../../components/task-comments/task-comments.component';
 import {
   Board,
   CreateBoardRequest,
@@ -49,7 +50,7 @@ interface TaskForm {
 @Component({
   selector: 'app-workspace-tasks',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TaskCommentsComponent],
   templateUrl: './workspace-tasks.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -91,6 +92,11 @@ export class WorkspaceTasksComponent implements OnInit {
   dragSourceListId: string | null = null;
   readonly dragOverListId = signal<string | null>(null);
   readonly dragOverIndex = signal(-1);
+  highlightedCommentId: string | null = null;
+
+  private pendingBoardId: string | null = null;
+  private pendingTaskId: string | null = null;
+  private pendingCommentId: string | null = null;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -114,6 +120,13 @@ export class WorkspaceTasksComponent implements OnInit {
 
   ngOnInit(): void {
     this.workspaceId = this.route.snapshot.paramMap.get('workspaceId')!;
+    this.route.queryParamMap.subscribe((params) => {
+      this.pendingBoardId = params.get('boardId');
+      this.pendingTaskId = params.get('taskId');
+      this.pendingCommentId = params.get('commentId');
+      this.applyRouteTaskSelection();
+    });
+
     forkJoin({
       workspace: this.workspaceService.getById(this.workspaceId),
       members: this.workspaceService.listMembers(this.workspaceId),
@@ -133,6 +146,7 @@ export class WorkspaceTasksComponent implements OnInit {
       next: (boards) => {
         this.boards = boards;
         this.selectedBoard ??= boards[0] ?? null;
+        this.applyRouteTaskSelection();
         this.finishBoardLoading();
       },
       error: () => {
@@ -252,7 +266,7 @@ export class WorkspaceTasksComponent implements OnInit {
     });
   }
 
-  openTaskDetail(task: Task): void {
+  openTaskDetail(task: Task, highlightedCommentId: string | null = null): void {
     this.editTaskForm.patchValue({
       title: task.title,
       description: task.description ?? '',
@@ -260,11 +274,32 @@ export class WorkspaceTasksComponent implements OnInit {
       assigneeAuthId: task.assigneeAuthId,
       dueDate: task.dueDate ? task.dueDate.substring(0, 10) : null,
     });
+    this.highlightedCommentId = highlightedCommentId;
     this.activeTask.set(task);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        boardId: this.selectedBoard?.id ?? null,
+        taskId: task.id,
+        commentId: highlightedCommentId,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   closeTaskDetail(): void {
+    this.highlightedCommentId = null;
     this.activeTask.set(null);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        taskId: null,
+        commentId: null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   onSaveTask(): void {
@@ -490,6 +525,124 @@ export class WorkspaceTasksComponent implements OnInit {
     }));
   }
 
+  private applyRouteTaskSelection(): void {
+    if (!this.boards.length) {
+      return;
+    }
+
+    if (this.pendingBoardId) {
+      const board = this.boards.find(({ id }) => id === this.pendingBoardId);
+      if (board) {
+        this.selectedBoard = board;
+      }
+    }
+
+    if (!this.pendingTaskId) {
+      return;
+    }
+
+    const task = this.findTaskAcrossBoards(this.pendingTaskId);
+    if (!task) {
+      return;
+    }
+
+    this.openTaskDetail(task, this.pendingCommentId);
+    this.pendingTaskId = null;
+    this.pendingCommentId = null;
+  }
+
+  private findTaskAcrossBoards(taskId: string): Task | null {
+    for (const board of this.boards) {
+      const task = this.findTaskById(board, taskId);
+      if (task) {
+        this.selectedBoard = board;
+        return task;
+      }
+    }
+
+    return null;
+  }
+
+  private findTaskById(board: Board, taskId: string): Task | null {
+    for (const list of board.lists) {
+      const task = list.tasks.find(({ id }) => id === taskId);
+      if (task) {
+        return task;
+      }
+    }
+
+    return null;
+  }
+
+  private normalizeTaskPositions(tasks: Task[]): void {
+    tasks.forEach((task, index) => {
+      task.position = index;
+    });
+  }
+
+  private restoreBoardSnapshot(board: Board): void {
+    this.selectedBoard = board;
+    this.boards = this.boards.map((item) => item.id === board.id ? board : item);
+  }
+
+  private applyOptimisticTaskMove(
+    taskId: string,
+    sourceListId: string,
+    targetListId: string,
+    requestedPosition: number,
+  ): Task | null {
+    let movedTask: Task | null = null;
+
+    this.updateSelectedBoard((board) => {
+      const nextBoard = structuredClone(board);
+      const sourceList = nextBoard.lists.find(({ id }) => id === sourceListId);
+      const targetList = nextBoard.lists.find(({ id }) => id === targetListId);
+      if (!sourceList || !targetList) {
+        return board;
+      }
+
+      const sourceIndex = sourceList.tasks.findIndex(({ id }) => id === taskId);
+      if (sourceIndex < 0) {
+        return board;
+      }
+
+      const [task] = sourceList.tasks.splice(sourceIndex, 1);
+      const targetPosition = Math.max(0, Math.min(requestedPosition, targetList.tasks.length));
+      movedTask = { ...task, listId: targetListId, position: targetPosition };
+      targetList.tasks.splice(targetPosition, 0, movedTask);
+      this.normalizeTaskPositions(sourceList.tasks);
+      if (sourceListId !== targetListId) {
+        this.normalizeTaskPositions(targetList.tasks);
+      }
+
+      return nextBoard;
+    });
+
+    return movedTask;
+  }
+
+  private replaceTaskInBoard(board: Board, movedTask: Task): Board {
+    const nextBoard = structuredClone(board);
+
+    nextBoard.lists = nextBoard.lists.map((list) => ({
+      ...list,
+      tasks: list.tasks
+        .filter((task) => task.id !== movedTask.id || list.id === movedTask.listId)
+        .map((task) => task.id === movedTask.id ? movedTask : task),
+    }));
+
+    const targetList = nextBoard.lists.find(({ id }) => id === movedTask.listId);
+    if (targetList && !targetList.tasks.some(({ id }) => id === movedTask.id)) {
+      targetList.tasks.push(movedTask);
+    }
+
+    for (const list of nextBoard.lists) {
+      this.normalizeTaskPositions(list.tasks);
+    }
+
+    return nextBoard;
+  }
+
   private moveDraggedTask(targetListId: string, position: number): void {
     const task = this.dragTask;
     const sourceListId = this.dragSourceListId;
@@ -499,27 +652,29 @@ export class WorkspaceTasksComponent implements OnInit {
 
     this.dragOverListId.set(null);
     this.dragOverIndex.set(-1);
+    const previousBoard = structuredClone(this.selectedBoard);
+    const optimisticTask = this.applyOptimisticTaskMove(task.id, sourceListId, targetListId, position);
+    if (!optimisticTask) {
+      this.onDragEnd();
+      return;
+    }
+
     this.taskService.moveTask(this.workspaceId, task.id, { targetListId, position }).subscribe({
       next: (movedTask) => {
-        this.updateSelectedBoard((board) => ({
-          ...board,
-          lists: board.lists.map((list) => {
-            if (list.id === sourceListId) {
-              return {
-                ...list,
-                tasks: list.tasks.filter(({ id }) => id !== task.id),
-              };
-            }
-
-            if (list.id === targetListId) {
-              const tasks = list.tasks.filter(({ id }) => id !== task.id);
-              tasks.splice(position, 0, movedTask);
-              return { ...list, tasks };
-            }
-
-            return list;
-          }),
-        }));
+        this.updateSelectedBoard((board) => this.replaceTaskInBoard(board, movedTask));
+        if (this.activeTask()?.id === movedTask.id) {
+          this.activeTask.set(movedTask);
+        }
+        this.onDragEnd();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.restoreBoardSnapshot(previousBoard);
+        if (this.activeTask()?.id === task.id) {
+          this.activeTask.set(this.findTaskById(previousBoard, task.id) ?? task);
+        }
+        this.onDragEnd();
+        this.alertService.danger('Could not move the task.', 'Error');
         this.cdr.markForCheck();
       },
     });
