@@ -13,6 +13,7 @@ import { WorkspaceDetailComponent } from './features/workspace/pages/workspace-d
 import { TasksOverviewComponent } from './features/tasks/pages/tasks-overview/tasks-overview.component';
 import { WorkspaceTasksComponent } from './features/tasks/pages/workspace-tasks/workspace-tasks.component';
 import { NotificationsComponent } from './features/notifications/pages/notifications/notifications.component';
+import { SocialComponent } from './features/social/pages/social/social.component';
 import { MainLayoutComponent } from './shared/components/sidebar/main-layout.component';
 import { guestGuard } from './core/guards/guest.guard';
 import { authGuard } from './core/guards/auth.guard';
@@ -40,6 +41,7 @@ export const routes: Routes = [
       { path: 'tasks', component: TasksOverviewComponent, canActivate: protectedRouteGuards },
       { path: 'tasks/:workspaceId', component: WorkspaceTasksComponent, canActivate: protectedRouteGuards },
       { path: 'notifications', component: NotificationsComponent, canActivate: protectedRouteGuards },
+      { path: 'social', component: SocialComponent, canActivate: protectedRouteGuards },
     ],
   },
   { path: '**', redirectTo: '' },
