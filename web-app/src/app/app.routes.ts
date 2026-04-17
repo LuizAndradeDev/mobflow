@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LandingComponent } from './features/landing/landing.component';
 import { LoginComponent } from './features/auth/pages/login/login.component';
 import { RegisterComponent } from './features/auth/pages/register/register.component';
+import { ConfirmEmailComponent } from './features/auth/pages/confirm-email/confirm-email.component';
 import { DashboardComponent } from './features/auth/pages/dashboard/dashboard.component';
 import { HomeComponent } from './features/home/home.component';
 import { AnalyticsComponent } from './features/analytics/analytics.component';
@@ -23,6 +24,7 @@ const protectedRouteGuards = [profileGuard];
 
 export const routes: Routes = [
   { path: '', component: LandingComponent, canActivate: [guestGuard] },
+  { path: 'confirm-email', component: ConfirmEmailComponent },
   { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
   { path: 'signup', component: RegisterComponent, canActivate: [guestGuard] },
   { path: 'complete-profile', component: CompleteProfileComponent, canActivate: [authGuard] },

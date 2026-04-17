@@ -25,6 +25,12 @@ export class AuthService {
     return this.http.post<{ username: string; email: string }>(`${this.apiPath}/signup`, data);
   }
 
+  confirmEmail(token: string) {
+    return this.http.get(`${this.apiPath}/confirm-email?token=${encodeURIComponent(token)}`, {
+      responseType: 'text',
+    });
+  }
+
   login(data: LoginRequest) {
     return this.http.post<AuthResponse>(`${this.apiPath}/login`, data).pipe(
       tap((response) => {

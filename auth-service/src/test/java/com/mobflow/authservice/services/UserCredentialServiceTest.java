@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static com.mobflow.authservice.testsupport.AuthTestFixtures.registerRequest;
@@ -145,5 +146,45 @@ class UserCredentialServiceTest {
         assertThatThrownBy(() -> userCredentialService.findUserCredentialByUsername("missing"))
                 .isInstanceOf(GenericAplicationException.class)
                 .hasMessage(ErrorTP.USER_NOT_FOUND.name());
+    }
+
+    @Test
+    void confirmEmailShouldEnableAccountAndClearConfirmationFields() {
+        // Given
+        UserCredential user = userCredential("john", "john@mobflow.dev", "encoded-password");
+        user.setEnabled(false);
+        user.setConfirmationToken("token-123");
+        user.setConfirmationTokenExpiresAt(LocalDateTime.now().plusHours(2));
+
+        when(userCredentialRepository.findByConfirmationToken("token-123")).thenReturn(Optional.of(user));
+        when(userCredentialRepository.save(any(UserCredential.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        UserCredential confirmedUser = userCredentialService.confirmEmail("token-123");
+
+        // Then
+        assertThat(confirmedUser.isEnabled()).isTrue();
+        assertThat(confirmedUser.getEmailConfirmedAt()).isNotNull();
+        assertThat(confirmedUser.getConfirmationToken()).isNull();
+        assertThat(confirmedUser.getConfirmationTokenExpiresAt()).isNull();
+        verify(userCredentialRepository).save(user);
+    }
+
+    @Test
+    void confirmEmailShouldRejectExpiredTokens() {
+        // Given
+        UserCredential user = userCredential("john", "john@mobflow.dev", "encoded-password");
+        user.setEnabled(false);
+        user.setConfirmationToken("expired-token");
+        user.setConfirmationTokenExpiresAt(LocalDateTime.now().minusMinutes(1));
+
+        when(userCredentialRepository.findByConfirmationToken("expired-token")).thenReturn(Optional.of(user));
+
+        // When / Then
+        assertThatThrownBy(() -> userCredentialService.confirmEmail("expired-token"))
+                .isInstanceOf(GenericAplicationException.class)
+                .hasMessage(ErrorTP.GENERIC_ERROR.name());
+
+        verify(userCredentialRepository, never()).save(any());
     }
 }

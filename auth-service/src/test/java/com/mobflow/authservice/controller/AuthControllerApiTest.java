@@ -15,8 +15,11 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
+
 import static com.mobflow.authservice.testsupport.AuthTestFixtures.loginRequest;
 import static com.mobflow.authservice.testsupport.AuthTestFixtures.registerRequest;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -122,6 +125,32 @@ class AuthControllerApiTest extends AbstractPostgresIntegrationTest {
                         .content(objectMapper.writeValueAsString(loginRequest("john@mobflow.dev", "wrong-password"))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errorType").value("INVALID_CREDENTIALS"));
+    }
+
+    @Test
+    void getConfirmEmailShouldEnablePersistedUser() throws Exception {
+        // Given
+        UserCredential pendingUser = userCredentialRepository.save(UserCredential.builder()
+                .username("john")
+                .email("john@mobflow.dev")
+                .passwordHash(passwordEncoder.encode("Password123!"))
+                .role(Role.ROLE_USER)
+                .enabled(false)
+                .accountNonLocked(true)
+                .failedLoginAttempts(0)
+                .confirmationToken("confirmation-token")
+                .confirmationTokenExpiresAt(LocalDateTime.now().plusHours(2))
+                .build());
+
+        // When / Then
+        mockMvc.perform(get("/api/auth/confirm-email").param("token", "confirmation-token"))
+                .andExpect(status().isOk());
+
+        UserCredential confirmedUser = userCredentialRepository.findById(pendingUser.getId()).orElseThrow();
+        assertThat(confirmedUser.isEnabled()).isTrue();
+        assertThat(confirmedUser.getEmailConfirmedAt()).isNotNull();
+        assertThat(confirmedUser.getConfirmationToken()).isNull();
+        assertThat(confirmedUser.getConfirmationTokenExpiresAt()).isNull();
     }
 
     @Test
