@@ -9,12 +9,14 @@ import java.util.UUID;
 public record FriendResponse(
         UUID authId,
         String username,
+        String avatarUrl,
         Instant friendsSince
 ) {
-    public static FriendResponse of(UUID authId, String username, Instant friendsSince) {
+    public static FriendResponse of(UUID authId, String username, String avatarUrl, Instant friendsSince) {
         return FriendResponse.builder()
                 .authId(authId)
                 .username(username)
+                .avatarUrl(avatarUrl)
                 .friendsSince(friendsSince)
                 .build();
     }

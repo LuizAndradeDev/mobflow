@@ -1,6 +1,7 @@
 package com.mobflow.socialservice.service;
 
 import com.mobflow.socialservice.client.AuthServiceClient;
+import com.mobflow.socialservice.client.UserServiceClient;
 import com.mobflow.socialservice.exception.SocialServiceException;
 import com.mobflow.socialservice.model.dto.request.SendFriendRequestRequest;
 import com.mobflow.socialservice.model.dto.response.FriendRequestResponse;
@@ -15,7 +16,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class FriendshipService {
@@ -23,6 +26,7 @@ public class FriendshipService {
     private final FriendRequestRepository friendRequestRepository;
     private final FriendshipRepository friendshipRepository;
     private final AuthServiceClient authServiceClient;
+    private final UserServiceClient userServiceClient;
     private final FriendRequestFactory friendRequestFactory;
     private final FriendshipFactory friendshipFactory;
     private final SocialNotificationService socialNotificationService;
@@ -31,6 +35,7 @@ public class FriendshipService {
             FriendRequestRepository friendRequestRepository,
             FriendshipRepository friendshipRepository,
             AuthServiceClient authServiceClient,
+            UserServiceClient userServiceClient,
             FriendRequestFactory friendRequestFactory,
             FriendshipFactory friendshipFactory,
             SocialNotificationService socialNotificationService
@@ -38,6 +43,7 @@ public class FriendshipService {
         this.friendRequestRepository = friendRequestRepository;
         this.friendshipRepository = friendshipRepository;
         this.authServiceClient = authServiceClient;
+        this.userServiceClient = userServiceClient;
         this.friendRequestFactory = friendRequestFactory;
         this.friendshipFactory = friendshipFactory;
         this.socialNotificationService = socialNotificationService;
@@ -112,8 +118,26 @@ public class FriendshipService {
     }
 
     public List<FriendResponse> listFriends(AuthenticatedUser authenticatedUser) {
-        return friendshipRepository.findByUserAOrUserB(authenticatedUser.authId(), authenticatedUser.authId()).stream()
+        List<FriendResponse> friends = friendshipRepository.findByUserAOrUserB(authenticatedUser.authId(), authenticatedUser.authId()).stream()
                 .map(friendship -> mapFriend(friendship, authenticatedUser.authId()))
+                .toList();
+
+        Map<UUID, String> avatarUrlsByAuthId = userServiceClient.fetchProfiles(
+                        friends.stream().map(FriendResponse::authId).toList()
+                ).stream()
+                .collect(Collectors.toMap(
+                        UserServiceClient.UserProfileResponse::authId,
+                        profile -> profile.avatarUrl() == null ? "" : profile.avatarUrl(),
+                        (left, right) -> left
+                ));
+
+        return friends.stream()
+                .map(friend -> FriendResponse.of(
+                        friend.authId(),
+                        friend.username(),
+                        avatarUrlsByAuthId.getOrDefault(friend.authId(), ""),
+                        friend.friendsSince()
+                ))
                 .toList();
     }
 
@@ -156,8 +180,8 @@ public class FriendshipService {
 
     private FriendResponse mapFriend(Friendship friendship, UUID currentAuthId) {
         if (friendship.getUserA().equals(currentAuthId)) {
-            return FriendResponse.of(friendship.getUserB(), friendship.getUserBUsername(), friendship.getCreatedAt());
+            return FriendResponse.of(friendship.getUserB(), friendship.getUserBUsername(), "", friendship.getCreatedAt());
         }
-        return FriendResponse.of(friendship.getUserA(), friendship.getUserAUsername(), friendship.getCreatedAt());
+        return FriendResponse.of(friendship.getUserA(), friendship.getUserAUsername(), "", friendship.getCreatedAt());
     }
 }
