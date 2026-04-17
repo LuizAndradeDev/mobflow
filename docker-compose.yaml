@@ -71,6 +71,7 @@ services:
     image: postgres:16
     container_name: mobflow-postgres
     environment:
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       TZ: America/Sao_Paulo
@@ -78,14 +79,28 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     networks:
       - mobflow-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${POSTGRES_DB:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  postgres-bootstrap:
+    image: postgres:16
+    container_name: mobflow-postgres-bootstrap
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./scripts/postgres-bootstrap.sh:/scripts/postgres-bootstrap.sh:ro
+    entrypoint: ["/bin/bash", "/scripts/postgres-bootstrap.sh"]
+    networks:
+      - mobflow-network
 
   redis:
     image: redis:7-alpine
@@ -129,8 +144,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
+      postgres-bootstrap:
+        condition: service_completed_successfully
     networks:
       - mobflow-network
     env_file:
@@ -142,8 +157,8 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      postgres:
-        condition: service_healthy
+      postgres-bootstrap:
+        condition: service_completed_successfully
       minio:
         condition: service_healthy
       redis:
@@ -159,8 +174,8 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      postgres:
-        condition: service_healthy
+      postgres-bootstrap:
+        condition: service_completed_successfully
       user-service:
         condition: service_started
     networks:
@@ -174,8 +189,8 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      postgres:
-        condition: service_healthy
+      postgres-bootstrap:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       workspace-service:
