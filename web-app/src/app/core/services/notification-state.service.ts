@@ -3,6 +3,7 @@ import { Subscription, interval } from 'rxjs';
 import { AlertService } from '../../shared/components/alert/service/alert.service';
 import { NotificationService } from './notification.service';
 import { BrowserStorageService } from './browser-storage.service';
+import { ActiveChatStateService } from './active-chat-state.service';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationStateService {
@@ -16,6 +17,7 @@ export class NotificationStateService {
     private readonly notificationService: NotificationService,
     private readonly alertService: AlertService,
     private readonly storage: BrowserStorageService,
+    private readonly activeChatState: ActiveChatStateService,
   ) {}
 
   loadUnreadCount() {
@@ -78,7 +80,12 @@ export class NotificationStateService {
     this._unreadCount.set(normalizedCount);
     this.lastUnreadCount = normalizedCount;
 
-    if (showAlert && previousCount !== null && normalizedCount > previousCount) {
+    if (
+      showAlert
+      && previousCount !== null
+      && normalizedCount > previousCount
+      && !this.activeChatState.hasActiveConversation()
+    ) {
       const newNotifications = normalizedCount - previousCount;
       this.alertService.info(
         newNotifications === 1

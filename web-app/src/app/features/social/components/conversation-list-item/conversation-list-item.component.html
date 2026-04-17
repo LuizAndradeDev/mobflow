@@ -1,0 +1,44 @@
+<button
+  type="button"
+  (click)="onSelect()"
+  class="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-3 text-left transition"
+  [class.bg-white]="!active"
+  [class.dark:bg-transparent]="!active"
+  [class.shadow-sm]="!active"
+  [class.dark:shadow-none]="!active"
+  [class.hover:bg-gray-50]="!active"
+  [class.dark:hover:bg-white/5]="!active"
+  [class.bg-blue-50]="active"
+  [class.dark:bg-blue-500/15]="active"
+  [class.ring-1]="active"
+  [class.ring-blue-500/20]="active"
+>
+  @if (hasAvatar) {
+    <img
+      [src]="item.counterpartAvatarUrl"
+      [alt]="item.counterpartUsername"
+      class="h-12 w-12 shrink-0 rounded-full object-cover"
+    />
+  } @else {
+    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-sm font-semibold text-white">
+      {{ initial }}
+    </div>
+  }
+
+  <div class="min-w-0 flex-1">
+    <div class="flex items-start justify-between gap-3">
+      <p class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ item.counterpartUsername }}</p>
+      <span class="shrink-0 text-[11px] text-gray-400 dark:text-gray-500">
+        {{ item.conversation.lastActivityAt | date: 'shortTime' }}
+      </span>
+    </div>
+    <div class="mt-1 flex items-center justify-between gap-3">
+      <p class="truncate text-xs text-gray-500 dark:text-gray-400">{{ item.previewText }}</p>
+      @if (item.unreadCount > 0) {
+        <span class="inline-flex min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+          {{ item.unreadCount > 99 ? '99+' : item.unreadCount }}
+        </span>
+      }
+    </div>
+  </div>
+</button>

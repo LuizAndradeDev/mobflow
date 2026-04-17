@@ -103,6 +103,14 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (notification.type === 'CHAT_MESSAGE_RECEIVED') {
+      const conversationId = notification.metadata['conversationId'];
+      void this.router.navigate(['/social'], {
+        queryParams: conversationId ? { conversationId } : undefined,
+      });
+      return;
+    }
+
     if (notification.type.startsWith('FRIEND_REQUEST')) {
       this.router.navigate(['/social']);
     }

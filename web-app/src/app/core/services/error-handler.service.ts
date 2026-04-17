@@ -8,6 +8,7 @@ import {
   UserErrorTP,
   WorkspaceErrorTP,
   TaskErrorTP,
+  ChatErrorTP,
 } from '../models/error-response.model';
 import { AlertInterface } from '../../shared/components/alert/model/alert.interface';
 import { AlertType } from '../../shared/components/alert/enum/alert-type.enum';
@@ -72,7 +73,7 @@ export class ErrorHandlerService {
   }
 
   private getTitleByErrorType(
-    errorType: ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP | SocialErrorTP,
+    errorType: ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP | SocialErrorTP | ChatErrorTP,
   ): string {
     switch (errorType) {
       case ErrorTP.USERNAME_ALREADY_EXIST: return 'Username already taken';
@@ -102,6 +103,14 @@ export class ErrorHandlerService {
       case SocialErrorTP.FRIENDSHIP_ALREADY_EXISTS: return 'Already friends';
       case SocialErrorTP.INVALID_FRIEND_REQUEST_STATE: return 'Request already processed';
       case SocialErrorTP.UPSTREAM_SERVICE_ERROR: return 'Integration error';
+      case ChatErrorTP.CONVERSATION_NOT_FOUND: return 'Conversation not found';
+      case ChatErrorTP.ACCESS_DENIED: return 'Permission denied';
+      case ChatErrorTP.SELF_CONVERSATION_NOT_ALLOWED: return 'Invalid conversation';
+      case ChatErrorTP.FRIENDSHIP_REQUIRED: return 'Friendship required';
+      case ChatErrorTP.SOCIAL_SERVICE_UNAVAILABLE: return 'Integration error';
+      case ChatErrorTP.INVALID_MESSAGE_CONTENT: return 'Invalid message';
+      case ChatErrorTP.WEBSOCKET_AUTHENTICATION_REQUIRED: return 'Reconnect required';
+      case ChatErrorTP.INVALID_DESTINATION: return 'Invalid destination';
       default: return 'Error';
     }
   }

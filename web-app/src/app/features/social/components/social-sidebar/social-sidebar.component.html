@@ -12,20 +12,62 @@
 
         <div class="min-w-0">
           <p class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ username }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">Friends</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            {{ sidebarMode === 'conversations' ? 'Conversations' : 'Friends' }}
+          </p>
         </div>
       </div>
 
-      <div class="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
+      <button
+        type="button"
+        (click)="addFriend.emit()"
+        class="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-500 transition hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+      >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5v14m7-7H5" />
         </svg>
-      </div>
+      </button>
     </div>
   </header>
 
   <div class="border-b border-gray-200 px-4 py-4 dark:border-gray-800">
-    <label class="relative block">
+    <div class="grid grid-cols-2 gap-2 rounded-2xl bg-gray-100 p-1 dark:bg-white/[0.05]">
+      <button
+        type="button"
+        (click)="changeMode.emit('conversations')"
+        class="rounded-xl px-3 py-2 text-sm font-semibold transition"
+        [class.bg-white]="sidebarMode === 'conversations'"
+        [class.text-gray-900]="sidebarMode === 'conversations'"
+        [class.shadow-sm]="sidebarMode === 'conversations'"
+        [class.dark:bg-white/10]="sidebarMode === 'conversations'"
+        [class.dark:text-white]="sidebarMode === 'conversations'"
+        [class.text-gray-500]="sidebarMode !== 'conversations'"
+        [class.dark:text-gray-400]="sidebarMode !== 'conversations'"
+      >
+        Chats
+        @if (totalUnreadCount > 0) {
+          <span class="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[11px] text-white">
+            {{ totalUnreadCount > 99 ? '99+' : totalUnreadCount }}
+          </span>
+        }
+      </button>
+      <button
+        type="button"
+        (click)="changeMode.emit('friends')"
+        class="rounded-xl px-3 py-2 text-sm font-semibold transition"
+        [class.bg-white]="sidebarMode === 'friends'"
+        [class.text-gray-900]="sidebarMode === 'friends'"
+        [class.shadow-sm]="sidebarMode === 'friends'"
+        [class.dark:bg-white/10]="sidebarMode === 'friends'"
+        [class.dark:text-white]="sidebarMode === 'friends'"
+        [class.text-gray-500]="sidebarMode !== 'friends'"
+        [class.dark:text-gray-400]="sidebarMode !== 'friends'"
+      >
+        Friends
+      </button>
+    </div>
+
+    <label class="relative mt-4 block">
       <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400 dark:text-gray-500">
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -34,7 +76,7 @@
       <input
         [formControl]="friendSearch"
         type="text"
-        placeholder="Search friends"
+        [placeholder]="sidebarMode === 'conversations' ? 'Search conversations' : 'Search friends'"
         class="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:bg-white dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500/70 dark:focus:bg-white/8"
       />
     </label>
@@ -42,40 +84,50 @@
     <div class="mt-4 grid grid-cols-2 gap-2">
       <button
         type="button"
-        (click)="addFriend.emit()"
-        class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-      >
-        Add Friend
-      </button>
-      <button
-        type="button"
         (click)="openPendingRequests.emit()"
         class="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:hover:bg-white/10"
       >
         Pending Requests
       </button>
+      <div class="flex items-center justify-center rounded-xl bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+        {{ sidebarMode === 'conversations' ? conversationCount + ' chats' : friends.length + ' friends' }}
+      </div>
     </div>
   </div>
 
   <div class="flex min-h-0 flex-1 flex-col">
     <div class="px-4 pb-3 pt-4">
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Messages</p>
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+        {{ sidebarMode === 'conversations' ? 'Messages' : 'Start a chat' }}
+      </p>
     </div>
 
     <div class="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
-      @if (isLoading) {
+      @if ((sidebarMode === 'conversations' && isLoadingConversations) || (sidebarMode === 'friends' && isLoadingFriends)) {
         <div class="space-y-2">
           @for (item of [1, 2, 3, 4, 5, 6]; track item) {
-            <div class="flex items-center gap-3 rounded-2xl px-3 py-3 animate-pulse">
-              <div class="h-12 w-12 rounded-full bg-gray-200 dark:bg-white/10"></div>
-              <div class="flex-1 space-y-2">
-                <div class="h-3 w-24 rounded bg-gray-200 dark:bg-white/10"></div>
-                <div class="h-3 w-16 rounded bg-gray-200 dark:bg-white/10"></div>
+            <div class="animate-pulse rounded-2xl px-3 py-3">
+              <div class="flex items-center gap-3">
+                <div class="h-12 w-12 rounded-full bg-gray-200 dark:bg-white/10"></div>
+                <div class="flex-1 space-y-2">
+                  <div class="h-3 w-24 rounded bg-gray-200 dark:bg-white/10"></div>
+                  <div class="h-3 w-16 rounded bg-gray-200 dark:bg-white/10"></div>
+                </div>
               </div>
             </div>
           }
         </div>
-      } @else if (friends.length === 0) {
+      } @else if (sidebarMode === 'conversations' && conversations.length === 0) {
+        <div class="flex h-full min-h-[16rem] flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-6 text-center dark:border-white/10 dark:bg-white/[0.03]">
+          <div class="flex h-14 w-14 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm dark:bg-white/5 dark:text-gray-400 dark:shadow-none">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M7 8h10M7 12h7m-7 4h4m12-8v9a2 2 0 01-2 2H8l-5 3V5a2 2 0 012-2h14a2 2 0 012 2z" />
+            </svg>
+          </div>
+          <h2 class="mt-4 text-sm font-semibold text-gray-900 dark:text-gray-100">No conversations yet</h2>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Open the Friends tab and start your first chat.</p>
+        </div>
+      } @else if (sidebarMode === 'friends' && friends.length === 0) {
         <div class="flex h-full min-h-[16rem] flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-6 text-center dark:border-white/10 dark:bg-white/[0.03]">
           <div class="flex h-14 w-14 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm dark:bg-white/5 dark:text-gray-400 dark:shadow-none">
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,6 +136,16 @@
           </div>
           <h2 class="mt-4 text-sm font-semibold text-gray-900 dark:text-gray-100">No friends found</h2>
           <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Search for another name or send a new request.</p>
+        </div>
+      } @else if (sidebarMode === 'conversations') {
+        <div class="space-y-1.5">
+          @for (conversation of conversations; track trackConversation($index, conversation)) {
+            <app-conversation-list-item
+              [item]="conversation"
+              [active]="conversation.conversation.id === selectedConversationId"
+              (selectConversation)="selectConversation.emit($event)"
+            />
+          }
         </div>
       } @else {
         <div class="space-y-1.5">

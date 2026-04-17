@@ -41,8 +41,19 @@ export enum SocialErrorTP {
   UPSTREAM_SERVICE_ERROR = 'UPSTREAM_SERVICE_ERROR',
 }
 
+export enum ChatErrorTP {
+  CONVERSATION_NOT_FOUND = 'CONVERSATION_NOT_FOUND',
+  ACCESS_DENIED = 'ACCESS_DENIED',
+  SELF_CONVERSATION_NOT_ALLOWED = 'SELF_CONVERSATION_NOT_ALLOWED',
+  FRIENDSHIP_REQUIRED = 'FRIENDSHIP_REQUIRED',
+  SOCIAL_SERVICE_UNAVAILABLE = 'SOCIAL_SERVICE_UNAVAILABLE',
+  INVALID_MESSAGE_CONTENT = 'INVALID_MESSAGE_CONTENT',
+  WEBSOCKET_AUTHENTICATION_REQUIRED = 'WEBSOCKET_AUTHENTICATION_REQUIRED',
+  INVALID_DESTINATION = 'INVALID_DESTINATION',
+}
+
 export interface ErrorResponseDTO {
-  errorType?: ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP | SocialErrorTP;
+  errorType?: ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP | SocialErrorTP | ChatErrorTP;
   title?: string;
   detail?: string;
   message: string;
@@ -51,7 +62,7 @@ export interface ErrorResponseDTO {
 }
 
 export const ErrorMessages: Record<
-  ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP | SocialErrorTP,
+  ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP | SocialErrorTP | ChatErrorTP,
   string
 > = {
   [ErrorTP.USERNAME_ALREADY_EXIST]: 'This username is already in use.',
@@ -80,4 +91,11 @@ export const ErrorMessages: Record<
   [SocialErrorTP.FRIENDSHIP_ALREADY_EXISTS]: 'You are already friends with this user.',
   [SocialErrorTP.INVALID_FRIEND_REQUEST_STATE]: 'This friend request was already processed.',
   [SocialErrorTP.UPSTREAM_SERVICE_ERROR]: 'A dependent service failed to validate the request.',
+  [ChatErrorTP.CONVERSATION_NOT_FOUND]: 'Conversation not found.',
+  [ChatErrorTP.SELF_CONVERSATION_NOT_ALLOWED]: 'You cannot start a conversation with yourself.',
+  [ChatErrorTP.FRIENDSHIP_REQUIRED]: 'Only friends can exchange messages.',
+  [ChatErrorTP.SOCIAL_SERVICE_UNAVAILABLE]: 'The friendship validation service is unavailable right now.',
+  [ChatErrorTP.INVALID_MESSAGE_CONTENT]: 'Message content must not be blank.',
+  [ChatErrorTP.WEBSOCKET_AUTHENTICATION_REQUIRED]: 'You need to reconnect your chat session.',
+  [ChatErrorTP.INVALID_DESTINATION]: 'The chat destination is invalid.',
 };
