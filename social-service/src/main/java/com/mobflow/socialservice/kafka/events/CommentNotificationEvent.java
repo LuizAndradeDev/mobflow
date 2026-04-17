@@ -9,6 +9,7 @@ public record CommentNotificationEvent(
         String actorUsername,
         String taskId,
         String workspaceId,
+        String boardId,
         String commentId,
         String taskTitle,
         String commentPreview,
