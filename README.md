@@ -33,6 +33,19 @@ web-app (Angular 21)
              +--> workspace-service /internal/workspaces/{id}/members/{authId}/role
              +--> user-service /internal/users/batch
              +--> Kafka topic: task.events
+  |
+  +--> social-service (8085, context-path /social) -> MongoDB: social
+  |          |
+  |          +--> task-service /tasks/internal/tasks/{taskId}
+  |          +--> user-service /internal/users/batch
+  |          +--> workspace-service /internal/workspaces/{id}/members/{authId}/role
+  |          +--> Kafka topics: social-comment-events, social-friendship-events
+  |
+  +--> chat-service (8086, context-path /chat) -> MongoDB: chat
+             |
+             +--> social-service /social/internal/social/friendships/{authId}/friends/{targetAuthId}
+             +--> WebSocket endpoint: /chat/ws/chat
+             +--> Kafka topic: social.events
 
 auth-service
   |
@@ -43,6 +56,9 @@ notification-service (8084)
   +--> consumes task.events
   +--> consumes workspace.events
   +--> consumes auth.events
+  +--> consumes social-comment-events
+  +--> consumes social-friendship-events
+  +--> consumes social.events
   +--> MongoDB database: notifications
   +--> JavaMailSender + Thymeleaf
 ```
@@ -51,7 +67,8 @@ notification-service (8084)
 
 - Frontend to services: JWT Bearer token on public `/api/**` endpoints.
 - Synchronous service-to-service calls: `/internal/**` endpoints protected by the `X-Internal-Secret` header.
-- Asynchronous service-to-service communication: Kafka topics `task.events`, `workspace.events`, and `auth.events`.
+- Realtime browser communication: STOMP over WebSocket through `chat-service` on `/chat/ws/chat`.
+- Asynchronous service-to-service communication: Kafka topics `task.events`, `workspace.events`, `auth.events`, `social-comment-events`, `social-friendship-events`, and `social.events`.
 
 ## Technology Stack
 
@@ -69,6 +86,8 @@ mobflow/
 ├── user-service/           # User profiles, avatar upload, profile caching
 ├── workspace-service/      # Workspaces, membership, invite lifecycle, join codes
 ├── task-service/           # Boards, lists, tasks, drag-and-drop ordering, analytics
+├── social-service/         # Friend graph, social interactions, task comments
+├── chat-service/           # Private conversations, realtime messaging, read receipts
 ├── notification-service/   # Kafka consumer, notification persistence, email delivery
 ├── web-app/                # Angular frontend with public and authenticated pages
 ├── docker-compose.yaml     # Full local orchestration for infra and applications
@@ -133,6 +152,8 @@ KAFKA_BOOTSTRAP_SERVERS=kafka:9092
 # Service base URLs used for synchronous internal requests
 WORKSPACE_SERVICE_URL=http://workspace-service:8082
 USER_SERVICE_URL=http://user-service:8081
+TASK_SERVICE_URL=http://task-service:8083
+SOCIAL_SERVICE_URL=http://social-service:8085
 
 # SMTP configuration used by notification-service email delivery
 MAIL_HOST=mailhog
@@ -192,6 +213,8 @@ curl http://localhost:8084/actuator/health
 | `user-service` | `8081` | PostgreSQL `mobflow_users`, Redis, MinIO | Manages profile metadata, avatar uploads, and cached profile reads consumed by both frontend and internal services. |
 | `workspace-service` | `8082` | PostgreSQL `mobflow_workspaces` | Owns workspace creation, member roles, invite lifecycle, and public join-code access. |
 | `task-service` | `8083` | PostgreSQL `mobflow_tasks` | Owns boards, task lists, tasks, drag-and-drop ordering, workspace summaries, and authenticated analytics endpoints. |
+| `social-service` | `8085` | MongoDB `social` | Owns friendships, friend requests, task comments, comment mentions, and social notification event publication. |
+| `chat-service` | `8086` | MongoDB `chat` | Owns private conversations, paginated message history, read receipts, WebSocket delivery, and chat notification publication. |
 | `notification-service` | `8084` | MongoDB `notifications` | Persists in-app notifications, computes unread counters, marks notifications as read, and sends email notifications from Kafka events. |
 | `web-app` | `4200` | Browser state | Angular client with landing, onboarding, workspace, task, analytics, profile, and settings flows. |
 
@@ -217,6 +240,9 @@ Kafka is used for cross-service notifications. Producers serialize self-containe
 | `task.events` | `task-service` | `TASK_CREATED`, `TASK_ASSIGNED`, `TASK_UPDATED`, `TASK_DELETED`, `TASK_COMPLETED`, `TASK_DUE_SOON` |
 | `workspace.events` | `workspace-service` | `WORKSPACE_INVITE`, `WORKSPACE_MEMBER_ADDED`, `WORKSPACE_MEMBER_REMOVED`, `WORKSPACE_ROLE_CHANGED` |
 | `auth.events` | `auth-service` | `EMAIL_CONFIRMATION` |
+| `social-comment-events` | `social-service` | `COMMENT_CREATED`, `USER_MENTIONED` |
+| `social-friendship-events` | `social-service` | `FRIEND_REQUEST_SENT` |
+| `social.events` | `chat-service` | `CHAT_MESSAGE_RECEIVED` |
 
 All event payloads are self-contained. The `notification-service` does not call upstream services to enrich notification content after consuming an event.
 
@@ -226,4 +252,6 @@ All event payloads are self-contained. The `notification-service` does not call 
 - [user-service README](user-service/README.md)
 - [workspace-service README](workspace-service/README.md)
 - [task-service README](task-service/README.md)
+- [social-service README](social-service/README.md)
+- [chat-service README](chat-service/README.md)
 - [notification-service README](notification-service/README.md)
