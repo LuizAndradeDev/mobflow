@@ -1,0 +1,12 @@
+.git
+.gitignore
+.idea
+.vscode
+**/.angular
+**/node_modules
+**/dist
+**/target
+**/build
+**/.DS_Store
+**/*.log
+docker-compose.override.yaml
