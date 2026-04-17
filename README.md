@@ -93,7 +93,6 @@ mobflow/
 ├── notification-service/   # Kafka consumer, notification persistence, email delivery
 ├── web-app/                # Angular frontend source code
 ├── docker-compose.yaml     # Full local orchestration for infra and applications
-├── init-db.sql             # PostgreSQL database bootstrap for service isolation
 ├── nginx.conf              # Shared Nginx configuration
 ├── web-app.conf            # Frontend/static/proxy server block configuration
 └── Dockerfile.nginx        # Multi-stage Angular build + Nginx runtime image
@@ -177,21 +176,20 @@ APP_BASE_URL=http://localhost
 
 ## PostgreSQL Bootstrap
 
-PostgreSQL startup is resilient in two layers:
+PostgreSQL startup is handled by a single idempotent bootstrap step:
 
-1. `init-db.sql` is mounted into `/docker-entrypoint-initdb.d/` and creates the relational databases on the very first volume initialization.
-2. `postgres-bootstrap` runs on every `docker compose up` and idempotently ensures the same databases exist before any Spring service starts.
+1. `postgres` starts and is considered healthy only after it accepts authenticated connections.
+2. `postgres-bootstrap` connects with the same admin credentials configured on the PostgreSQL container.
+3. It creates `mobflow_auth`, `mobflow_user`, `mobflow_workspace`, and `mobflow_task` only when they do not already exist.
+4. The relational Spring services start only after that bootstrap container exits successfully.
 
-The second step runs inline in Docker Compose through `psql`, without a mounted shell script, so it is not affected by Windows line-ending issues.
+The bootstrap runs inline through `psql`, without mounted `.sh` or `.sql` files, so it is stable on Linux, macOS, and Windows.
 
-That means the setup works both on a brand-new machine and on a machine that already has a persistent PostgreSQL volume.
+Because the creation is idempotent, the same flow works on:
 
-```sql
-CREATE DATABASE mobflow_auth;
-CREATE DATABASE mobflow_user;
-CREATE DATABASE mobflow_workspace;
-CREATE DATABASE mobflow_task;
-```
+- first startup on a clean machine
+- `docker compose up --build` after rebuilds
+- restart with persistent Docker volumes already present
 
 After the databases exist, each relational service runs its own Flyway migrations against its own schema boundary.
 
@@ -212,6 +210,14 @@ That single command is enough on a clean machine:
 5. Nginx serves the frontend on `http://localhost`
 
 No manual database creation, no extra bootstrap command, and no volume reset is required.
+
+If someone previously initialized this project with older PostgreSQL credentials from an earlier setup version, Docker may still have an incompatible persisted volume. In that specific migration case only, reset the old local state with:
+
+```bash
+docker compose down -v
+```
+
+Then run `docker compose up --build` again.
 
 ### Optional: Start the Frontend in Development Mode
 
