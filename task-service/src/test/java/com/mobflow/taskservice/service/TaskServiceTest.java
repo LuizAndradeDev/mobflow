@@ -172,15 +172,78 @@ class TaskServiceTest {
         when(workspaceClient.isOwnerOrAdmin(workspaceId, authId)).thenReturn(true);
         when(taskRepository.findById(task.getId())).thenReturn(Optional.of(task));
         when(taskListRepository.findById(targetList.getId())).thenReturn(Optional.of(targetList));
+        when(taskRepository.findByListIdOrderByPositionAsc(currentList.getId())).thenReturn(List.of(task));
         when(taskRepository.findByListIdOrderByPositionAsc(targetList.getId())).thenReturn(List.of(existing));
-        when(taskRepository.save(task)).thenReturn(task);
 
         TaskResponseDTO response = taskService.moveTask(workspaceId, task.getId(), authId, request);
 
         assertThat(response.getListId()).isEqualTo(targetList.getId());
-        assertThat(existing.getPosition()).isEqualTo(2);
+        assertThat(existing.getPosition()).isEqualTo(0);
         assertThat(task.getPosition()).isEqualTo(1);
-        verify(taskRepository).saveAll(List.of(existing));
+        verify(taskRepository).saveAll(List.of());
+        verify(taskRepository).saveAll(List.of(existing, task));
+    }
+
+    @Test
+    void moveTask_sameListMoveToLastPosition_reordersSequentially() {
+        UUID workspaceId = UUID.randomUUID();
+        UUID authId = UUID.randomUUID();
+        Board board = board(workspaceId);
+        TaskList list = taskList(board);
+        Task first = task(list, workspaceId, authId, null);
+        first.setPosition(0);
+        Task second = task(list, workspaceId, authId, null);
+        second.setPosition(1);
+        Task third = task(list, workspaceId, authId, null);
+        third.setPosition(2);
+        MoveTaskRequest request = com.mobflow.taskservice.testsupport.TaskServiceTestFixtures.moveTaskRequest(list.getId(), 2);
+
+        when(workspaceClient.isOwnerOrAdmin(workspaceId, authId)).thenReturn(true);
+        when(taskRepository.findById(first.getId())).thenReturn(Optional.of(first));
+        when(taskListRepository.findById(list.getId())).thenReturn(Optional.of(list));
+        when(taskRepository.findByListIdOrderByPositionAsc(list.getId())).thenReturn(List.of(first, second, third));
+
+        TaskResponseDTO response = taskService.moveTask(workspaceId, first.getId(), authId, request);
+
+        assertThat(response.getPosition()).isEqualTo(2);
+        assertThat(second.getPosition()).isEqualTo(0);
+        assertThat(third.getPosition()).isEqualTo(1);
+        assertThat(first.getPosition()).isEqualTo(2);
+        verify(taskRepository).saveAll(List.of(first, second, third));
+    }
+
+    @Test
+    void moveTask_acrossLists_normalizesSourceAndTargetPositions() {
+        UUID workspaceId = UUID.randomUUID();
+        UUID authId = UUID.randomUUID();
+        Board board = board(workspaceId);
+        TaskList sourceList = taskList(board);
+        TaskList targetList = taskList(board);
+        Task moving = task(sourceList, workspaceId, authId, null);
+        moving.setPosition(1);
+        Task sourceFirst = task(sourceList, workspaceId, authId, null);
+        sourceFirst.setPosition(0);
+        Task sourceThird = task(sourceList, workspaceId, authId, null);
+        sourceThird.setPosition(2);
+        Task targetFirst = task(targetList, workspaceId, authId, null);
+        targetFirst.setPosition(0);
+        MoveTaskRequest request = com.mobflow.taskservice.testsupport.TaskServiceTestFixtures.moveTaskRequest(targetList.getId(), 1);
+
+        when(workspaceClient.isOwnerOrAdmin(workspaceId, authId)).thenReturn(true);
+        when(taskRepository.findById(moving.getId())).thenReturn(Optional.of(moving));
+        when(taskListRepository.findById(targetList.getId())).thenReturn(Optional.of(targetList));
+        when(taskRepository.findByListIdOrderByPositionAsc(sourceList.getId())).thenReturn(List.of(sourceFirst, moving, sourceThird));
+        when(taskRepository.findByListIdOrderByPositionAsc(targetList.getId())).thenReturn(List.of(targetFirst));
+
+        TaskResponseDTO response = taskService.moveTask(workspaceId, moving.getId(), authId, request);
+
+        assertThat(response.getListId()).isEqualTo(targetList.getId());
+        assertThat(sourceFirst.getPosition()).isEqualTo(0);
+        assertThat(sourceThird.getPosition()).isEqualTo(1);
+        assertThat(targetFirst.getPosition()).isEqualTo(0);
+        assertThat(moving.getPosition()).isEqualTo(1);
+        verify(taskRepository).saveAll(List.of(sourceFirst, sourceThird));
+        verify(taskRepository).saveAll(List.of(targetFirst, moving));
     }
 
     @Test
