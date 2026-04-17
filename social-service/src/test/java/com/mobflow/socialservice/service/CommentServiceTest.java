@@ -85,7 +85,7 @@ class CommentServiceTest {
 
         when(taskServiceClient.getTaskContext(TASK_ID)).thenReturn(taskContext());
         when(workspaceServiceClient.requireMembership(WORKSPACE_ID, AUTHOR_ID)).thenReturn(WorkspaceRole.MEMBER);
-        when(mentionService.resolveMentions("Hello team")).thenReturn(List.of());
+        when(mentionService.resolveMentions("Hello team", WORKSPACE_ID)).thenReturn(List.of());
         when(commentFactory.create(taskContext(), author, "Hello team", List.of())).thenReturn(unsavedComment);
         when(commentRepository.save(unsavedComment)).thenReturn(savedComment);
 
@@ -108,7 +108,7 @@ class CommentServiceTest {
 
         when(taskServiceClient.getTaskContext(TASK_ID)).thenReturn(taskContext());
         when(workspaceServiceClient.requireMembership(WORKSPACE_ID, AUTHOR_ID)).thenReturn(WorkspaceRole.MEMBER);
-        when(mentionService.resolveMentions("Hello @mary_dev")).thenReturn(mentions);
+        when(mentionService.resolveMentions("Hello @mary_dev", WORKSPACE_ID)).thenReturn(mentions);
         when(commentFactory.create(taskContext(), author, "Hello @mary_dev", List.of("mary_dev"))).thenReturn(unsavedComment);
         when(commentRepository.save(unsavedComment)).thenReturn(savedComment);
 
@@ -128,7 +128,7 @@ class CommentServiceTest {
 
         when(taskServiceClient.getTaskContext(TASK_ID)).thenReturn(taskContext());
         when(workspaceServiceClient.requireMembership(WORKSPACE_ID, AUTHOR_ID)).thenReturn(WorkspaceRole.MEMBER);
-        when(mentionService.resolveMentions("Hello @mary_dev and @ghost_user")).thenReturn(mentions);
+        when(mentionService.resolveMentions("Hello @mary_dev and @ghost_user", WORKSPACE_ID)).thenReturn(mentions);
         when(commentFactory.create(taskContext(), author, "Hello @mary_dev and @ghost_user", List.of("mary_dev"))).thenReturn(unsavedComment);
         when(commentRepository.save(unsavedComment)).thenReturn(unsavedComment);
 
@@ -145,7 +145,7 @@ class CommentServiceTest {
 
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(existingComment));
         when(workspaceServiceClient.requireMembership(WORKSPACE_ID, AUTHOR_ID)).thenReturn(WorkspaceRole.MEMBER);
-        when(mentionService.resolveMentions("Updated content")).thenReturn(List.of());
+        when(mentionService.resolveMentions("Updated content", WORKSPACE_ID)).thenReturn(List.of());
         when(commentRepository.save(existingComment)).thenReturn(existingComment);
 
         CommentResponse response = commentService.updateComment(commentId, author, request);

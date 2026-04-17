@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.mobflow.socialservice.testsupport.CommentTestFixtures.TASK_ASSIGNEE_ID;
+import static com.mobflow.socialservice.testsupport.CommentTestFixtures.BOARD_ID;
 import static com.mobflow.socialservice.testsupport.CommentTestFixtures.TASK_CREATOR_ID;
 import static com.mobflow.socialservice.testsupport.CommentTestFixtures.TASK_ID;
 import static com.mobflow.socialservice.testsupport.CommentTestFixtures.WORKSPACE_ID;
@@ -70,12 +71,15 @@ class CommentFlowIntegrationTest extends AbstractSocialIntegrationTest {
                 .thenReturn(new TaskServiceClient.TaskCommentContextResponse(
                         TASK_ID,
                         WORKSPACE_ID,
+                        BOARD_ID,
                         TASK_CREATOR_ID,
                         TASK_ASSIGNEE_ID,
                         "Prepare roadmap"
                 ));
         when(workspaceServiceClient.requireMembership(eq(WORKSPACE_ID), org.mockito.ArgumentMatchers.any(UUID.class)))
                 .thenReturn(WorkspaceRole.MEMBER);
+        when(workspaceServiceClient.isWorkspaceMember(eq(WORKSPACE_ID), org.mockito.ArgumentMatchers.any(UUID.class)))
+                .thenReturn(true);
         when(authServiceClient.resolveByUsernames(anyList()))
                 .thenReturn(java.util.Map.of("mary_dev", new AuthServiceClient.AuthUserSummaryResponse(UUID.randomUUID(), "mary_dev")));
     }
@@ -139,5 +143,42 @@ class CommentFlowIntegrationTest extends AbstractSocialIntegrationTest {
                 .extracting(ConsumerRecord::value)
                 .anySatisfy(payload -> assertThat(payload).contains("\"eventType\":\"COMMENT_CREATED\""))
                 .anySatisfy(payload -> assertThat(payload).contains("\"eventType\":\"USER_MENTIONED\""));
+    }
+
+    @Test
+    void commentFlow_mentionsOutsideWorkspace_areIgnored() throws Exception {
+        UUID actorId = UUID.randomUUID();
+        UUID validMentionId = UUID.randomUUID();
+        UUID externalMentionId = UUID.randomUUID();
+        String token = bearerToken(actorId, "john_dev");
+
+        when(authServiceClient.resolveByUsernames(List.of("mary_dev", "outsider_dev")))
+                .thenReturn(java.util.Map.of(
+                        "mary_dev", new AuthServiceClient.AuthUserSummaryResponse(validMentionId, "mary_dev"),
+                        "outsider_dev", new AuthServiceClient.AuthUserSummaryResponse(externalMentionId, "outsider_dev")
+                ));
+        when(workspaceServiceClient.isWorkspaceMember(WORKSPACE_ID, validMentionId)).thenReturn(true);
+        when(workspaceServiceClient.isWorkspaceMember(WORKSPACE_ID, externalMentionId)).thenReturn(false);
+
+        mockMvc.perform(withSocialContextPath(
+                        post("/social/api/tasks/{taskId}/comments", TASK_ID))
+                        .header("Authorization", token)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("content", "Hello @mary_dev and @outsider_dev"))))
+                .andExpect(status().isCreated());
+
+        List<ConsumerRecord<String, String>> records = new CopyOnWriteArrayList<>();
+        Awaitility.await()
+                .atMost(Duration.ofSeconds(5))
+                .untilAsserted(() -> {
+                    KafkaTestUtils.getRecords(commentConsumer, Duration.ofMillis(250))
+                            .forEach(records::add);
+                    assertThat(records).hasSizeGreaterThanOrEqualTo(3);
+                });
+
+        assertThat(records)
+                .extracting(ConsumerRecord::value)
+                .anySatisfy(payload -> assertThat(payload).contains("\"mentionedUsername\":\"mary_dev\""))
+                .noneSatisfy(payload -> assertThat(payload).contains("\"mentionedUsername\":\"outsider_dev\""));
     }
 }
