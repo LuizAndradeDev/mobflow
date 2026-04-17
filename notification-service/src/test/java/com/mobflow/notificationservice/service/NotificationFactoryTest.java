@@ -1,6 +1,7 @@
 package com.mobflow.notificationservice.service;
 
 import com.mobflow.notificationservice.kafka.events.AuthNotificationEvent;
+import com.mobflow.notificationservice.kafka.events.CommentNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.TaskNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.WorkspaceNotificationEvent;
 import com.mobflow.notificationservice.model.entities.Notification;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static com.mobflow.notificationservice.testsupport.NotificationTestFixtures.authEvent;
+import static com.mobflow.notificationservice.testsupport.NotificationTestFixtures.commentEvent;
 import static com.mobflow.notificationservice.testsupport.NotificationTestFixtures.taskEvent;
 import static com.mobflow.notificationservice.testsupport.NotificationTestFixtures.workspaceEvent;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +47,7 @@ class NotificationFactoryTest {
         assertThat(notification.getType()).isEqualTo(NotificationType.TASK_DUE_SOON);
         assertThat(notification.getPriority()).isEqualTo(NotificationPriority.HIGH);
         assertThat(notification.getBody()).contains("is due on");
+        assertThat(notification.getMetadata()).containsEntry("boardId", event.boardId());
     }
 
     @Test
@@ -67,6 +70,20 @@ class NotificationFactoryTest {
         assertThat(notification.getType()).isEqualTo(NotificationType.WORKSPACE_INVITE_DECLINED);
         assertThat(notification.getBody()).contains("Kate declined the invite");
         assertThat(notification.getMetadata()).containsEntry("subjectDisplayName", "Kate");
+    }
+
+    @Test
+    void createCommentNotification_commentEvent_includesNavigationMetadata() {
+        CommentNotificationEvent event = commentEvent("COMMENT_CREATED");
+
+        Notification notification = notificationFactory.createCommentNotification(event);
+
+        assertThat(notification.getType()).isEqualTo(NotificationType.COMMENT_CREATED);
+        assertThat(notification.getMetadata())
+                .containsEntry("workspaceId", event.workspaceId())
+                .containsEntry("boardId", event.boardId())
+                .containsEntry("taskId", event.taskId())
+                .containsEntry("commentId", event.commentId());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.mobflow.notificationservice.testsupport;
 
 import com.mobflow.notificationservice.kafka.events.AuthNotificationEvent;
+import com.mobflow.notificationservice.kafka.events.CommentNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.TaskNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.WorkspaceNotificationEvent;
 import com.mobflow.notificationservice.model.entities.Notification;
@@ -58,11 +59,29 @@ public final class NotificationTestFixtures {
                 UUID.randomUUID().toString(),
                 "John",
                 UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
                 "Platform",
                 UUID.randomUUID().toString(),
                 "Prepare release",
                 "TODO",
                 LocalDate.now().plusDays(1),
+                Instant.now()
+        );
+    }
+
+    public static CommentNotificationEvent commentEvent(String eventType) {
+        return new CommentNotificationEvent(
+                eventType,
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                "john_dev",
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                "Prepare release",
+                "Review completed",
+                "mary_dev",
                 Instant.now()
         );
     }
