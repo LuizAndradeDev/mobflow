@@ -1,43 +1,3 @@
-x-app-env: &app-env
-  DB_HOST: ${DB_HOST:-postgres}
-  DB_PORT: ${DB_PORT:-5432}
-  DB_USER: ${DB_USER:-mobflow}
-  DB_PASSWORD: ${DB_PASSWORD:-mobflow_secret}
-  AUTH_DB: ${AUTH_DB:-mobflow_auth}
-  USER_DB: ${USER_DB:-mobflow_user}
-  WORKSPACE_DB: ${WORKSPACE_DB:-mobflow_workspace}
-  TASK_DB: ${TASK_DB:-mobflow_task}
-  JWT_SECRET: ${JWT_SECRET:-QGXgm8syhGOcl8UlHI8l4wAAx/+ztNB3ZDULgAO64X4=}
-  JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
-  INTERNAL_SECRET: ${INTERNAL_SECRET:-mobflow-internal-secret-2024}
-  REDIS_HOST: ${REDIS_HOST:-redis}
-  REDIS_PORT: ${REDIS_PORT:-6379}
-  MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
-  MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
-  MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mobflow_minio}
-  MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mobflow_minio_secret}
-  MINIO_BUCKET: ${MINIO_BUCKET:-mobflow-avatars}
-  MONGO_USER: ${MONGO_USER:-mobflow-mongo}
-  MONGO_PASSWORD: ${MONGO_PASSWORD:-mongo-secret}
-  MONGO_HOST: ${MONGO_HOST:-mongodb}
-  MONGO_PORT: ${MONGO_PORT:-27017}
-  KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
-  AUTH_EVENTS_TOPIC: ${AUTH_EVENTS_TOPIC:-auth-events}
-  TASK_EVENTS_TOPIC: ${TASK_EVENTS_TOPIC:-task-events}
-  WORKSPACE_EVENTS_TOPIC: ${WORKSPACE_EVENTS_TOPIC:-workspace-events}
-  SOCIAL_COMMENT_EVENTS_TOPIC: ${SOCIAL_COMMENT_EVENTS_TOPIC:-social-comment-events}
-  SOCIAL_FRIENDSHIP_EVENTS_TOPIC: ${SOCIAL_FRIENDSHIP_EVENTS_TOPIC:-social-friendship-events}
-  SOCIAL_EVENTS_TOPIC: ${SOCIAL_EVENTS_TOPIC:-social.events}
-  USER_SERVICE_URL: ${USER_SERVICE_URL:-http://mobflow-user:8081}
-  WORKSPACE_SERVICE_URL: ${WORKSPACE_SERVICE_URL:-http://mobflow-workspace:8082}
-  TASK_SERVICE_URL: ${TASK_SERVICE_URL:-http://mobflow-task:8083}
-  SOCIAL_SERVICE_URL: ${SOCIAL_SERVICE_URL:-http://mobflow-social:8085}
-  APP_BASE_URL: ${APP_BASE_URL:-http://localhost}
-  MAIL_HOST: ${MAIL_HOST:-mailhog}
-  MAIL_PORT: ${MAIL_PORT:-1025}
-  MAIL_USERNAME: ${MAIL_USERNAME:-no-reply@mobflow.dev}
-  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-
 services:
   mongodb:
     image: mongo:latest
@@ -45,8 +5,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-mobflow-mongo}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mongo-secret}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - mongodb_data:/data/db
     networks:
@@ -111,55 +71,21 @@ services:
     image: postgres:16
     container_name: mobflow-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_USER: ${DB_USER:-mobflow}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-mobflow_secret}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       TZ: America/Sao_Paulo
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - mobflow-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-mobflow} -d ${POSTGRES_DB:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
       timeout: 5s
       retries: 10
-
-  postgres-bootstrap:
-    image: postgres:16
-    container_name: mobflow-postgres-bootstrap
-    restart: on-failure:5
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      <<: *app-env
-      PGPASSWORD: ${DB_PASSWORD:-mobflow_secret}
-    entrypoint:
-      - sh
-      - -ec
-      - |
-        attempts=0
-        until psql --host=postgres --port="${DB_PORT}" --username="${DB_USER}" --dbname="${POSTGRES_DB:-postgres}" --set=ON_ERROR_STOP=1 \
-          --set=AUTH_DB="${AUTH_DB}" --set=USER_DB="${USER_DB}" --set=WORKSPACE_DB="${WORKSPACE_DB}" --set=TASK_DB="${TASK_DB}" <<'SQL'
-        SELECT 'CREATE DATABASE "' || :'AUTH_DB' || '"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'AUTH_DB')\gexec
-        SELECT 'CREATE DATABASE "' || :'USER_DB' || '"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'USER_DB')\gexec
-        SELECT 'CREATE DATABASE "' || :'WORKSPACE_DB' || '"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'WORKSPACE_DB')\gexec
-        SELECT 'CREATE DATABASE "' || :'TASK_DB' || '"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'TASK_DB')\gexec
-        SQL
-        do
-          attempts=$((attempts + 1))
-          if [ "$${attempts}" -ge 30 ]; then
-            echo "PostgreSQL bootstrap failed after $${attempts} attempts." >&2
-            exit 1
-          fi
-          echo "PostgreSQL is not ready for authenticated bootstrap yet. Retrying ($${attempts}/30)..." >&2
-          sleep 2
-        done
-    networks:
-      - mobflow-network
 
   redis:
     image: redis:7-alpine
@@ -203,11 +129,12 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      postgres-bootstrap:
-        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
     networks:
       - mobflow-network
-    environment: *app-env
+    env_file:
+      - .env
 
   user-service:
     build: ./user-service
@@ -215,15 +142,16 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      postgres-bootstrap:
-        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
       minio:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - mobflow-network
-    environment: *app-env
+    env_file:
+      - .env
 
   workspace-service:
     build: ./workspace-service
@@ -231,13 +159,14 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      postgres-bootstrap:
-        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
       user-service:
         condition: service_started
     networks:
       - mobflow-network
-    environment: *app-env
+    env_file:
+      - .env
 
   task-service:
     build: ./task-service
@@ -245,8 +174,8 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      postgres-bootstrap:
-        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
       workspace-service:
@@ -255,7 +184,8 @@ services:
         condition: service_started
     networks:
       - mobflow-network
-    environment: *app-env
+    env_file:
+      - .env
 
   notification-service:
     build: ./notification-service
@@ -271,7 +201,8 @@ services:
         condition: service_started
     networks:
       - mobflow-network
-    environment: *app-env
+    env_file:
+      - .env
 
   social-service:
     build: ./social-service
@@ -291,7 +222,8 @@ services:
         condition: service_started
     networks:
       - mobflow-network
-    environment: *app-env
+    env_file:
+      - .env
 
   chat-service:
     build: ./chat-service
@@ -307,7 +239,8 @@ services:
         condition: service_started
     networks:
       - mobflow-network
-    environment: *app-env
+    env_file:
+      - .env
 
 
   nginx:
