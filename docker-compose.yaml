@@ -225,6 +225,23 @@ services:
     env_file:
       - .env
 
+  chat-service:
+    build: ./chat-service
+    container_name: mobflow-chat
+    ports:
+      - "8086:8086"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      social-service:
+        condition: service_started
+    networks:
+      - mobflow-network
+    env_file:
+      - .env
+
 
   nginx:
     build:
@@ -240,6 +257,7 @@ services:
       - task-service
       - notification-service
       - social-service
+      - chat-service
     networks:
       - mobflow-network
 
