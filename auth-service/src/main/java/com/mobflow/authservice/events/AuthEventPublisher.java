@@ -51,6 +51,6 @@ public class AuthEventPublisher {
     }
 
     private String buildConfirmationUrl(String token) {
-        return appBaseUrl + "/confirm-email?token=" + token;
+        return appBaseUrl.replaceAll("/+$", "") + "/confirm-email?token=" + token;
     }
 }
