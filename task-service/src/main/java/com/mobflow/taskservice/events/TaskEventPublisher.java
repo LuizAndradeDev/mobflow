@@ -56,6 +56,7 @@ public class TaskEventPublisher {
                     actorAuthId != null ? actorAuthId.toString() : null,
                     actor != null ? actor.displayName() : null,
                     task.getWorkspaceId().toString(),
+                    task.getList().getBoard().getId().toString(),
                     workspaceName,
                     task.getId().toString(),
                     task.getTitle(),

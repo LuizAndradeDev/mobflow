@@ -9,6 +9,7 @@ import java.util.UUID;
 public record TaskCommentContextResponseDTO(
         UUID taskId,
         UUID workspaceId,
+        UUID boardId,
         UUID createdByAuthId,
         UUID assigneeAuthId,
         String taskTitle
@@ -17,6 +18,7 @@ public record TaskCommentContextResponseDTO(
         return TaskCommentContextResponseDTO.builder()
                 .taskId(task.getId())
                 .workspaceId(task.getWorkspaceId())
+                .boardId(task.getList().getBoard().getId())
                 .createdByAuthId(task.getCreatedByAuthId())
                 .assigneeAuthId(task.getAssigneeAuthId())
                 .taskTitle(task.getTitle())

@@ -11,6 +11,7 @@ public record TaskNotificationEvent(
         String actorAuthId,
         String actorDisplayName,
         String workspaceId,
+        String boardId,
         String workspaceName,
         String taskId,
         String taskTitle,
