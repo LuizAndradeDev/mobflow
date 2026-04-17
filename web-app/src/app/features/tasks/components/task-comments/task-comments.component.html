@@ -1,0 +1,172 @@
+<section class="rounded-3xl border border-gray-100 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-800/40">
+  <div class="flex items-start justify-between gap-4 mb-5">
+    <div>
+      <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Comments</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Use <span class="font-semibold text-gray-700 dark:text-gray-200">@username</span> to mention teammates.
+      </p>
+    </div>
+    <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-500 shadow-sm dark:bg-gray-900 dark:text-gray-300">
+      {{ totalElements }} total
+    </span>
+  </div>
+
+  <form [formGroup]="createCommentForm" (ngSubmit)="submitComment()" class="space-y-3 mb-6">
+    <textarea
+      formControlName="content"
+      rows="4"
+      placeholder="Write a comment or mention someone with @username"
+      class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:ring-2 focus:ring-blue-500 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></textarea>
+
+    <div class="flex items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">
+        {{ createCommentForm.controls.content.value.length }}/4000
+      </p>
+      <button
+        type="submit"
+        [disabled]="createCommentForm.invalid || isSubmitting"
+        class="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {{ isSubmitting ? 'Posting...' : 'Post comment' }}
+      </button>
+    </div>
+  </form>
+
+  @if (isLoading) {
+    <div class="space-y-3">
+      @for (item of [1, 2, 3]; track item) {
+        <div class="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+          <div class="space-y-3">
+            <div class="h-4 w-32 rounded bg-gray-100 dark:bg-gray-800"></div>
+            <div class="h-3 w-full rounded bg-gray-100 dark:bg-gray-800"></div>
+            <div class="h-3 w-2/3 rounded bg-gray-100 dark:bg-gray-800"></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (comments.length === 0) {
+    <div class="rounded-3xl border border-dashed border-gray-200 bg-white px-6 py-12 text-center dark:border-gray-700 dark:bg-gray-900">
+      <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-gray-800">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M7.5 8.25h9m-9 3h5.25m-8.25 8.25h12A2.25 2.25 0 0019.5 17.25V6.75A2.25 2.25 0 0017.25 4.5h-10.5A2.25 2.25 0 004.5 6.75v10.5A2.25 2.25 0 006.75 19.5z" />
+        </svg>
+      </div>
+      <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100">No comments yet</h4>
+      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        Start the discussion for this task.
+      </p>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (comment of comments; track trackComment($index, comment)) {
+        <article
+          [id]="commentElementId(comment.id)"
+          class="rounded-2xl border border-gray-100 bg-white p-4 transition dark:border-gray-800 dark:bg-gray-900"
+          [class.border-blue-300]="isHighlighted(comment.id)"
+          [class.dark:border-blue-700]="isHighlighted(comment.id)"
+          [class.bg-blue-50]="isHighlighted(comment.id)"
+          [class.dark:bg-blue-950/20]="isHighlighted(comment.id)"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              @if (avatarUrl(comment); as avatarUrl) {
+                <img [src]="avatarUrl" [alt]="authorDisplayName(comment)" class="mt-0.5 h-10 w-10 shrink-0 rounded-2xl object-cover" />
+              } @else {
+                <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  {{ authorInitial(comment) }}
+                </div>
+              }
+
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <p class="font-semibold text-gray-900 dark:text-gray-100">{{ authorDisplayName(comment) }}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">@{{ comment.authorUsername }}</p>
+                @if (comment.deleted) {
+                  <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    Deleted
+                  </span>
+                }
+                </div>
+                <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+                  <span>{{ comment.createdAt | date: 'medium' }}</span>
+                  @if (comment.editedAt) {
+                    <span>Edited {{ comment.editedAt | date: 'short' }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            @if (canManage(comment) && editingCommentId !== comment.id) {
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  (click)="startEdit(comment)"
+                  class="rounded-xl border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  (click)="deleteComment(comment)"
+                  [disabled]="isDeleting(comment.id)"
+                  class="rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/30"
+                >
+                  {{ isDeleting(comment.id) ? 'Deleting...' : 'Delete' }}
+                </button>
+              </div>
+            }
+          </div>
+
+          @if (editingCommentId === comment.id) {
+            <form [formGroup]="editCommentForm" (ngSubmit)="saveEdit(comment)" class="mt-4 space-y-3">
+              <textarea
+                formControlName="content"
+                rows="4"
+                class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:ring-2 focus:ring-blue-500 resize-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+              ></textarea>
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-xs text-gray-400">{{ editCommentForm.controls.content.value.length }}/4000</p>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    (click)="cancelEdit()"
+                    class="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    [disabled]="editCommentForm.invalid || savingCommentId === comment.id"
+                    class="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
+                  >
+                    {{ savingCommentId === comment.id ? 'Saving...' : 'Save' }}
+                  </button>
+                </div>
+              </div>
+            </form>
+          } @else if (comment.deleted) {
+            <p class="mt-4 italic text-sm text-gray-400 dark:text-gray-500">This comment was deleted.</p>
+          } @else {
+            <p class="mt-4 whitespace-pre-wrap text-sm leading-6 text-gray-700 dark:text-gray-300">
+              {{ comment.content }}
+            </p>
+          }
+        </article>
+      }
+    </div>
+
+    @if (hasMoreComments) {
+      <div class="pt-4">
+        <button
+          type="button"
+          (click)="loadMoreComments()"
+          [disabled]="isLoadingMore"
+          class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+        >
+          {{ isLoadingMore ? 'Loading...' : 'Load more comments' }}
+        </button>
+      </div>
+    }
+  }
+</section>
