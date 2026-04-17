@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.ArrayList;
 
 @Service
 public class TaskService {
@@ -164,17 +165,22 @@ public class TaskService {
             throw TaskServiceException.accessDenied();
         }
 
-        List<Task> targetTasks = taskRepository.findByListIdOrderByPositionAsc(targetList.getId());
-        for (Task targetTask : targetTasks) {
-            if (targetTask.getPosition() >= request.getPosition() && !targetTask.getId().equals(taskId)) {
-                targetTask.setPosition(targetTask.getPosition() + 1);
-            }
-        }
-        taskRepository.saveAll(targetTasks);
+        TaskList sourceList = task.getList();
+        boolean sameListMove = sourceList.getId().equals(targetList.getId());
 
-        task.setList(targetList);
-        task.setPosition(request.getPosition());
-        taskRepository.save(task);
+        List<Task> sourceTasks = new ArrayList<>(taskRepository.findByListIdOrderByPositionAsc(sourceList.getId()));
+        List<Task> targetTasks = sameListMove
+                ? sourceTasks
+                : new ArrayList<>(taskRepository.findByListIdOrderByPositionAsc(targetList.getId()));
+
+        if (sameListMove) {
+            moveWithinSameList(task, sourceTasks, request.getPosition());
+            taskRepository.saveAll(sourceTasks);
+        } else {
+            moveAcrossLists(task, targetList, sourceTasks, targetTasks, request.getPosition());
+            taskRepository.saveAll(sourceTasks);
+            taskRepository.saveAll(targetTasks);
+        }
 
         return taskProfileService.toTaskResponse(task);
     }
@@ -197,6 +203,44 @@ public class TaskService {
             taskEventPublisher.publish("TASK_DELETED", task, authId, task.getList().getBoard().getName());
         }
         taskRepository.delete(task);
+    }
+
+    private void moveWithinSameList(Task task, List<Task> tasks, int requestedPosition) {
+        List<Task> reordered = new ArrayList<>(tasks);
+        reordered.removeIf(existingTask -> existingTask.getId().equals(task.getId()));
+
+        int targetPosition = clampPosition(requestedPosition, reordered.size());
+        reordered.add(targetPosition, task);
+        normalizePositions(reordered);
+    }
+
+    private void moveAcrossLists(
+            Task task,
+            TaskList targetList,
+            List<Task> sourceTasks,
+            List<Task> targetTasks,
+            int requestedPosition
+    ) {
+        sourceTasks.removeIf(existingTask -> existingTask.getId().equals(task.getId()));
+        normalizePositions(sourceTasks);
+
+        int targetPosition = clampPosition(requestedPosition, targetTasks.size());
+        task.setList(targetList);
+        targetTasks.add(targetPosition, task);
+        normalizePositions(targetTasks);
+    }
+
+    private void normalizePositions(List<Task> tasks) {
+        for (int index = 0; index < tasks.size(); index++) {
+            tasks.get(index).setPosition(index);
+        }
+    }
+
+    private int clampPosition(int requestedPosition, int maxPosition) {
+        if (requestedPosition < 0) {
+            return 0;
+        }
+        return Math.min(requestedPosition, maxPosition);
     }
 
 }
