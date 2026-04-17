@@ -1,6 +1,7 @@
 package com.mobflow.notificationservice.service;
 
 import com.mobflow.notificationservice.kafka.events.AuthNotificationEvent;
+import com.mobflow.notificationservice.kafka.events.ChatMessageNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.CommentNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.TaskNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.WorkspaceNotificationEvent;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static com.mobflow.notificationservice.testsupport.NotificationTestFixtures.authEvent;
+import static com.mobflow.notificationservice.testsupport.NotificationTestFixtures.chatMessageEvent;
 import static com.mobflow.notificationservice.testsupport.NotificationTestFixtures.commentEvent;
 import static com.mobflow.notificationservice.testsupport.NotificationTestFixtures.taskEvent;
 import static com.mobflow.notificationservice.testsupport.NotificationTestFixtures.workspaceEvent;
@@ -84,6 +86,21 @@ class NotificationFactoryTest {
                 .containsEntry("boardId", event.boardId())
                 .containsEntry("taskId", event.taskId())
                 .containsEntry("commentId", event.commentId());
+    }
+
+    @Test
+    void createChatMessageNotification_newMessageEvent_buildsInAppNotification() {
+        ChatMessageNotificationEvent event = chatMessageEvent("NEW_CHAT_MESSAGE");
+
+        Notification notification = notificationFactory.createChatMessageNotification(event);
+
+        assertThat(notification.getType()).isEqualTo(NotificationType.CHAT_MESSAGE_RECEIVED);
+        assertThat(notification.getChannel()).isEqualTo(NotificationChannel.IN_APP);
+        assertThat(notification.getBody()).isEqualTo(event.contentPreview());
+        assertThat(notification.getMetadata())
+                .containsEntry("conversationId", event.conversationId())
+                .containsEntry("messageId", event.messageId())
+                .containsEntry("senderId", event.senderId());
     }
 
     @Test

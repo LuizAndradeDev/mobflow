@@ -1,6 +1,7 @@
 package com.mobflow.notificationservice.service;
 
 import com.mobflow.notificationservice.kafka.events.AuthNotificationEvent;
+import com.mobflow.notificationservice.kafka.events.ChatMessageNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.CommentNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.FriendRequestEvent;
 import com.mobflow.notificationservice.kafka.events.TaskNotificationEvent;
@@ -122,6 +123,26 @@ public class NotificationFactory {
                 .build();
     }
 
+    public Notification createChatMessageNotification(ChatMessageNotificationEvent event) {
+        if (event.recipientId() == null || event.recipientId().isBlank()) {
+            return null;
+        }
+
+        if (!"NEW_CHAT_MESSAGE".equals(event.eventType())) {
+            return null;
+        }
+
+        return Notification.builder()
+                .recipientId(event.recipientId())
+                .title("New chat message")
+                .body(chatMessageBodyFor(event))
+                .type(NotificationType.CHAT_MESSAGE_RECEIVED)
+                .channel(NotificationChannel.IN_APP)
+                .priority(NotificationPriority.MEDIUM)
+                .metadata(chatMessageMetadata(event))
+                .build();
+    }
+
     public Notification createFriendRequestNotification(FriendRequestEvent event) {
         if (event.recipientId() == null || event.recipientId().isBlank()) {
             return null;
@@ -217,6 +238,14 @@ public class NotificationFactory {
         };
     }
 
+    private String chatMessageBodyFor(ChatMessageNotificationEvent event) {
+        String contentPreview = safe(event.contentPreview()).trim();
+        if (contentPreview.isBlank()) {
+            return "You received a new message.";
+        }
+        return contentPreview;
+    }
+
     private String friendRequestTitleFor(NotificationType type) {
         return switch (type) {
             case FRIEND_REQUEST_SENT -> "New friend request";
@@ -282,6 +311,15 @@ public class NotificationFactory {
         metadata.put("actorUsername", safe(event.actorUsername()));
         metadata.put("subjectAuthId", safe(event.subjectAuthId()));
         metadata.put("subjectUsername", safe(event.subjectUsername()));
+        return metadata;
+    }
+
+    private Map<String, String> chatMessageMetadata(ChatMessageNotificationEvent event) {
+        Map<String, String> metadata = new LinkedHashMap<>();
+        metadata.put("messageId", safe(event.messageId()));
+        metadata.put("conversationId", safe(event.conversationId()));
+        metadata.put("senderId", safe(event.senderId()));
+        metadata.put("contentPreview", safe(event.contentPreview()));
         return metadata;
     }
 
