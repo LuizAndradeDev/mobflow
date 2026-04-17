@@ -112,14 +112,15 @@ class FriendControllerTest {
     @Test
     void listFriends_authenticatedRequest_returnsFriendArray() throws Exception {
         when(friendshipService.listFriends(any())).thenReturn(List.of(
-                FriendResponse.of(UUID.randomUUID(), "mary_dev", Instant.now())
+                FriendResponse.of(UUID.randomUUID(), "mary_dev", "http://cdn.mobflow.dev/mary.png", Instant.now())
         ));
 
         mockMvc.perform(get("/social/api/friends")
                         .contextPath("/social")
                         .with(SecurityMockMvcRequestPostProcessors.authentication(authentication(UUID.randomUUID(), "john_dev"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].username").value("mary_dev"));
+                .andExpect(jsonPath("$[0].username").value("mary_dev"))
+                .andExpect(jsonPath("$[0].avatarUrl").value("http://cdn.mobflow.dev/mary.png"));
     }
 
     @Test

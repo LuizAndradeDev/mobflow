@@ -1,6 +1,7 @@
 package com.mobflow.socialservice.service;
 
 import com.mobflow.socialservice.client.AuthServiceClient;
+import com.mobflow.socialservice.client.UserServiceClient;
 import com.mobflow.socialservice.exception.SocialServiceException;
 import com.mobflow.socialservice.model.dto.response.FriendRequestResponse;
 import com.mobflow.socialservice.model.dto.response.FriendResponse;
@@ -50,6 +51,9 @@ class FriendshipServiceTest {
 
     @Mock
     private AuthServiceClient authServiceClient;
+
+    @Mock
+    private UserServiceClient userServiceClient;
 
     @Mock
     private FriendRequestFactory friendRequestFactory;
@@ -207,11 +211,14 @@ class FriendshipServiceTest {
     void listFriends_existingFriendships_returnsOtherSideAsFriendResponse() {
         Friendship friendship = friendship(UUID.randomUUID(), REQUESTER_ID, "john_dev", TARGET_ID, "mary_dev");
         when(friendshipRepository.findByUserAOrUserB(REQUESTER_ID, REQUESTER_ID)).thenReturn(List.of(friendship));
+        when(userServiceClient.fetchProfiles(List.of(TARGET_ID))).thenReturn(List.of(
+                new UserServiceClient.UserProfileResponse(TARGET_ID, "Mary", "http://cdn.mobflow.dev/mary.png")
+        ));
 
         List<FriendResponse> responses = friendshipService.listFriends(requester);
 
         assertThat(responses).singleElement()
-                .extracting(FriendResponse::authId, FriendResponse::username)
-                .containsExactly(TARGET_ID, "mary_dev");
+                .extracting(FriendResponse::authId, FriendResponse::username, FriendResponse::avatarUrl)
+                .containsExactly(TARGET_ID, "mary_dev", "http://cdn.mobflow.dev/mary.png");
     }
 }
