@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.mobflow.socialservice.testsupport.CommentTestFixtures.TASK_ASSIGNEE_ID;
+import static com.mobflow.socialservice.testsupport.CommentTestFixtures.BOARD_ID;
 import static com.mobflow.socialservice.testsupport.CommentTestFixtures.TASK_CREATOR_ID;
 import static com.mobflow.socialservice.testsupport.CommentTestFixtures.authenticatedUser;
 import static com.mobflow.socialservice.testsupport.CommentTestFixtures.comment;
@@ -50,6 +51,7 @@ class SocialNotificationServiceTest {
         TaskServiceClient.TaskCommentContextResponse taskContext = new TaskServiceClient.TaskCommentContextResponse(
                 taskContext().taskId(),
                 taskContext().workspaceId(),
+                BOARD_ID,
                 TASK_CREATOR_ID,
                 TASK_ASSIGNEE_ID,
                 taskContext().taskTitle()

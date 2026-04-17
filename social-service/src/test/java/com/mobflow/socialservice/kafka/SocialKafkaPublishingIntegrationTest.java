@@ -50,6 +50,7 @@ class SocialKafkaPublishingIntegrationTest extends AbstractSocialIntegrationTest
                 "john_dev",
                 "task-1",
                 "workspace-1",
+                "board-1",
                 "comment-1",
                 "Prepare roadmap",
                 "Hello @mary_dev",
