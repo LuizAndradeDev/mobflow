@@ -93,8 +93,6 @@ mobflow/
 ├── notification-service/   # Kafka consumer, notification persistence, email delivery
 ├── web-app/                # Angular frontend source code
 ├── docker-compose.yaml     # Full local orchestration for infra and applications
-├── .env                    # Centralized runtime configuration for all containers
-├── init-db.sql             # PostgreSQL database bootstrap for service isolation
 ├── nginx.conf              # Shared Nginx configuration
 ├── web-app.conf            # Frontend/static/proxy server block configuration
 └── Dockerfile.nginx        # Multi-stage Angular build + Nginx runtime image
@@ -110,25 +108,27 @@ If you want to work on the Angular frontend outside Docker, use Node.js `20.19+`
 
 ## Environment Configuration
 
-All containers use the root `.env` file. The following variables are required.
+The Docker Compose file contains safe local defaults, so no `.env` file is required to boot the stack on a clean machine.
+
+If someone wants to override ports, credentials, or service URLs, they can create an optional root `.env`. When no `.env` is present, Compose falls back to the built-in defaults below:
 
 ```dotenv
 # PostgreSQL connection shared settings
+POSTGRES_DB=postgres
 DB_HOST=postgres
 DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=postgres
+DB_USER=mobflow
+DB_PASSWORD=mobflow_secret
 
 # Dedicated PostgreSQL databases, one per service
 AUTH_DB=mobflow_auth
-USER_DB=mobflow_users
-WORKSPACE_DB=mobflow_workspaces
-TASK_DB=mobflow_tasks
+USER_DB=mobflow_user
+WORKSPACE_DB=mobflow_workspace
+TASK_DB=mobflow_task
 
 # Stateless JWT configuration shared by every service
-# JWT_SECRET must be a Base64-encoded 256-bit key
 JWT_SECRET=replace_with_base64_256_bit_secret
-JWT_EXPIRATION=86400000
+JWT_EXPIRATION=3600000
 
 # Shared secret for synchronous service-to-service /internal/** calls
 INTERNAL_SECRET=replace_with_internal_secret
@@ -145,22 +145,29 @@ MINIO_ROOT_PASSWORD=minio123
 MINIO_BUCKET=mobflow-avatars
 
 # MongoDB credentials used by notification-service
-MONGO_USER=mobflow
-MONGO_PASSWORD=mobflow
+MONGO_USER=mobflow-mongo
+MONGO_PASSWORD=mongo-secret
+MONGO_HOST=mongodb
+MONGO_PORT=27017
 
 # Kafka bootstrap server used by event producers and consumers
 KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+AUTH_EVENTS_TOPIC=auth-events
+TASK_EVENTS_TOPIC=task-events
+WORKSPACE_EVENTS_TOPIC=workspace-events
+SOCIAL_COMMENT_EVENTS_TOPIC=social-comment-events
+SOCIAL_FRIENDSHIP_EVENTS_TOPIC=social-friendship-events
 
 # Service base URLs used for synchronous internal requests
-WORKSPACE_SERVICE_URL=http://workspace-service:8082
-USER_SERVICE_URL=http://user-service:8081
-TASK_SERVICE_URL=http://task-service:8083
-SOCIAL_SERVICE_URL=http://social-service:8085
+WORKSPACE_SERVICE_URL=http://mobflow-workspace:8082
+USER_SERVICE_URL=http://mobflow-user:8081
+TASK_SERVICE_URL=http://mobflow-task:8083
+SOCIAL_SERVICE_URL=http://mobflow-social:8085
 
 # SMTP configuration used by notification-service email delivery
 MAIL_HOST=mailhog
 MAIL_PORT=1025
-MAIL_USERNAME=
+MAIL_USERNAME=no-reply@mobflow.dev
 MAIL_PASSWORD=
 
 # Public base URL used in generated links such as email confirmation flows
@@ -169,16 +176,22 @@ APP_BASE_URL=http://localhost
 
 ## PostgreSQL Bootstrap
 
-`init-db.sql` must create the four isolated PostgreSQL databases used by the relational services.
+PostgreSQL startup is handled by a single idempotent bootstrap step:
 
-```sql
-CREATE DATABASE mobflow_auth;
-CREATE DATABASE mobflow_users;
-CREATE DATABASE mobflow_workspaces;
-CREATE DATABASE mobflow_tasks;
-```
+1. `postgres` starts and is considered healthy only after it accepts authenticated connections.
+2. `postgres-bootstrap` connects with the same admin credentials configured on the PostgreSQL container.
+3. It creates `mobflow_auth`, `mobflow_user`, `mobflow_workspace`, and `mobflow_task` only when they do not already exist.
+4. The relational Spring services start only after that bootstrap container exits successfully.
 
-This file is mounted into the PostgreSQL container during local startup so each service can run Flyway migrations against its own schema boundary.
+The bootstrap runs inline through `psql`, without mounted `.sh` or `.sql` files, so it is stable on Linux, macOS, and Windows.
+
+Because the creation is idempotent, the same flow works on:
+
+- first startup on a clean machine
+- `docker compose up --build` after rebuilds
+- restart with persistent Docker volumes already present
+
+After the databases exist, each relational service runs its own Flyway migrations against its own schema boundary.
 
 ## Running the Platform
 
@@ -188,7 +201,23 @@ This file is mounted into the PostgreSQL container during local startup so each 
 docker compose up --build
 ```
 
-The platform is then available on `http://localhost`, served by the edge Nginx container. Nginx delivers the production Angular build, handles SPA route refreshes, and proxies HTTP and WebSocket traffic to the backend containers.
+That single command is enough on a clean machine:
+
+1. infrastructure containers start
+2. PostgreSQL becomes healthy
+3. `postgres-bootstrap` guarantees the required databases exist
+4. Spring services start and run their own migrations
+5. Nginx serves the frontend on `http://localhost`
+
+No manual database creation, no extra bootstrap command, and no volume reset is required.
+
+If someone previously initialized this project with older PostgreSQL credentials from an earlier setup version, Docker may still have an incompatible persisted volume. In that specific migration case only, reset the old local state with:
+
+```bash
+docker compose down -v
+```
+
+Then run `docker compose up --build` again.
 
 ### Optional: Start the Frontend in Development Mode
 
@@ -204,12 +233,8 @@ Development mode is optional and intended only for frontend iteration. It is not
 
 ```bash
 docker compose ps
+docker compose logs postgres-bootstrap
 curl http://localhost/health
-curl http://localhost:8080/actuator/health
-curl http://localhost:8081/actuator/health
-curl http://localhost:8082/actuator/health
-curl http://localhost:8083/tasks/actuator/health
-curl http://localhost:8084/actuator/health
 ```
 
 ## Service Catalog
@@ -217,9 +242,9 @@ curl http://localhost:8084/actuator/health
 | Service | Port | Database / State | Description |
 | --- | --- | --- | --- |
 | `auth-service` | `8080` | PostgreSQL `mobflow_auth` | Issues JWTs, stores credentials, confirms accounts by token, and exposes the authenticated profile identity. |
-| `user-service` | `8081` | PostgreSQL `mobflow_users`, Redis, MinIO | Manages profile metadata, avatar uploads, and cached profile reads consumed by both frontend and internal services. |
-| `workspace-service` | `8082` | PostgreSQL `mobflow_workspaces` | Owns workspace creation, member roles, invite lifecycle, and public join-code access. |
-| `task-service` | `8083` | PostgreSQL `mobflow_tasks` | Owns boards, task lists, tasks, drag-and-drop ordering, workspace summaries, and authenticated analytics endpoints. |
+| `user-service` | `8081` | PostgreSQL `mobflow_user`, Redis, MinIO | Manages profile metadata, avatar uploads, and cached profile reads consumed by both frontend and internal services. |
+| `workspace-service` | `8082` | PostgreSQL `mobflow_workspace` | Owns workspace creation, member roles, invite lifecycle, and public join-code access. |
+| `task-service` | `8083` | PostgreSQL `mobflow_task` | Owns boards, task lists, tasks, drag-and-drop ordering, workspace summaries, and authenticated analytics endpoints. |
 | `social-service` | `8085` | MongoDB `social` | Owns friendships, friend requests, task comments, comment mentions, and social notification event publication. |
 | `chat-service` | `8086` | MongoDB `chat` | Owns private conversations, paginated message history, read receipts, WebSocket delivery, and chat notification publication. |
 | `notification-service` | `8084` | MongoDB `notifications` | Persists in-app notifications, computes unread counters, marks notifications as read, and sends email notifications from Kafka events. |
