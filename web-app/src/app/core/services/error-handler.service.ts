@@ -4,6 +4,7 @@ import {
   ErrorMessages,
   ErrorResponseDTO,
   ErrorTP,
+  SocialErrorTP,
   UserErrorTP,
   WorkspaceErrorTP,
   TaskErrorTP,
@@ -17,20 +18,33 @@ type AlertWithoutId = Omit<AlertInterface, 'id'>;
 export class ErrorHandlerService {
   mapHttpErrorToAlert(error: HttpErrorResponse): AlertWithoutId {
     const backendError = error.error as ErrorResponseDTO | null;
+    const socialErrorType = this.resolveProblemTitle(backendError);
 
-    if (backendError?.errorType) {
-      return this.mapBackendError(backendError);
+    if (backendError?.errorType || socialErrorType) {
+      return this.mapBackendError(backendError, socialErrorType);
+    }
+
+    if (backendError?.errors?.length) {
+      return {
+        title: 'Validation error',
+        message: backendError.errors[0],
+        alertType: AlertType.warning,
+      };
     }
 
     return this.mapStatusError(error);
   }
 
-  private mapBackendError(error: ErrorResponseDTO): AlertWithoutId {
+  private mapBackendError(
+    error: ErrorResponseDTO | null,
+    socialErrorType?: SocialErrorTP,
+  ): AlertWithoutId {
+    const resolvedErrorType = error?.errorType ?? socialErrorType ?? ErrorTP.GENERIC_ERROR;
     const translatedMessage =
-      ErrorMessages[error.errorType] ?? ErrorMessages[ErrorTP.GENERIC_ERROR];
+      ErrorMessages[resolvedErrorType] ?? error?.detail ?? error?.message ?? ErrorMessages[ErrorTP.GENERIC_ERROR];
 
     return {
-      title: this.getTitleByErrorType(error.errorType),
+      title: this.getTitleByErrorType(resolvedErrorType),
       message: translatedMessage,
       alertType: AlertType.error,
     };
@@ -58,7 +72,7 @@ export class ErrorHandlerService {
   }
 
   private getTitleByErrorType(
-    errorType: ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP,
+    errorType: ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP | SocialErrorTP,
   ): string {
     switch (errorType) {
       case ErrorTP.USERNAME_ALREADY_EXIST: return 'Username already taken';
@@ -75,7 +89,30 @@ export class ErrorHandlerService {
       case TaskErrorTP.TASK_NOT_FOUND: return 'Task not found';
       case TaskErrorTP.ACCESS_DENIED: return 'Permission denied';
       case TaskErrorTP.WORKSPACE_MEMBER_NOT_FOUND: return 'Not a member';
+      case SocialErrorTP.COMMENT_NOT_FOUND: return 'Comment not found';
+      case SocialErrorTP.TASK_NOT_FOUND: return 'Task not found';
+      case SocialErrorTP.FRIEND_REQUEST_NOT_FOUND: return 'Friend request not found';
+      case SocialErrorTP.USER_NOT_FOUND: return 'User not found';
+      case SocialErrorTP.ACCESS_DENIED: return 'Permission denied';
+      case SocialErrorTP.WORKSPACE_MEMBERSHIP_REQUIRED: return 'Membership required';
+      case SocialErrorTP.COMMENT_ALREADY_DELETED: return 'Comment already deleted';
+      case SocialErrorTP.INVALID_COMMENT_STATE: return 'Comment unavailable';
+      case SocialErrorTP.FRIEND_REQUEST_TO_SELF: return 'Invalid friend request';
+      case SocialErrorTP.FRIEND_REQUEST_ALREADY_EXISTS: return 'Request already pending';
+      case SocialErrorTP.FRIENDSHIP_ALREADY_EXISTS: return 'Already friends';
+      case SocialErrorTP.INVALID_FRIEND_REQUEST_STATE: return 'Request already processed';
+      case SocialErrorTP.UPSTREAM_SERVICE_ERROR: return 'Integration error';
       default: return 'Error';
     }
+  }
+
+  private resolveProblemTitle(error: ErrorResponseDTO | null): SocialErrorTP | undefined {
+    const title = error?.title;
+
+    if (!title) {
+      return undefined;
+    }
+
+    return Object.values(SocialErrorTP).find((value) => value === title);
   }
 }

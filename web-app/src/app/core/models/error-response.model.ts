@@ -25,14 +25,33 @@ export enum TaskErrorTP {
   WORKSPACE_MEMBER_NOT_FOUND = 'WORKSPACE_MEMBER_NOT_FOUND',
 }
 
+export enum SocialErrorTP {
+  COMMENT_NOT_FOUND = 'COMMENT_NOT_FOUND',
+  TASK_NOT_FOUND = 'TASK_NOT_FOUND',
+  FRIEND_REQUEST_NOT_FOUND = 'FRIEND_REQUEST_NOT_FOUND',
+  USER_NOT_FOUND = 'USER_NOT_FOUND',
+  ACCESS_DENIED = 'ACCESS_DENIED',
+  WORKSPACE_MEMBERSHIP_REQUIRED = 'WORKSPACE_MEMBERSHIP_REQUIRED',
+  COMMENT_ALREADY_DELETED = 'COMMENT_ALREADY_DELETED',
+  INVALID_COMMENT_STATE = 'INVALID_COMMENT_STATE',
+  FRIEND_REQUEST_TO_SELF = 'FRIEND_REQUEST_TO_SELF',
+  FRIEND_REQUEST_ALREADY_EXISTS = 'FRIEND_REQUEST_ALREADY_EXISTS',
+  FRIENDSHIP_ALREADY_EXISTS = 'FRIENDSHIP_ALREADY_EXISTS',
+  INVALID_FRIEND_REQUEST_STATE = 'INVALID_FRIEND_REQUEST_STATE',
+  UPSTREAM_SERVICE_ERROR = 'UPSTREAM_SERVICE_ERROR',
+}
+
 export interface ErrorResponseDTO {
-  errorType: ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP;
+  errorType?: ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP | SocialErrorTP;
+  title?: string;
+  detail?: string;
   message: string;
   timestamp: string;
+  errors?: string[];
 }
 
 export const ErrorMessages: Record<
-  ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP,
+  ErrorTP | UserErrorTP | WorkspaceErrorTP | TaskErrorTP | SocialErrorTP,
   string
 > = {
   [ErrorTP.USERNAME_ALREADY_EXIST]: 'This username is already in use.',
@@ -50,4 +69,15 @@ export const ErrorMessages: Record<
   [TaskErrorTP.TASK_NOT_FOUND]: 'Task not found.',
   [TaskErrorTP.ACCESS_DENIED]: 'You do not have permission to perform this action.',
   [TaskErrorTP.WORKSPACE_MEMBER_NOT_FOUND]: 'You are not a member of this workspace.',
+  [SocialErrorTP.COMMENT_NOT_FOUND]: 'Comment not found.',
+  [SocialErrorTP.FRIEND_REQUEST_NOT_FOUND]: 'Friend request not found.',
+  [SocialErrorTP.USER_NOT_FOUND]: 'The requested user does not exist.',
+  [SocialErrorTP.WORKSPACE_MEMBERSHIP_REQUIRED]: 'You must be a member of this workspace to use comments.',
+  [SocialErrorTP.COMMENT_ALREADY_DELETED]: 'This comment was already deleted.',
+  [SocialErrorTP.INVALID_COMMENT_STATE]: 'This comment cannot be edited anymore.',
+  [SocialErrorTP.FRIEND_REQUEST_TO_SELF]: 'You cannot send a friend request to yourself.',
+  [SocialErrorTP.FRIEND_REQUEST_ALREADY_EXISTS]: 'There is already a pending friend request for this user.',
+  [SocialErrorTP.FRIENDSHIP_ALREADY_EXISTS]: 'You are already friends with this user.',
+  [SocialErrorTP.INVALID_FRIEND_REQUEST_STATE]: 'This friend request was already processed.',
+  [SocialErrorTP.UPSTREAM_SERVICE_ERROR]: 'A dependent service failed to validate the request.',
 };
