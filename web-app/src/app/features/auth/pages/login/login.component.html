@@ -1,68 +1,60 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
-  <div class="w-full max-w-md">
+<app-navbar-public></app-navbar-public>
 
-    
-    <div class="text-center mb-8">
-      <div class="inline-flex items-center gap-2 mb-4">
-        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-          <span class="text-white font-bold">M</span>
-        </div>
-        <span class="text-2xl font-bold text-blue-600">Mobflow</span>
+<div class="min-h-screen bg-gray-50 px-4 pb-8 pt-28 dark:bg-gray-950 sm:pt-32">
+  <div class="mx-auto flex min-h-[calc(100dvh-8rem)] w-full max-w-md items-center">
+    <div class="w-full">
+      <div class="mb-8 text-center">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 sm:text-2xl">Welcome back</h2>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Sign in to your account</p>
       </div>
-      <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">Welcome back</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Sign in to your account</p>
-    </div>
 
-    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8">
+      <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+            <input
+              formControlName="email"
+              type="email"
+              placeholder="you@example.com"
+              class="w-full rounded-xl border bg-white px-4 py-3 text-gray-800 outline-none transition focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
+              [class.border-red-400]="fieldError === 'invalid_credentials'"
+              [class.border-gray-300]="fieldError !== 'invalid_credentials'"
+              [class.dark:border-red-600]="fieldError === 'invalid_credentials'"
+              [class.dark:border-gray-600]="fieldError !== 'invalid_credentials'"
+            />
+          </div>
 
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+            <input
+              formControlName="password"
+              type="password"
+              placeholder="••••••••"
+              class="w-full rounded-xl border bg-white px-4 py-3 text-gray-800 outline-none transition focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
+              [class.border-red-400]="fieldError === 'invalid_credentials'"
+              [class.border-gray-300]="fieldError !== 'invalid_credentials'"
+              [class.dark:border-red-600]="fieldError === 'invalid_credentials'"
+              [class.dark:border-gray-600]="fieldError !== 'invalid_credentials'"
+            />
+            @if (fieldError === 'invalid_credentials') {
+              <p class="mt-1.5 text-xs text-red-500 dark:text-red-400">Invalid email or password.</p>
+            }
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
-          <input
-            formControlName="email"
-            type="email"
-            placeholder="you@example.com"
-            class="w-full px-4 py-3 rounded-xl border text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 outline-none transition focus:ring-2 focus:ring-blue-500"
-            [class.border-red-400]="fieldError === 'invalid_credentials'"
-            [class.border-gray-300]="fieldError !== 'invalid_credentials'"
-            [class.dark:border-red-600]="fieldError === 'invalid_credentials'"
-            [class.dark:border-gray-600]="fieldError !== 'invalid_credentials'"
-          />
-        </div>
+          <button
+            type="submit"
+            [disabled]="loginForm.invalid"
+            class="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Sign in
+          </button>
+        </form>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
-          <input
-            formControlName="password"
-            type="password"
-            placeholder="••••••••"
-            class="w-full px-4 py-3 rounded-xl border text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 outline-none transition focus:ring-2 focus:ring-blue-500"
-            [class.border-red-400]="fieldError === 'invalid_credentials'"
-            [class.border-gray-300]="fieldError !== 'invalid_credentials'"
-            [class.dark:border-red-600]="fieldError === 'invalid_credentials'"
-            [class.dark:border-gray-600]="fieldError !== 'invalid_credentials'"
-          />
-          @if (fieldError === 'invalid_credentials') {
-            <p class="mt-1.5 text-xs text-red-500 dark:text-red-400">Invalid email or password.</p>
-          }
-        </div>
-
-        <button
-          type="submit"
-          [disabled]="loginForm.invalid"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-        >
-          Sign in
-        </button>
-
-      </form>
-
-      <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-        Don't have an account?
-        <a routerLink="/signup" class="text-blue-600 dark:text-blue-400 font-medium hover:underline ml-1">Sign up</a>
-      </p>
-
+        <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+          Don't have an account?
+          <a routerLink="/signup" class="ml-1 font-medium text-blue-600 hover:underline dark:text-blue-400">Sign up</a>
+        </p>
+      </div>
     </div>
   </div>
 </div>

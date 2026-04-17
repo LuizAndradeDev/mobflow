@@ -6,6 +6,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { UserProfileService } from '../../../../core/services/user-profile.service';
 import { LoginRequest } from '../../../../core/models/auth.model';
 import { HttpErrorResponse } from '@angular/common/http';
+import { NavbarPublicComponent } from '../../../../shared/components/navbar-public/navbar-public.component';
 
 interface LoginForm {
   email: FormControl<string>;
@@ -15,7 +16,7 @@ interface LoginForm {
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, NavbarPublicComponent],
   templateUrl: './login.component.html',
 })
 export class LoginComponent {

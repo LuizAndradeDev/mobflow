@@ -6,6 +6,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
 import { SignupRequest } from '../../../../core/models/auth.model';
 import { HttpErrorResponse } from '@angular/common/http';
+import { NavbarPublicComponent } from '../../../../shared/components/navbar-public/navbar-public.component';
 
 interface RegisterForm {
   username: FormControl<string>;
@@ -16,7 +17,7 @@ interface RegisterForm {
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, NavbarPublicComponent],
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {
