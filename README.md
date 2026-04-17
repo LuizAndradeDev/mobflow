@@ -93,7 +93,6 @@ mobflow/
 ├── notification-service/   # Kafka consumer, notification persistence, email delivery
 ├── web-app/                # Angular frontend source code
 ├── docker-compose.yaml     # Full local orchestration for infra and applications
-├── .env                    # Centralized runtime configuration for all containers
 ├── init-db.sql             # PostgreSQL database bootstrap for service isolation
 ├── nginx.conf              # Shared Nginx configuration
 ├── web-app.conf            # Frontend/static/proxy server block configuration
@@ -110,9 +109,9 @@ If you want to work on the Angular frontend outside Docker, use Node.js `20.19+`
 
 ## Environment Configuration
 
-The repository already includes a root `.env` with working local defaults. No manual configuration is required to boot the stack on a clean machine.
+The Docker Compose file contains safe local defaults, so no `.env` file is required to boot the stack on a clean machine.
 
-All containers consume that file. The main values are:
+If someone wants to override ports, credentials, or service URLs, they can create an optional root `.env`. When no `.env` is present, Compose falls back to the built-in defaults below:
 
 ```dotenv
 # PostgreSQL connection shared settings
@@ -182,6 +181,8 @@ PostgreSQL startup is resilient in two layers:
 
 1. `init-db.sql` is mounted into `/docker-entrypoint-initdb.d/` and creates the relational databases on the very first volume initialization.
 2. `postgres-bootstrap` runs on every `docker compose up` and idempotently ensures the same databases exist before any Spring service starts.
+
+The second step runs inline in Docker Compose through `psql`, without a mounted shell script, so it is not affected by Windows line-ending issues.
 
 That means the setup works both on a brand-new machine and on a machine that already has a persistent PostgreSQL volume.
 
