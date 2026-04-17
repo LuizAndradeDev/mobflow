@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription, interval } from 'rxjs';
+import { Router } from '@angular/router';
 import { NotificationItem } from '../../../../core/models/notification.model';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { NotificationStateService } from '../../../../core/services/notification-state.service';
+import { SocialService } from '../../../../core/services/social.service';
 import { WorkspaceService } from '../../../../core/services/workspace.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
 
@@ -25,7 +27,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   constructor(
     private readonly notificationService: NotificationService,
     private readonly notificationState: NotificationStateService,
+    private readonly socialService: SocialService,
     private readonly workspaceService: WorkspaceService,
+    private readonly router: Router,
     private readonly alertService: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -74,6 +78,36 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     return this.processingInviteIds.has(notification.id);
   }
 
+  canRespondToFriendRequest(notification: NotificationItem): boolean {
+    return notification.type === 'FRIEND_REQUEST_SENT'
+      && !notification.read
+      && !!notification.metadata['requestId'];
+  }
+
+  openNotification(notification: NotificationItem): void {
+    if (this.canRespondToInvite(notification) || this.canRespondToFriendRequest(notification)) {
+      return;
+    }
+
+    if (!notification.read) {
+      this.markAsRead(notification);
+    }
+
+    if (notification.type === 'COMMENT_CREATED' || notification.type === 'USER_MENTIONED') {
+      this.navigateToTask(notification, true);
+      return;
+    }
+
+    if (notification.type.startsWith('TASK_')) {
+      this.navigateToTask(notification, false);
+      return;
+    }
+
+    if (notification.type.startsWith('FRIEND_REQUEST')) {
+      this.router.navigate(['/social']);
+    }
+  }
+
   acceptInvite(notification: NotificationItem): void {
     const inviteId = notification.metadata['inviteId'];
     if (!inviteId || this.isProcessingInvite(notification)) {
@@ -104,6 +138,44 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.workspaceService.declineInvite(inviteId).subscribe({
       next: () => {
         this.alertService.info('The workspace invitation was declined.', 'Invite declined');
+        this.finishInviteAction(notification);
+      },
+      error: () => {
+        this.processingInviteIds.delete(notification.id);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  acceptFriendRequest(notification: NotificationItem): void {
+    const requestId = notification.metadata['requestId'];
+    if (!requestId || this.isProcessingInvite(notification)) {
+      return;
+    }
+
+    this.processingInviteIds.add(notification.id);
+    this.socialService.acceptFriendRequest(requestId).subscribe({
+      next: () => {
+        this.alertService.success('Friend request accepted.', 'Friend added');
+        this.finishInviteAction(notification);
+      },
+      error: () => {
+        this.processingInviteIds.delete(notification.id);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  declineFriendRequest(notification: NotificationItem): void {
+    const requestId = notification.metadata['requestId'];
+    if (!requestId || this.isProcessingInvite(notification)) {
+      return;
+    }
+
+    this.processingInviteIds.add(notification.id);
+    this.socialService.declineFriendRequest(requestId).subscribe({
+      next: () => {
+        this.alertService.info('Friend request declined.', 'Request declined');
         this.finishInviteAction(notification);
       },
       error: () => {
@@ -181,6 +253,25 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.loadNotifications(true);
+      },
+    });
+  }
+
+  private navigateToTask(notification: NotificationItem, includeComment: boolean): void {
+    const workspaceId = notification.metadata['workspaceId'];
+    const boardId = notification.metadata['boardId'];
+    const taskId = notification.metadata['taskId'];
+    const commentId = notification.metadata['commentId'];
+
+    if (!workspaceId || !taskId) {
+      return;
+    }
+
+    this.router.navigate(['/tasks', workspaceId], {
+      queryParams: {
+        boardId: boardId || null,
+        taskId,
+        commentId: includeComment ? commentId || null : null,
       },
     });
   }

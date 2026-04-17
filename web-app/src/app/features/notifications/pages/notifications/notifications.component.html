@@ -61,6 +61,8 @@
           [class.dark:border-red-900/60]="!notification.read"
           [class.border-gray-100]="notification.read"
           [class.dark:border-gray-800]="notification.read"
+          [class.cursor-pointer]="!canRespondToInvite(notification) && !canRespondToFriendRequest(notification)"
+          (click)="openNotification(notification)"
         >
           <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-start gap-4">
@@ -101,14 +103,29 @@
             <div class="flex shrink-0 items-center gap-2">
               @if (canRespondToInvite(notification)) {
                 <button
-                  (click)="declineInvite(notification)"
+                  (click)="declineInvite(notification); $event.stopPropagation()"
                   [disabled]="isProcessingInvite(notification)"
                   class="rounded-xl bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {{ isProcessingInvite(notification) ? 'Processing...' : 'Refuse' }}
                 </button>
                 <button
-                  (click)="acceptInvite(notification)"
+                  (click)="acceptInvite(notification); $event.stopPropagation()"
+                  [disabled]="isProcessingInvite(notification)"
+                  class="rounded-xl bg-green-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {{ isProcessingInvite(notification) ? 'Processing...' : 'Accept' }}
+                </button>
+              } @else if (canRespondToFriendRequest(notification)) {
+                <button
+                  (click)="declineFriendRequest(notification); $event.stopPropagation()"
+                  [disabled]="isProcessingInvite(notification)"
+                  class="rounded-xl bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {{ isProcessingInvite(notification) ? 'Processing...' : 'Decline' }}
+                </button>
+                <button
+                  (click)="acceptFriendRequest(notification); $event.stopPropagation()"
                   [disabled]="isProcessingInvite(notification)"
                   class="rounded-xl bg-green-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -116,11 +133,19 @@
                 </button>
               } @else if (!notification.read) {
                 <button
-                  (click)="markAsRead(notification)"
+                  (click)="markAsRead(notification); $event.stopPropagation()"
                   class="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                 >
                   Mark as read
                 </button>
+                @if (notification.type.startsWith('TASK_') || notification.type === 'COMMENT_CREATED' || notification.type === 'USER_MENTIONED') {
+                  <button
+                    (click)="openNotification(notification); $event.stopPropagation()"
+                    class="rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    Open
+                  </button>
+                }
               } @else {
                 <span class="rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                   Read
