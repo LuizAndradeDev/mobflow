@@ -29,7 +29,7 @@ public class TaskServiceClient {
     public TaskCommentContextResponse getTaskContext(UUID taskId) {
         try {
             TaskCommentContextResponse response = restClient.get()
-                    .uri("/internal/tasks/{taskId}/context", taskId)
+                    .uri("/tasks/internal/tasks/{taskId}/context", taskId)
                     .header(INTERNAL_SECRET_HEADER, internalSecret)
                     .retrieve()
                     .body(TaskCommentContextResponse.class);
@@ -48,6 +48,7 @@ public class TaskServiceClient {
     public record TaskCommentContextResponse(
             UUID taskId,
             UUID workspaceId,
+            UUID boardId,
             UUID createdByAuthId,
             UUID assigneeAuthId,
             String taskTitle
