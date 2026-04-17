@@ -239,6 +239,7 @@ public class NotificationFactory {
         metadata.put("taskId", safe(event.taskId()));
         metadata.put("taskTitle", safe(event.taskTitle()));
         metadata.put("workspaceId", safe(event.workspaceId()));
+        metadata.put("boardId", safe(event.boardId()));
         metadata.put("workspaceName", safe(event.workspaceName()));
         metadata.put("taskStatus", safe(event.taskStatus()));
         metadata.put("dueDate", safe(String.valueOf(event.dueDate())));
@@ -264,6 +265,7 @@ public class NotificationFactory {
         Map<String, String> metadata = new LinkedHashMap<>();
         metadata.put("taskId", safe(event.taskId()));
         metadata.put("workspaceId", safe(event.workspaceId()));
+        metadata.put("boardId", safe(event.boardId()));
         metadata.put("commentId", safe(event.commentId()));
         metadata.put("taskTitle", safe(event.taskTitle()));
         metadata.put("commentPreview", safe(event.commentPreview()));
