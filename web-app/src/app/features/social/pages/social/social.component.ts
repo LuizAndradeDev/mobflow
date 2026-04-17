@@ -11,7 +11,10 @@ import { finalize, forkJoin } from 'rxjs';
 import { Friend, FriendRequest } from '../../../../core/models/social.model';
 import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
 import { SocialService } from '../../../../core/services/social.service';
+import { UserProfileStateService } from '../../../../core/services/user-profile-state.service';
+import { UserStateService } from '../../../../core/services/user-state.service';
 import { AlertService } from '../../../../shared/components/alert/service/alert.service';
+import { SocialSidebarComponent } from '../../components/social-sidebar/social-sidebar.component';
 
 interface SendFriendRequestForm {
   username: FormControl<string>;
@@ -20,13 +23,14 @@ interface SendFriendRequestForm {
 @Component({
   selector: 'app-social',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, SocialSidebarComponent],
   templateUrl: './social.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SocialComponent implements OnInit {
   friends: Friend[] = [];
   requests: FriendRequest[] = [];
+  selectedFriend: Friend | null = null;
   readonly friendSearch = new FormControl('', { nonNullable: true });
 
   isLoading = true;
@@ -43,6 +47,8 @@ export class SocialComponent implements OnInit {
     private readonly socialService: SocialService,
     private readonly alertService: AlertService,
     private readonly errorHandler: ErrorHandlerService,
+    readonly userState: UserStateService,
+    readonly userProfileState: UserProfileStateService,
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.sendFriendRequestForm = this.formBuilder.group({
@@ -73,12 +79,12 @@ export class SocialComponent implements OnInit {
       .filter((friend) => !term || friend.username.toLowerCase().includes(term));
   }
 
-  get friendsCount(): number {
-    return this.friends.length;
+  get currentUsername(): string {
+    return this.userState.user()?.username ?? this.userProfileState.profile()?.displayName ?? 'You';
   }
 
-  get pendingCount(): number {
-    return this.incomingRequests.length;
+  get currentUserAvatarUrl(): string | null {
+    return this.userProfileState.profile()?.avatarUrl ?? null;
   }
 
   loadSocialData(silent = false): void {
@@ -93,6 +99,7 @@ export class SocialComponent implements OnInit {
       next: ({ friends, requests }) => {
         this.friends = friends;
         this.requests = requests;
+        this.syncSelectedFriend();
         this.isLoading = false;
         this.cdr.markForCheck();
       },
@@ -100,6 +107,7 @@ export class SocialComponent implements OnInit {
         if (!silent) {
           this.friends = [];
           this.requests = [];
+          this.selectedFriend = null;
           this.isLoading = false;
         }
         this.alertService.show(this.errorHandler.mapHttpErrorToAlert(error));
@@ -191,12 +199,20 @@ export class SocialComponent implements OnInit {
     return this.processingRequestIds.has(requestId);
   }
 
-  friendInitial(username: string): string {
-    return username.slice(0, 1).toUpperCase();
+  get selectedFriendInitial(): string {
+    return this.selectedFriend?.username.slice(0, 1).toUpperCase() ?? '';
   }
 
-  hasAvatar(friend: Friend): boolean {
-    return !!friend.avatarUrl?.trim();
+  get selectedFriendHasAvatar(): boolean {
+    return !!this.selectedFriend?.avatarUrl?.trim();
+  }
+
+  selectFriend(friend: Friend): void {
+    this.selectedFriend = friend;
+  }
+
+  clearSelectedFriend(): void {
+    this.selectedFriend = null;
   }
 
   openAddFriendModal(): void {
@@ -216,5 +232,13 @@ export class SocialComponent implements OnInit {
 
   closePendingRequestsModal(): void {
     this.showPendingRequestsModal = false;
+  }
+
+  private syncSelectedFriend(): void {
+    if (!this.selectedFriend) {
+      return;
+    }
+
+    this.selectedFriend = this.friends.find((friend) => friend.authId === this.selectedFriend?.authId) ?? null;
   }
 }
