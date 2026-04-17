@@ -1,6 +1,7 @@
 package com.mobflow.notificationservice.testsupport;
 
 import com.mobflow.notificationservice.kafka.events.AuthNotificationEvent;
+import com.mobflow.notificationservice.kafka.events.ChatMessageNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.CommentNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.TaskNotificationEvent;
 import com.mobflow.notificationservice.kafka.events.WorkspaceNotificationEvent;
@@ -82,6 +83,18 @@ public final class NotificationTestFixtures {
                 "Prepare release",
                 "Review completed",
                 "mary_dev",
+                Instant.now()
+        );
+    }
+
+    public static ChatMessageNotificationEvent chatMessageEvent(String eventType) {
+        return new ChatMessageNotificationEvent(
+                eventType,
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                "hello from chat",
                 Instant.now()
         );
     }
