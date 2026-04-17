@@ -1,0 +1,32 @@
+<button
+  type="button"
+  (click)="onSelect()"
+  class="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-3 text-left transition"
+  [class.bg-gray-100/90]="!active"
+  [class.dark:bg-transparent]="!active"
+  [class.hover:bg-gray-100]="!active"
+  [class.dark:hover:bg-white/5]="!active"
+  [class.bg-blue-50]="active"
+  [class.dark:bg-blue-500/15]="active"
+  [class.ring-1]="active"
+  [class.ring-blue-500/20]="active"
+>
+  @if (hasAvatar) {
+    <img
+      [src]="friend.avatarUrl"
+      [alt]="friend.username"
+      class="h-12 w-12 shrink-0 rounded-full object-cover"
+    />
+  } @else {
+    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-sm font-semibold text-white">
+      {{ initial }}
+    </div>
+  }
+
+  <div class="min-w-0 flex-1">
+    <p class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ friend.username }}</p>
+    <p class="truncate text-xs text-gray-500 dark:text-gray-400">
+      Friends since {{ friend.friendsSince | date: 'mediumDate' }}
+    </p>
+  </div>
+</button>
