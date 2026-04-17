@@ -51,6 +51,15 @@ public class WorkspaceServiceClient {
         return role == WorkspaceRole.OWNER || role == WorkspaceRole.ADMIN;
     }
 
+    public boolean isWorkspaceMember(UUID workspaceId, UUID authId) {
+        try {
+            requireMembership(workspaceId, authId);
+            return true;
+        } catch (SocialServiceException exception) {
+            return false;
+        }
+    }
+
     public record MemberRoleResponse(String role) {
     }
 }

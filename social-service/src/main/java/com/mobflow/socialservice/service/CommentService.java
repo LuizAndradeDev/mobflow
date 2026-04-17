@@ -49,7 +49,8 @@ public class CommentService {
         TaskServiceClient.TaskCommentContextResponse taskContext = taskServiceClient.getTaskContext(taskId);
         workspaceServiceClient.requireMembership(taskContext.workspaceId(), authenticatedUser.authId());
 
-        List<MentionService.ResolvedMention> mentions = mentionService.resolveMentions(request.getContent());
+        List<MentionService.ResolvedMention> mentions =
+                mentionService.resolveMentions(request.getContent(), taskContext.workspaceId());
         Comment comment = commentFactory.create(
                 taskContext,
                 authenticatedUser,
@@ -85,7 +86,8 @@ public class CommentService {
             throw SocialServiceException.invalidCommentState();
         }
 
-        List<MentionService.ResolvedMention> mentions = mentionService.resolveMentions(request.getContent());
+        List<MentionService.ResolvedMention> mentions =
+                mentionService.resolveMentions(request.getContent(), comment.getWorkspaceId());
         comment.edit(
                 request.getContent().trim(),
                 mentions.stream().map(MentionService.ResolvedMention::username).toList()

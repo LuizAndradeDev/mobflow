@@ -1,6 +1,7 @@
 package com.mobflow.socialservice.service;
 
 import com.mobflow.socialservice.client.AuthServiceClient;
+import com.mobflow.socialservice.client.WorkspaceServiceClient;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,12 +18,17 @@ public class MentionService {
     private static final Pattern MENTION_PATTERN = Pattern.compile("(?<![A-Za-z0-9_])@([A-Za-z0-9_]{3,50})");
 
     private final AuthServiceClient authServiceClient;
+    private final WorkspaceServiceClient workspaceServiceClient;
 
-    public MentionService(AuthServiceClient authServiceClient) {
+    public MentionService(
+            AuthServiceClient authServiceClient,
+            WorkspaceServiceClient workspaceServiceClient
+    ) {
         this.authServiceClient = authServiceClient;
+        this.workspaceServiceClient = workspaceServiceClient;
     }
 
-    public List<ResolvedMention> resolveMentions(String content) {
+    public List<ResolvedMention> resolveMentions(String content, java.util.UUID workspaceId) {
         Set<String> usernames = extractMentionUsernames(content);
         if (usernames.isEmpty()) {
             return List.of();
@@ -34,7 +40,7 @@ public class MentionService {
         List<ResolvedMention> resolvedMentions = new ArrayList<>();
         for (String username : usernames) {
             AuthServiceClient.AuthUserSummaryResponse resolvedUser = resolvedUsers.get(username);
-            if (resolvedUser != null) {
+            if (resolvedUser != null && workspaceServiceClient.isWorkspaceMember(workspaceId, resolvedUser.authId())) {
                 resolvedMentions.add(new ResolvedMention(resolvedUser.authId(), resolvedUser.username()));
             }
         }
