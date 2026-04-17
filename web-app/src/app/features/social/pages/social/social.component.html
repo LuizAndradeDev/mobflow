@@ -1,4 +1,4 @@
-<div class="flex h-full min-h-full overflow-hidden bg-[#0b111b] text-gray-100">
+<div class="flex h-full min-h-full overflow-hidden bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
   <app-social-sidebar
     [username]="currentUsername"
     [userAvatarUrl]="currentUserAvatarUrl"
@@ -11,12 +11,12 @@
     (selectFriend)="selectFriend($event)"
   />
 
-  <main class="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-gradient-to-br from-[#111827] via-[#0f172a] to-[#0a0f18]">
-    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.18),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(34,197,94,0.08),_transparent_24%)]"></div>
+  <main class="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-gradient-to-br from-white via-blue-50/60 to-gray-100 dark:from-[#111827] dark:via-[#0f172a] dark:to-[#0a0f18]">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.14),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(34,197,94,0.06),_transparent_24%)] dark:bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.18),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(34,197,94,0.08),_transparent_24%)]"></div>
 
     @if (selectedFriend) {
       <section class="relative flex h-full min-h-0 flex-col">
-        <header class="flex items-center justify-between gap-4 border-b border-white/10 px-6 py-5">
+        <header class="flex items-center justify-between gap-4 border-b border-gray-200/80 bg-white/55 px-6 py-5 backdrop-blur-sm dark:border-white/10 dark:bg-transparent">
           <div class="flex min-w-0 items-center gap-4">
             @if (selectedFriendHasAvatar) {
               <img
@@ -31,15 +31,15 @@
             }
 
             <div class="min-w-0">
-              <h1 class="truncate text-lg font-semibold text-gray-50">{{ selectedFriend.username }}</h1>
-              <p class="text-sm text-gray-400">Friend since {{ selectedFriend.friendsSince | date: 'mediumDate' }}</p>
+              <h1 class="truncate text-lg font-semibold text-gray-900 dark:text-gray-50">{{ selectedFriend.username }}</h1>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Friend since {{ selectedFriend.friendsSince | date: 'mediumDate' }}</p>
             </div>
           </div>
 
           <button
             type="button"
             (click)="clearSelectedFriend()"
-            class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-gray-200 transition hover:bg-white/10"
+            class="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10"
           >
             Back
           </button>
@@ -59,12 +59,12 @@
               </div>
             }
 
-            <h2 class="mt-6 text-3xl font-semibold text-white">{{ selectedFriend.username }}</h2>
-            <p class="mx-auto mt-3 max-w-xl text-base leading-7 text-gray-400">
+            <h2 class="mt-6 text-3xl font-semibold text-gray-900 dark:text-white">{{ selectedFriend.username }}</h2>
+            <p class="mx-auto mt-3 max-w-xl text-base leading-7 text-gray-500 dark:text-gray-400">
               Chat is not wired yet, but this layout is now ready for a real conversation surface. Select a friend, review requests, and move through the social space without the old dashboard framing.
             </p>
 
-            <div class="mt-10 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 text-left backdrop-blur-sm">
+            <div class="mt-10 rounded-[2rem] border border-gray-200 bg-white/80 p-5 text-left shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
               <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/20 text-blue-300">
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,19 +72,19 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-semibold text-white">Conversation preview</p>
-                  <p class="text-sm text-gray-400">Messaging UI placeholder for the next iteration.</p>
+                  <p class="text-sm font-semibold text-gray-900 dark:text-white">Conversation preview</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Messaging UI placeholder for the next iteration.</p>
                 </div>
               </div>
 
-              <div class="mt-5 rounded-2xl border border-white/8 bg-[#0b1220] p-4">
-                <p class="text-sm text-gray-500">No messages yet</p>
+              <div class="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-white/8 dark:bg-[#0b1220]">
+                <p class="text-sm text-gray-500 dark:text-gray-500">No messages yet</p>
                 <div class="mt-4 flex gap-3">
                   <input
                     type="text"
                     disabled
                     placeholder="Message composer coming soon"
-                    class="flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-500 outline-none"
+                    class="flex-1 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 outline-none dark:border-white/10 dark:bg-white/5"
                   />
                   <button
                     type="button"
@@ -102,14 +102,14 @@
     } @else {
       <section class="relative flex h-full min-h-0 flex-1 items-center justify-center px-6 py-10">
         <div class="w-full max-w-xl text-center">
-          <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-[2rem] border border-white/10 bg-white/5 text-blue-400 shadow-2xl shadow-black/20 backdrop-blur-sm">
+          <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-[2rem] border border-gray-200 bg-white text-blue-500 shadow-xl shadow-blue-100/60 backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:text-blue-400 dark:shadow-black/20">
             <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 10h8M8 14h5m-7 7 2.273-2.273A2 2 0 019.687 18H19a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h1v3z" />
             </svg>
           </div>
 
-          <h1 class="mt-8 text-4xl font-semibold tracking-tight text-white">Your friends</h1>
-          <p class="mt-3 text-base leading-7 text-gray-400">
+          <h1 class="mt-8 text-4xl font-semibold tracking-tight text-gray-900 dark:text-white">Your friends</h1>
+          <p class="mt-3 text-base leading-7 text-gray-500 dark:text-gray-400">
             Choose someone from the sidebar to open the conversation space, or start by sending a new request.
           </p>
 
@@ -126,14 +126,14 @@
 </div>
 
 @if (showAddFriendModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" (click)="closeAddFriendModal()">
-    <div class="w-full max-w-md rounded-[2rem] border border-white/10 bg-[#111827] p-6 shadow-2xl shadow-black/40" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm dark:bg-black/65" (click)="closeAddFriendModal()">
+    <div class="w-full max-w-md rounded-[2rem] border border-gray-200 bg-white p-6 shadow-2xl shadow-gray-300/40 dark:border-white/10 dark:bg-[#111827] dark:shadow-black/40" (click)="$event.stopPropagation()">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <h2 class="text-lg font-semibold text-white">Add friend</h2>
-          <p class="mt-1 text-sm text-gray-400">Enter a username to send a friend request.</p>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Add friend</h2>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Enter a username to send a friend request.</p>
         </div>
-        <button type="button" (click)="closeAddFriendModal()" class="text-gray-500 transition hover:text-gray-200">
+        <button type="button" (click)="closeAddFriendModal()" class="text-gray-400 transition hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -145,18 +145,20 @@
           formControlName="username"
           type="text"
           placeholder="username"
-          class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-blue-500/70"
+          class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-500/70"
         />
 
         @if (addFriendFeedback) {
           <div
             class="rounded-2xl px-4 py-3 text-sm font-medium"
             [class.bg-green-500/10]="addFriendFeedback.tone === 'success'"
-            [class.text-green-300]="addFriendFeedback.tone === 'success'"
+            [class.text-green-700]="addFriendFeedback.tone === 'success'"
+            [class.dark:text-green-300]="addFriendFeedback.tone === 'success'"
             [class.border]="true"
             [class.border-green-500/20]="addFriendFeedback.tone === 'success'"
             [class.bg-red-500/10]="addFriendFeedback.tone === 'error'"
-            [class.text-red-300]="addFriendFeedback.tone === 'error'"
+            [class.text-red-700]="addFriendFeedback.tone === 'error'"
+            [class.dark:text-red-300]="addFriendFeedback.tone === 'error'"
             [class.border-red-500/20]="addFriendFeedback.tone === 'error'"
           >
             {{ addFriendFeedback.message }}
@@ -167,7 +169,7 @@
           <button
             type="button"
             (click)="closeAddFriendModal()"
-            class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-gray-200 transition hover:bg-white/10"
+            class="flex-1 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10"
           >
             Cancel
           </button>
@@ -185,14 +187,14 @@
 }
 
 @if (showPendingRequestsModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" (click)="closePendingRequestsModal()">
-    <div class="w-full max-w-4xl rounded-[2rem] border border-white/10 bg-[#111827] p-6 shadow-2xl shadow-black/40" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm dark:bg-black/65" (click)="closePendingRequestsModal()">
+    <div class="w-full max-w-4xl rounded-[2rem] border border-gray-200 bg-white p-6 shadow-2xl shadow-gray-300/40 dark:border-white/10 dark:bg-[#111827] dark:shadow-black/40" (click)="$event.stopPropagation()">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <h2 class="text-lg font-semibold text-white">Pending requests</h2>
-          <p class="mt-1 text-sm text-gray-400">Review received requests and keep track of the ones you already sent.</p>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Pending requests</h2>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Review received requests and keep track of the ones you already sent.</p>
         </div>
-        <button type="button" (click)="closePendingRequestsModal()" class="text-gray-500 transition hover:text-gray-200">
+        <button type="button" (click)="closePendingRequestsModal()" class="text-gray-400 transition hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -200,24 +202,24 @@
       </div>
 
       <div class="mt-6 grid gap-4 lg:grid-cols-2">
-        <section class="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4">
-          <div class="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
-            <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-gray-400">Received</h3>
-            <span class="rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-gray-300">{{ incomingRequests.length }}</span>
+        <section class="rounded-[1.75rem] border border-gray-200 bg-gray-50/80 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+          <div class="flex items-center justify-between gap-3 border-b border-gray-200 pb-3 dark:border-white/10">
+            <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Received</h3>
+            <span class="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm dark:bg-white/5 dark:text-gray-300 dark:shadow-none">{{ incomingRequests.length }}</span>
           </div>
 
           @if (incomingRequests.length === 0) {
-            <p class="mt-4 text-sm text-gray-500">No received requests.</p>
+            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">No received requests.</p>
           } @else {
             <div class="mt-4 space-y-3">
               @for (request of incomingRequests; track request.id) {
-                <article class="rounded-2xl border border-white/10 bg-[#0b1220] p-4">
+                <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#0b1220] dark:shadow-none">
                   <div class="flex items-start justify-between gap-3">
                     <div>
-                      <p class="font-semibold text-white">{{ request.requesterUsername }}</p>
-                      <p class="mt-1 text-sm text-gray-500">{{ request.createdAt | date: 'medium' }}</p>
+                      <p class="font-semibold text-gray-900 dark:text-white">{{ request.requesterUsername }}</p>
+                      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ request.createdAt | date: 'medium' }}</p>
                     </div>
-                    <span class="rounded-full bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-300">Incoming</span>
+                    <span class="rounded-full bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-300">Incoming</span>
                   </div>
 
                   <div class="mt-4 flex gap-2">
@@ -225,7 +227,7 @@
                       type="button"
                       (click)="declineRequest(request)"
                       [disabled]="isProcessing(request.id)"
-                      class="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      class="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-300"
                     >
                       {{ isProcessing(request.id) ? 'Processing...' : 'Decline' }}
                     </button>
@@ -244,24 +246,24 @@
           }
         </section>
 
-        <section class="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4">
-          <div class="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
-            <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-gray-400">Sent</h3>
-            <span class="rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-gray-300">{{ outgoingRequests.length }}</span>
+        <section class="rounded-[1.75rem] border border-gray-200 bg-gray-50/80 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+          <div class="flex items-center justify-between gap-3 border-b border-gray-200 pb-3 dark:border-white/10">
+            <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Sent</h3>
+            <span class="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm dark:bg-white/5 dark:text-gray-300 dark:shadow-none">{{ outgoingRequests.length }}</span>
           </div>
 
           @if (outgoingRequests.length === 0) {
-            <p class="mt-4 text-sm text-gray-500">No sent requests.</p>
+            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">No sent requests.</p>
           } @else {
             <div class="mt-4 space-y-3">
               @for (request of outgoingRequests; track request.id) {
-                <article class="rounded-2xl border border-white/10 bg-[#0b1220] p-4">
+                <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#0b1220] dark:shadow-none">
                   <div class="flex items-start justify-between gap-3">
                     <div>
-                      <p class="font-semibold text-white">{{ request.targetUsername }}</p>
-                      <p class="mt-1 text-sm text-gray-500">Sent {{ request.createdAt | date: 'medium' }}</p>
+                      <p class="font-semibold text-gray-900 dark:text-white">{{ request.targetUsername }}</p>
+                      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Sent {{ request.createdAt | date: 'medium' }}</p>
                     </div>
-                    <span class="rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-gray-300">Pending</span>
+                    <span class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 dark:bg-white/5 dark:text-gray-300">Pending</span>
                   </div>
                 </article>
               }

@@ -1,5 +1,5 @@
-<aside class="flex h-full w-[300px] max-w-[82vw] shrink-0 flex-col border-r border-white/10 bg-[#0f1723] sm:w-[320px] md:w-[340px] md:min-w-[340px]">
-  <header class="border-b border-white/10 px-5 pb-4 pt-5">
+<aside class="flex h-full w-[300px] max-w-[82vw] shrink-0 flex-col border-r border-gray-200 bg-white sm:w-[320px] md:w-[340px] md:min-w-[340px] dark:border-gray-800 dark:bg-gray-900">
+  <header class="border-b border-gray-200 px-5 pb-4 pt-5 dark:border-gray-800">
     <div class="flex items-center justify-between gap-3">
       <div class="flex min-w-0 items-center gap-3">
         @if (hasUserAvatar) {
@@ -11,12 +11,12 @@
         }
 
         <div class="min-w-0">
-          <p class="truncate text-sm font-semibold text-gray-100">{{ username }}</p>
-          <p class="text-xs text-gray-500">Friends</p>
+          <p class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ username }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Friends</p>
         </div>
       </div>
 
-      <div class="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300">
+      <div class="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5v14m7-7H5" />
         </svg>
@@ -24,9 +24,9 @@
     </div>
   </header>
 
-  <div class="border-b border-white/10 px-4 py-4">
+  <div class="border-b border-gray-200 px-4 py-4 dark:border-gray-800">
     <label class="relative block">
-      <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-500">
+      <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400 dark:text-gray-500">
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
@@ -35,7 +35,7 @@
         [formControl]="friendSearch"
         type="text"
         placeholder="Search friends"
-        class="w-full rounded-full border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-gray-100 outline-none transition placeholder:text-gray-500 focus:border-blue-500/70 focus:bg-white/8"
+        class="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:bg-white dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500/70 dark:focus:bg-white/8"
       />
     </label>
 
@@ -50,7 +50,7 @@
       <button
         type="button"
         (click)="openPendingRequests.emit()"
-        class="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-gray-100 transition hover:bg-white/10"
+        class="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:hover:bg-white/10"
       >
         Pending Requests
       </button>
@@ -59,7 +59,7 @@
 
   <div class="flex min-h-0 flex-1 flex-col">
     <div class="px-4 pb-3 pt-4">
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Messages</p>
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Messages</p>
     </div>
 
     <div class="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
@@ -67,23 +67,23 @@
         <div class="space-y-2">
           @for (item of [1, 2, 3, 4, 5, 6]; track item) {
             <div class="flex items-center gap-3 rounded-2xl px-3 py-3 animate-pulse">
-              <div class="h-12 w-12 rounded-full bg-white/10"></div>
+              <div class="h-12 w-12 rounded-full bg-gray-200 dark:bg-white/10"></div>
               <div class="flex-1 space-y-2">
-                <div class="h-3 w-24 rounded bg-white/10"></div>
-                <div class="h-3 w-16 rounded bg-white/10"></div>
+                <div class="h-3 w-24 rounded bg-gray-200 dark:bg-white/10"></div>
+                <div class="h-3 w-16 rounded bg-gray-200 dark:bg-white/10"></div>
               </div>
             </div>
           }
         </div>
       } @else if (friends.length === 0) {
-        <div class="flex h-full min-h-[16rem] flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 bg-white/[0.03] px-6 text-center">
-          <div class="flex h-14 w-14 items-center justify-center rounded-full bg-white/5 text-gray-400">
+        <div class="flex h-full min-h-[16rem] flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-6 text-center dark:border-white/10 dark:bg-white/[0.03]">
+          <div class="flex h-14 w-14 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm dark:bg-white/5 dark:text-gray-400 dark:shadow-none">
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584m11.904.303a5.971 5.971 0 00-.941-3.197M6 18.719a5.971 5.971 0 01.941-3.197m0 0A5.995 5.995 0 0112 12.75a5.995 5.995 0 015.058 2.772M15 6.75a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <h2 class="mt-4 text-sm font-semibold text-gray-100">No friends found</h2>
-          <p class="mt-2 text-sm text-gray-500">Search for another name or send a new request.</p>
+          <h2 class="mt-4 text-sm font-semibold text-gray-900 dark:text-gray-100">No friends found</h2>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Search for another name or send a new request.</p>
         </div>
       } @else {
         <div class="space-y-1.5">
