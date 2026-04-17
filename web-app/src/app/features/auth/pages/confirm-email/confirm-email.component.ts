@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NavbarPublicComponent } from '../../../../shared/components/navbar-public/navbar-public.component';
+import { catchError, of, timeout } from 'rxjs';
 
 type ConfirmationState = 'loading' | 'success' | 'error';
 
@@ -14,6 +15,8 @@ type ConfirmationState = 'loading' | 'success' | 'error';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfirmEmailComponent implements OnInit {
+  private static readonly CONFIRMATION_TIMEOUT_MS = 15000;
+
   state: ConfirmationState = 'loading';
   title = 'Confirming your email';
   message = 'We are validating your confirmation link and activating your account.';
@@ -31,15 +34,20 @@ export class ConfirmEmailComponent implements OnInit {
       return;
     }
 
-    this.authService.confirmEmail(token).subscribe({
-      next: () => {
-        this.state = 'success';
-        this.title = 'Email confirmed';
-        this.message = 'Your account is now active and ready to sign in.';
-      },
-      error: () => {
-        this.setError('Confirmation failed', 'This confirmation link is invalid or has expired. Request a new email confirmation to activate your account.');
-      },
+    this.authService.confirmEmail(token).pipe(
+      timeout(ConfirmEmailComponent.CONFIRMATION_TIMEOUT_MS),
+      catchError(() => {
+        this.setError('Confirmation failed', 'This confirmation link is invalid, has expired, or could not be verified right now. Request a new email confirmation to activate your account.');
+        return of(null);
+      }),
+    ).subscribe((response) => {
+      if (response === null) {
+        return;
+      }
+
+      this.state = 'success';
+      this.title = 'Email confirmed';
+      this.message = 'Your account is now active and ready to sign in.';
     });
   }
 

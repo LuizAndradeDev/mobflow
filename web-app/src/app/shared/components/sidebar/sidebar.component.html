@@ -1,12 +1,12 @@
 <div
-  class="relative flex min-h-dvh"
+  class="relative flex h-dvh shrink-0"
   (mouseenter)="onContainerEnter()"
   (mouseleave)="onContainerLeave()"
 >
 
   
   <aside
-    class="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-40 shadow-sm overflow-hidden"
+    class="flex h-dvh flex-col self-stretch bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-40 shadow-sm overflow-hidden"
     [class.w-16]="!expanded()"
     [class.w-60]="expanded()"
   >
@@ -151,7 +151,7 @@
   
   
   @if (analyticsOpen() && expanded()) {
-    <div class="fixed inset-x-4 bottom-4 top-20 z-30 flex flex-col rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-60 lg:top-0 lg:h-full lg:w-56 lg:rounded-none lg:border-r">
+    <div class="absolute left-full top-0 z-30 hidden h-full w-56 flex-col border-r border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 lg:flex">
       <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-gray-800">
         <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Analytics</span>
         <button (click)="toggleAnalytics()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
