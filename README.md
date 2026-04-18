@@ -18,19 +18,19 @@ nginx (80)
   |
   +--> auth-service (8080) --------> PostgreSQL: mobflow_auth
   |
-  +--> user-service (8081) --------> PostgreSQL: mobflow_users
+  +--> user-service (8081) --------> PostgreSQL: mobflow_user
   |                                   |
   |                                   +--> Redis 7 (profile cache)
   |                                   |
   |                                   +--> MinIO (avatar objects)
   |
-  +--> workspace-service (8082) ----> PostgreSQL: mobflow_workspaces
+  +--> workspace-service (8082) ----> PostgreSQL: mobflow_workspace
   |          |
   |          +--> user-service /internal/users/by-username/{username}
   |          +--> user-service /internal/users/batch
   |          +--> Kafka topic: workspace.events
   |
-  +--> task-service (8083, context-path /tasks) -> PostgreSQL: mobflow_tasks
+  +--> task-service (8083, context-path /tasks) -> PostgreSQL: mobflow_task
              |
              +--> workspace-service /internal/workspaces/{id}/members/{authId}/role
              +--> user-service /internal/users/batch
@@ -94,7 +94,8 @@ mobflow/
 ├── web-app/                # Angular frontend source code
 ├── docker-compose.yaml     # Full local orchestration for infra and applications
 ├── .env                    # Centralized runtime configuration for all containers
-├── init-db.sql             # PostgreSQL database bootstrap for service isolation
+├── .env.example            # Reference template for the local runtime configuration
+├── init-db.sql             # PostgreSQL initialization script for relational services
 ├── nginx.conf              # Shared Nginx configuration
 ├── web-app.conf            # Frontend/static/proxy server block configuration
 └── Dockerfile.nginx        # Multi-stage Angular build + Nginx runtime image
@@ -110,20 +111,20 @@ If you want to work on the Angular frontend outside Docker, use Node.js `20.19+`
 
 ## Environment Configuration
 
-All containers use the root `.env` file. The following variables are required.
+All containers use the root `.env` file. Start by copying `.env.example` to `.env`. The example file contains the complete set of variables required by Docker Compose and the application containers.
 
 ```dotenv
 # PostgreSQL connection shared settings
 DB_HOST=postgres
 DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=postgres
+DB_USER=mobflow
+DB_PASSWORD=replace_with_postgres_password
 
 # Dedicated PostgreSQL databases, one per service
 AUTH_DB=mobflow_auth
-USER_DB=mobflow_users
-WORKSPACE_DB=mobflow_workspaces
-TASK_DB=mobflow_tasks
+USER_DB=mobflow_user
+WORKSPACE_DB=mobflow_workspace
+TASK_DB=mobflow_task
 
 # Stateless JWT configuration shared by every service
 # JWT_SECRET must be a Base64-encoded 256-bit key
@@ -141,17 +142,28 @@ REDIS_PORT=6379
 MINIO_ENDPOINT=http://minio:9000
 MINIO_PUBLIC_URL=http://localhost:9000
 MINIO_ROOT_USER=minio
-MINIO_ROOT_PASSWORD=minio123
+MINIO_ROOT_PASSWORD=replace_with_minio_password
 MINIO_BUCKET=mobflow-avatars
 
-# MongoDB credentials used by notification-service
+# MongoDB shared settings used by Mongo-backed services
+MONGO_HOST=mongodb
+MONGO_PORT=27017
 MONGO_USER=mobflow
-MONGO_PASSWORD=mobflow
+MONGO_PASSWORD=replace_with_mongodb_password
 
 # Kafka bootstrap server used by event producers and consumers
 KAFKA_BOOTSTRAP_SERVERS=kafka:9092
 
+# Event topics used across the platform
+AUTH_EVENTS_TOPIC=auth-events
+TASK_EVENTS_TOPIC=task-events
+WORKSPACE_EVENTS_TOPIC=workspace-events
+SOCIAL_COMMENT_EVENTS_TOPIC=social-comment-events
+SOCIAL_FRIENDSHIP_EVENTS_TOPIC=social-friendship-events
+SOCIAL_EVENTS_TOPIC=social.events
+
 # Service base URLs used for synchronous internal requests
+AUTH_SERVICE_URL=http://auth-service:8080
 WORKSPACE_SERVICE_URL=http://workspace-service:8082
 USER_SERVICE_URL=http://user-service:8081
 TASK_SERVICE_URL=http://task-service:8083
@@ -160,32 +172,85 @@ SOCIAL_SERVICE_URL=http://social-service:8085
 # SMTP configuration used by notification-service email delivery
 MAIL_HOST=mailhog
 MAIL_PORT=1025
-MAIL_USERNAME=
+MAIL_USERNAME=no-reply@mobflow.dev
 MAIL_PASSWORD=
+MAIL_SMTP_AUTH=false
+MAIL_SMTP_STARTTLS=false
 
-# Public base URL used in generated links such as email confirmation flows
+# Shared application settings
 APP_BASE_URL=http://localhost
+APP_CORS_ALLOWED_ORIGINS=http://localhost
+APP_MAIL_MAX_ATTEMPTS=3
+TASK_DUE_SOON_CRON=0 0 8 * * *
 ```
 
-## PostgreSQL Bootstrap
+## PostgreSQL Initialization
 
 `init-db.sql` must create the four isolated PostgreSQL databases used by the relational services.
 
 ```sql
 CREATE DATABASE mobflow_auth;
-CREATE DATABASE mobflow_users;
-CREATE DATABASE mobflow_workspaces;
-CREATE DATABASE mobflow_tasks;
+CREATE DATABASE mobflow_user;
+CREATE DATABASE mobflow_workspace;
+CREATE DATABASE mobflow_task;
 ```
 
-This file is mounted into the PostgreSQL container during local startup so each service can run Flyway migrations against its own schema boundary.
+This file is mounted into the PostgreSQL container during local startup so each relational service can run Flyway migrations against its own database boundary. The script is executed only when PostgreSQL initializes an empty data directory for the first time.
 
 ## Running the Platform
 
-### Start the Full Stack
+### Local Setup
+
+1. Ensure no other local application is using the ports required by Mobflow: `80`, `5432`, `6379`, `8025`, `8080` to `8086`, `9000`, `9001`, `9092`, and `27017`.
+
+2. Create your local `.env` file from the committed template.
 
 ```bash
-docker compose up --build
+cp .env.example .env
+```
+
+3. Generate a Base64-encoded 256-bit secret and replace the placeholder value of `JWT_SECRET`.
+
+```bash
+openssl rand -base64 32
+```
+
+4. Define a value for `INTERNAL_SECRET=replace_with_internal_secret`. This secret is used by synchronous internal service-to-service calls through `/internal/**` endpoints.
+
+5. Start PostgreSQL first.
+
+```bash
+docker compose up -d postgres
+```
+
+6. Confirm that the databases defined in `init-db.sql` were created correctly.
+
+```bash
+docker compose exec postgres sh -lc 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d postgres -c "\l"'
+```
+
+The expected databases are `mobflow_auth`, `mobflow_user`, `mobflow_workspace`, and `mobflow_task`.
+
+If those databases are missing on a reused PostgreSQL volume, recreate the PostgreSQL data volume before retrying so `init-db.sql` is applied again.
+
+7. Start the rest of the application after PostgreSQL is ready.
+
+```bash
+docker compose up --build -d \
+  mongodb \
+  zookeeper \
+  kafka \
+  mailhog \
+  redis \
+  minio \
+  auth-service \
+  user-service \
+  workspace-service \
+  task-service \
+  notification-service \
+  social-service \
+  chat-service \
+  nginx
 ```
 
 The platform is then available on `http://localhost`, served by the edge Nginx container. Nginx delivers the production Angular build, handles SPA route refreshes, and proxies HTTP and WebSocket traffic to the backend containers.
@@ -217,9 +282,9 @@ curl http://localhost:8084/actuator/health
 | Service | Port | Database / State | Description |
 | --- | --- | --- | --- |
 | `auth-service` | `8080` | PostgreSQL `mobflow_auth` | Issues JWTs, stores credentials, confirms accounts by token, and exposes the authenticated profile identity. |
-| `user-service` | `8081` | PostgreSQL `mobflow_users`, Redis, MinIO | Manages profile metadata, avatar uploads, and cached profile reads consumed by both frontend and internal services. |
-| `workspace-service` | `8082` | PostgreSQL `mobflow_workspaces` | Owns workspace creation, member roles, invite lifecycle, and public join-code access. |
-| `task-service` | `8083` | PostgreSQL `mobflow_tasks` | Owns boards, task lists, tasks, drag-and-drop ordering, workspace summaries, and authenticated analytics endpoints. |
+| `user-service` | `8081` | PostgreSQL `mobflow_user`, Redis, MinIO | Manages profile metadata, avatar uploads, and cached profile reads consumed by both frontend and internal services. |
+| `workspace-service` | `8082` | PostgreSQL `mobflow_workspace` | Owns workspace creation, member roles, invite lifecycle, and public join-code access. |
+| `task-service` | `8083` | PostgreSQL `mobflow_task` | Owns boards, task lists, tasks, drag-and-drop ordering, workspace summaries, and authenticated analytics endpoints. |
 | `social-service` | `8085` | MongoDB `social` | Owns friendships, friend requests, task comments, comment mentions, and social notification event publication. |
 | `chat-service` | `8086` | MongoDB `chat` | Owns private conversations, paginated message history, read receipts, WebSocket delivery, and chat notification publication. |
 | `notification-service` | `8084` | MongoDB `notifications` | Persists in-app notifications, computes unread counters, marks notifications as read, and sends email notifications from Kafka events. |
