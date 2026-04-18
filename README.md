@@ -148,8 +148,8 @@ MINIO_BUCKET=mobflow-avatars
 # MongoDB shared settings used by Mongo-backed services
 MONGO_HOST=mongodb
 MONGO_PORT=27017
-MONGO_USER=mobflow
-MONGO_PASSWORD=mobflow
+MONGO_USER=mobflow-mongo
+MONGO_PASSWORD=mongo-secret
 
 # Kafka bootstrap server used by event producers and consumers
 KAFKA_BOOTSTRAP_SERVERS=kafka:9092
