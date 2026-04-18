@@ -118,7 +118,7 @@ All containers use the root `.env` file. Start by copying `.env.example` to `.en
 DB_HOST=postgres
 DB_PORT=5432
 DB_USER=mobflow
-DB_PASSWORD=replace_with_postgres_password
+DB_PASSWORD=mobflow_secret
 
 # Dedicated PostgreSQL databases, one per service
 AUTH_DB=mobflow_auth
@@ -142,14 +142,14 @@ REDIS_PORT=6379
 MINIO_ENDPOINT=http://minio:9000
 MINIO_PUBLIC_URL=http://localhost:9000
 MINIO_ROOT_USER=minio
-MINIO_ROOT_PASSWORD=replace_with_minio_password
+MINIO_ROOT_PASSWORD=minio123
 MINIO_BUCKET=mobflow-avatars
 
 # MongoDB shared settings used by Mongo-backed services
 MONGO_HOST=mongodb
 MONGO_PORT=27017
 MONGO_USER=mobflow
-MONGO_PASSWORD=replace_with_mongodb_password
+MONGO_PASSWORD=mobflow
 
 # Kafka bootstrap server used by event producers and consumers
 KAFKA_BOOTSTRAP_SERVERS=kafka:9092
