@@ -1,6 +1,6 @@
 package com.mobflow.notificationservice.service;
 
-import com.mobflow.notificationservice.dto.response.NotificationResponseDTO;
+import com.mobflow.notificationservice.model.dto.response.NotificationResponseDTO;
 import com.mobflow.notificationservice.exception.NotificationNotFoundException;
 import com.mobflow.notificationservice.model.entities.Notification;
 import com.mobflow.notificationservice.model.enums.NotificationChannel;

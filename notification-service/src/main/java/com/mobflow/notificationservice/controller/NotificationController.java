@@ -1,7 +1,7 @@
 package com.mobflow.notificationservice.controller;
 
-import com.mobflow.notificationservice.dto.response.NotificationResponseDTO;
-import com.mobflow.notificationservice.dto.response.UnreadCountResponseDTO;
+import com.mobflow.notificationservice.model.dto.response.NotificationResponseDTO;
+import com.mobflow.notificationservice.model.dto.response.UnreadCountResponseDTO;
 import com.mobflow.notificationservice.service.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
