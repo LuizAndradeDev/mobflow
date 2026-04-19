@@ -18,9 +18,14 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     private final String bootstrapServers;
+    private final boolean listenerAutoStartup;
 
-    public KafkaConsumerConfig(@Value("${spring.kafka.bootstrap-servers}") String bootstrapServers) {
+    public KafkaConsumerConfig(
+            @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers,
+            @Value("${spring.kafka.listener.auto-startup:true}") boolean listenerAutoStartup
+    ) {
         this.bootstrapServers = bootstrapServers;
+        this.listenerAutoStartup = listenerAutoStartup;
     }
 
     @Bean
@@ -39,6 +44,7 @@ public class KafkaConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        factory.setAutoStartup(listenerAutoStartup);
         return factory;
     }
 }

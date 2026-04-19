@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "app.kafka.topics.auth=auth-events",
         "app.kafka.topics.task=task-events",
         "app.kafka.topics.workspace=workspace-events",
+        "spring.kafka.listener.auto-startup=false",
         "spring.kafka.bootstrap-servers=localhost:9092"
 })
 class NotificationIntegrationTest extends AbstractMongoNotificationTest {
