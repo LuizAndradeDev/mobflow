@@ -264,6 +264,24 @@ docker compose up --build -d \
 
 The platform is then available on `http://localhost`, served by the edge Nginx container. Nginx delivers the production Angular build, handles SPA route refreshes, and proxies HTTP and WebSocket traffic to the backend containers.
 
+## Account Creation
+
+1. Open the application in a browser at `http://localhost`.
+
+2. Go to the register page.
+
+3. Fill in the registration form with a `username`, `email`, and `password`.
+
+4. Submit the form.
+
+5. After submission, the application displays a notice indicating that the email address must be confirmed.
+
+6. Open MailHog at `http://localhost:8025`.
+
+7. Open the received confirmation email and click the confirmation link.
+
+8. After the account is confirmed, return to the application and log in normally.
+
 ### Optional: Start the Frontend in Development Mode
 
 ```bash
