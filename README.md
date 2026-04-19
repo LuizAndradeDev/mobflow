@@ -210,7 +210,7 @@ docker version
 2. Clone the repository and enter the project directory.
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/LuizAndradeDev/mobflow.git
 cd <repository-folder>
 ```
 
@@ -222,15 +222,11 @@ cd <repository-folder>
 cp .env.example .env
 ```
 
-5. Generate a secret and set it as the value of `JWT_SECRET`.
-
-```bash
-openssl rand -base64 32
-```
+5. Generate a Base64-encoded 256-bit secret and replace the placeholder value of `JWT_SECRET`.
 
 6. Define a value for `INTERNAL_SECRET=replace_with_internal_secret`. This secret is used by synchronous internal service-to-service calls through `/internal/**` endpoints.
 
-7. Start PostgreSQL first.
+7. Open a command prompt, navigate to the project directory, and then start PostgreSQL first.
 
 ```bash
 docker compose up -d postgres
