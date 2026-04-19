@@ -1,6 +1,6 @@
 package com.mobflow.notificationservice.exception;
 
-import com.mobflow.notificationservice.dto.response.ErrorResponseDTO;
+import com.mobflow.notificationservice.model.dto.response.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;

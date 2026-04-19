@@ -1,4 +1,4 @@
-package com.mobflow.notificationservice.dto.response;
+package com.mobflow.notificationservice.model.dto.response;
 
 public record UnreadCountResponseDTO(long unreadCount) {
 }
