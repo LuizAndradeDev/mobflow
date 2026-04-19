@@ -201,29 +201,42 @@ This file is mounted into the PostgreSQL container during local startup so each 
 
 ### Local Setup
 
-1. Ensure no other local application is using the ports required by Mobflow: `80`, `5432`, `6379`, `8025`, `8080` to `8086`, `9000`, `9001`, `9092`, and `27017`.
+1. Verify that Docker is installed and running.
 
-2. Create your local `.env` file from the committed template.
+```bash
+docker version
+```
+
+2. Clone the repository and enter the project directory.
+
+```bash
+git clone <your-repository-url>
+cd <repository-folder>
+```
+
+3. Ensure no other local application is using the ports required by Mobflow: `80`, `5432`, `6379`, `8025`, `8080` to `8086`, `9000`, `9001`, `9092`, and `27017`.
+
+4. Create your local `.env` file from the committed template.
 
 ```bash
 cp .env.example .env
 ```
 
-3. Generate a Base64-encoded 256-bit secret and replace the placeholder value of `JWT_SECRET`.
+5. Generate a secret and set it as the value of `JWT_SECRET`.
 
 ```bash
 openssl rand -base64 32
 ```
 
-4. Define a value for `INTERNAL_SECRET=replace_with_internal_secret`. This secret is used by synchronous internal service-to-service calls through `/internal/**` endpoints.
+6. Define a value for `INTERNAL_SECRET=replace_with_internal_secret`. This secret is used by synchronous internal service-to-service calls through `/internal/**` endpoints.
 
-5. Start PostgreSQL first.
+7. Start PostgreSQL first.
 
 ```bash
 docker compose up -d postgres
 ```
 
-6. Confirm that the databases defined in `init-db.sql` were created correctly.
+8. Confirm that the databases defined in `init-db.sql` were created correctly.
 
 ```bash
 docker compose exec postgres sh -lc 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d postgres -c "\l"'
@@ -233,7 +246,7 @@ The expected databases are `mobflow_auth`, `mobflow_user`, `mobflow_workspace`, 
 
 If those databases are missing on a reused PostgreSQL volume, recreate the PostgreSQL data volume before retrying so `init-db.sql` is applied again.
 
-7. Start the rest of the application after PostgreSQL is ready.
+9. Start the rest of the application after PostgreSQL is ready.
 
 ```bash
 docker compose up --build -d \
