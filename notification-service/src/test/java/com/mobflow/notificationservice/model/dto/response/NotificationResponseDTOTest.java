@@ -1,6 +1,5 @@
 package com.mobflow.notificationservice.model.dto.response;
 
-import com.mobflow.notificationservice.dto.response.NotificationResponseDTO;
 import com.mobflow.notificationservice.model.entities.Notification;
 import com.mobflow.notificationservice.model.enums.NotificationChannel;
 import com.mobflow.notificationservice.model.enums.NotificationPriority;
