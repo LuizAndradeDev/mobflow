@@ -1,6 +1,7 @@
 package com.mobflow.taskservice.service;
 
 import com.mobflow.taskservice.exception.TaskServiceException;
+import com.mobflow.taskservice.exception.enums.ErrorType;
 import com.mobflow.taskservice.model.dto.response.TaskCommentContextResponseDTO;
 import com.mobflow.taskservice.model.entities.Task;
 import com.mobflow.taskservice.repository.TaskRepository;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -53,6 +55,8 @@ class TaskContextServiceTest {
 
         assertThatThrownBy(() -> taskContextService.getTaskCommentContext(taskId))
                 .isInstanceOf(TaskServiceException.class)
-                .hasMessage("Task not found");
+                .hasMessage(ErrorType.TASK_NOT_FOUND.name())
+                .extracting("errorType", "status")
+                .containsExactly(ErrorType.TASK_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
 }
