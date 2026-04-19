@@ -1,6 +1,7 @@
 package com.mobflow.authservice.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mobflow.authservice.events.AuthEventPublisher;
 import com.mobflow.authservice.model.entities.UserCredential;
 import com.mobflow.authservice.model.enums.Role;
 import com.mobflow.authservice.repository.UserCredentialRepository;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static com.mobflow.authservice.testsupport.AuthTestFixtures.loginRequest;
@@ -36,6 +38,9 @@ class AuthSecurityApiTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private AuthEventPublisher authEventPublisher;
 
     @BeforeEach
     void cleanUp() {

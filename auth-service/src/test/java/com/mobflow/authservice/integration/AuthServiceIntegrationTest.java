@@ -1,6 +1,7 @@
 package com.mobflow.authservice.integration;
 
 import com.mobflow.authservice.exceptions.GenericAplicationException;
+import com.mobflow.authservice.events.AuthEventPublisher;
 import com.mobflow.authservice.model.dtos.request.LoginUserDTO;
 import com.mobflow.authservice.model.dtos.request.RegisterUserCredentialsDTO;
 import com.mobflow.authservice.model.entities.UserCredential;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static com.mobflow.authservice.testsupport.AuthTestFixtures.loginRequest;
 import static com.mobflow.authservice.testsupport.AuthTestFixtures.registerRequest;
@@ -31,6 +33,9 @@ class AuthServiceIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private AuthEventPublisher authEventPublisher;
 
     @BeforeEach
     void cleanUp() {
