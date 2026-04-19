@@ -1,6 +1,6 @@
 package com.mobflow.notificationservice.integration;
 
-import com.mobflow.notificationservice.dto.response.NotificationResponseDTO;
+import com.mobflow.notificationservice.model.dto.response.NotificationResponseDTO;
 import com.mobflow.notificationservice.model.entities.Notification;
 import com.mobflow.notificationservice.repository.NotificationRepository;
 import com.mobflow.notificationservice.service.NotificationService;

@@ -2,7 +2,7 @@ package com.mobflow.notificationservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mobflow.notificationservice.config.SecurityConfig;
-import com.mobflow.notificationservice.dto.response.NotificationResponseDTO;
+import com.mobflow.notificationservice.model.dto.response.NotificationResponseDTO;
 import com.mobflow.notificationservice.model.enums.NotificationChannel;
 import com.mobflow.notificationservice.model.enums.NotificationPriority;
 import com.mobflow.notificationservice.model.enums.NotificationType;
