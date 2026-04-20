@@ -28,13 +28,13 @@ nginx (80)
   |          |
   |          +--> user-service /internal/users/by-username/{username}
   |          +--> user-service /internal/users/batch
-  |          +--> Kafka topic: workspace.events
+  |          +--> Kafka topic: workspace-events
   |
   +--> task-service (8083, context-path /tasks) -> PostgreSQL: mobflow_task
              |
              +--> workspace-service /internal/workspaces/{id}/members/{authId}/role
              +--> user-service /internal/users/batch
-             +--> Kafka topic: task.events
+             +--> Kafka topic: task-events
   |
   +--> social-service (8085, context-path /social) -> MongoDB: social
   |          |
@@ -51,13 +51,13 @@ nginx (80)
 
 auth-service
   |
-  +--> Kafka topic: auth.events
+  +--> Kafka topic: auth-events
 
 notification-service (8084)
   |
-  +--> consumes task.events
-  +--> consumes workspace.events
-  +--> consumes auth.events
+  +--> consumes task-events
+  +--> consumes workspace-events
+  +--> consumes auth-events
   +--> consumes social-comment-events
   +--> consumes social-friendship-events
   +--> consumes social.events
@@ -70,7 +70,7 @@ notification-service (8084)
 - Frontend to services: JWT Bearer token on public `/api/**` endpoints.
 - Synchronous service-to-service calls: `/internal/**` endpoints protected by the `X-Internal-Secret` header.
 - Realtime browser communication: STOMP over WebSocket through `chat-service` on `/chat/ws/chat`.
-- Asynchronous service-to-service communication: Kafka topics `task.events`, `workspace.events`, `auth.events`, `social-comment-events`, `social-friendship-events`, and `social.events`.
+- Asynchronous service-to-service communication: Kafka topics `task-events`, `workspace-events`, `auth-events`, `social-comment-events`, `social-friendship-events`, and `social.events`.
 
 ## Technology Stack
 
@@ -103,11 +103,13 @@ mobflow/
 
 ## Prerequisites
 
-- Docker Desktop `24+`
+- Docker Desktop `24+` or Docker Engine with Docker Compose V2
 
 Java, Maven, Node.js, and npm do not need to be installed locally to run the full platform. All application images, including the Angular frontend, are built inside Docker.
 
 If you want to work on the Angular frontend outside Docker, use Node.js `20.19+` and npm `11+`.
+
+OpenSSL is used in the setup steps below to generate local secrets. Use an equivalent secure generator if OpenSSL is not available on your machine.
 
 ## Environment Configuration
 
@@ -211,10 +213,10 @@ docker version
 
 ```bash
 git clone https://github.com/LuizAndradeDev/mobflow.git
-cd <repository-folder>
+cd mobflow
 ```
 
-3. Ensure no other local application is using the ports required by Mobflow: `80`, `5432`, `6379`, `8025`, `8080` to `8086`, `9000`, `9001`, `9092`, and `27017`.
+3. Ensure no other local application is using the ports required by Mobflow: `80`, `1025`, `5432`, `6379`, `8025`, `8080` to `8086`, `9000`, `9001`, `9092`, and `27017`.
 
 4. Create your local `.env` file from the committed template.
 
@@ -222,11 +224,21 @@ cd <repository-folder>
 cp .env.example .env
 ```
 
-5. Generate a Base64-encoded 256-bit secret and replace the placeholder value of `JWT_SECRET`.
+5. Generate a value for `JWT_SECRET` and place it in the `.env` file.
 
-6. Define a value for `INTERNAL_SECRET=replace_with_internal_secret`. This secret is used by synchronous internal service-to-service calls through `/internal/**` endpoints.
+```bash
+openssl rand -base64 32
+```
 
-7. Open a command prompt, navigate to the project directory, and then start PostgreSQL first.
+6. Generate a value for `INTERNAL_SECRET` and place it in the `.env` file.
+
+```bash
+openssl rand -hex 32
+```
+
+`INTERNAL_SECRET` must be the same for all backend services because synchronous `/internal/**` requests are authorized with the `X-Internal-Secret` header.
+
+7. Start PostgreSQL first.
 
 ```bash
 docker compose up -d postgres
@@ -242,27 +254,20 @@ The expected databases are `mobflow_auth`, `mobflow_user`, `mobflow_workspace`, 
 
 If those databases are missing on a reused PostgreSQL volume, recreate the PostgreSQL data volume before retrying so `init-db.sql` is applied again.
 
-9. Start the rest of the application after PostgreSQL is ready.
+9. Start the rest of the platform after PostgreSQL is ready. Docker Compose will build the application images and start the dependent infrastructure containers.
 
 ```bash
-docker compose up --build -d \
-  mongodb \
-  zookeeper \
-  kafka \
-  mailhog \
-  redis \
-  minio \
-  auth-service \
-  user-service \
-  workspace-service \
-  task-service \
-  notification-service \
-  social-service \
-  chat-service \
-  nginx
+docker compose up --build -d
 ```
 
 The platform is then available on `http://localhost`, served by the edge Nginx container. Nginx delivers the production Angular build, handles SPA route refreshes, and proxies HTTP and WebSocket traffic to the backend containers.
+
+Supporting local tools are also exposed by Docker Compose:
+
+| Tool | URL | Purpose |
+| --- | --- | --- |
+| MailHog | `http://localhost:8025` | Inspect local email delivery, including account confirmation emails. |
+| MinIO Console | `http://localhost:9001` | Inspect avatar objects stored by `user-service`. |
 
 ## Account Creation
 
@@ -297,12 +302,37 @@ Development mode is optional and intended only for frontend iteration. It is not
 ```bash
 docker compose ps
 curl http://localhost/health
-curl http://localhost:8080/actuator/health
-curl http://localhost:8081/actuator/health
-curl http://localhost:8082/actuator/health
-curl http://localhost:8083/tasks/actuator/health
 curl http://localhost:8084/actuator/health
+curl http://localhost:8086/chat/actuator/health
 ```
+
+Use container logs when a service does not become ready:
+
+```bash
+docker compose logs -f <service-name>
+```
+
+To stop the platform while keeping local volumes:
+
+```bash
+docker compose down
+```
+
+To remove local volumes and force PostgreSQL to run `init-db.sql` again on the next startup:
+
+```bash
+docker compose down -v
+```
+
+### Backend Test Suite
+
+The repository includes a backend-only test runner for the seven Spring Boot services:
+
+```bash
+scripts/test-backend.sh
+```
+
+The script runs `mvn test` for `auth-service`, `user-service`, `workspace-service`, `task-service`, `notification-service`, `social-service`, and `chat-service`. Running it outside Docker requires Java 21 and Maven locally. Docker must also be running because integration tests use Testcontainers and embedded infrastructure where appropriate.
 
 ## Service Catalog
 
@@ -322,7 +352,7 @@ curl http://localhost:8084/actuator/health
 
 Mobflow uses stateless JWT authentication. The `auth-service` authenticates credentials and signs a token whose standard subject is the username and whose custom `authId` claim is the canonical user identifier shared across the platform. Every backend service validates the token independently using the same `JWT_SECRET`, extracts `authId`, and uses that value as the actor identity for authorization decisions and data ownership.
 
-Account creation is a two-step flow:
+Account creation is a confirmation-gated flow:
 
 1. A new account is created in `auth-service` with `enabled=false`.
 2. A UUID confirmation token with a 24-hour expiration window is generated and published as an `EMAIL_CONFIRMATION` event.
@@ -337,9 +367,9 @@ Kafka is used for cross-service notifications. Producers serialize self-containe
 
 | Topic | Produced By | Event Types |
 | --- | --- | --- |
-| `task.events` | `task-service` | `TASK_CREATED`, `TASK_ASSIGNED`, `TASK_UPDATED`, `TASK_DELETED`, `TASK_COMPLETED`, `TASK_DUE_SOON` |
-| `workspace.events` | `workspace-service` | `WORKSPACE_INVITE`, `WORKSPACE_MEMBER_ADDED`, `WORKSPACE_MEMBER_REMOVED`, `WORKSPACE_ROLE_CHANGED` |
-| `auth.events` | `auth-service` | `EMAIL_CONFIRMATION` |
+| `task-events` | `task-service` | `TASK_CREATED`, `TASK_ASSIGNED`, `TASK_UPDATED`, `TASK_DELETED`, `TASK_COMPLETED`, `TASK_DUE_SOON` |
+| `workspace-events` | `workspace-service` | `WORKSPACE_INVITE`, `WORKSPACE_INVITE_ACCEPTED`, `WORKSPACE_INVITE_DECLINED`, `WORKSPACE_MEMBER_ADDED`, `WORKSPACE_MEMBER_REMOVED`, `WORKSPACE_ROLE_CHANGED` |
+| `auth-events` | `auth-service` | `EMAIL_CONFIRMATION` |
 | `social-comment-events` | `social-service` | `COMMENT_CREATED`, `USER_MENTIONED` |
 | `social-friendship-events` | `social-service` | `FRIEND_REQUEST_SENT` |
 | `social.events` | `chat-service` | `CHAT_MESSAGE_RECEIVED` |
