@@ -59,8 +59,7 @@ public class AuthController {
     @GetMapping("/profile")
     public ResponseEntity<UserResponseDTO> authenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        UserCredential userCredential = userCredentialService.findUserCredentialByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+        UserCredential userCredential = userCredentialService.findUserCredentialByUsername(authentication.getName());
 
         UserResponseDTO user = UserResponseDTO.createUserResponse(userCredential.getUsername(), userCredential.getEmail());
 
