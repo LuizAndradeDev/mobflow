@@ -1,5 +1,6 @@
 package com.mobflow.socialservice.config;
 
+import com.mobflow.socialservice.observability.CorrelationIdClientHttpRequestInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,30 +10,46 @@ import org.springframework.web.client.RestClient;
 public class RestClientConfig {
 
     @Bean("authRestClient")
-    public RestClient authRestClient(@Value("${auth.service.url}") String baseUrl) {
+    public RestClient authRestClient(
+            @Value("${auth.service.url}") String baseUrl,
+            CorrelationIdClientHttpRequestInterceptor correlationIdInterceptor
+    ) {
         return RestClient.builder()
                 .baseUrl(baseUrl)
+                .requestInterceptor(correlationIdInterceptor)
                 .build();
     }
 
     @Bean("workspaceRestClient")
-    public RestClient workspaceRestClient(@Value("${workspace.service.url}") String baseUrl) {
+    public RestClient workspaceRestClient(
+            @Value("${workspace.service.url}") String baseUrl,
+            CorrelationIdClientHttpRequestInterceptor correlationIdInterceptor
+    ) {
         return RestClient.builder()
                 .baseUrl(baseUrl)
+                .requestInterceptor(correlationIdInterceptor)
                 .build();
     }
 
     @Bean("taskRestClient")
-    public RestClient taskRestClient(@Value("${task.service.url}") String baseUrl) {
+    public RestClient taskRestClient(
+            @Value("${task.service.url}") String baseUrl,
+            CorrelationIdClientHttpRequestInterceptor correlationIdInterceptor
+    ) {
         return RestClient.builder()
                 .baseUrl(baseUrl)
+                .requestInterceptor(correlationIdInterceptor)
                 .build();
     }
 
     @Bean("userRestClient")
-    public RestClient userRestClient(@Value("${user.service.url}") String baseUrl) {
+    public RestClient userRestClient(
+            @Value("${user.service.url}") String baseUrl,
+            CorrelationIdClientHttpRequestInterceptor correlationIdInterceptor
+    ) {
         return RestClient.builder()
                 .baseUrl(baseUrl)
+                .requestInterceptor(correlationIdInterceptor)
                 .build();
     }
 }

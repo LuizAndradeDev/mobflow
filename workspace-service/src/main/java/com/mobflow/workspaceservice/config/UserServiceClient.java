@@ -1,5 +1,6 @@
 package com.mobflow.workspaceservice.config;
 
+import com.mobflow.workspaceservice.observability.CorrelationIdClientHttpRequestInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -19,10 +20,12 @@ public class UserServiceClient {
 
     public UserServiceClient(
             @Value("${user.service.url}") String userServiceUrl,
-            @Value("${internal.secret}") String internalSecret
+            @Value("${internal.secret}") String internalSecret,
+            CorrelationIdClientHttpRequestInterceptor correlationIdInterceptor
     ) {
         this.restClient = RestClient.builder()
                 .baseUrl(userServiceUrl)
+                .requestInterceptor(correlationIdInterceptor)
                 .build();
         this.internalSecret = internalSecret;
     }
