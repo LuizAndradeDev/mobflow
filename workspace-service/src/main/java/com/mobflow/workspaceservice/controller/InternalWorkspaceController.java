@@ -5,8 +5,14 @@ import com.mobflow.workspaceservice.repository.WorkspaceMemberRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.UUID;
 
 @RestController
@@ -30,9 +36,9 @@ public class InternalWorkspaceController {
     public ResponseEntity<MemberRoleResponseDTO> getMemberRole(
             @PathVariable UUID workspaceId,
             @PathVariable UUID authId,
-            @RequestHeader(INTERNAL_SECRET_HEADER) String secret
+            @RequestHeader(value = INTERNAL_SECRET_HEADER, required = false) String secret
     ) {
-        if (!internalSecret.equals(secret)) {
+        if (!hasValidSecret(secret)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -40,5 +46,12 @@ public class InternalWorkspaceController {
                 .findByWorkspaceIdAndAuthId(workspaceId, authId)
                 .map(member -> ResponseEntity.ok(MemberRoleResponseDTO.of(member.getRole().name())))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    private boolean hasValidSecret(String secret) {
+        return secret != null && MessageDigest.isEqual(
+                internalSecret.getBytes(StandardCharsets.UTF_8),
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
     }
 }

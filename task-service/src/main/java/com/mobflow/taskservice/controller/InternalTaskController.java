@@ -5,6 +5,7 @@ import com.mobflow.taskservice.model.dto.response.WorkspaceSummaryDTO;
 import com.mobflow.taskservice.service.TaskContextService;
 import com.mobflow.taskservice.service.WorkspaceSummaryService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,10 +43,10 @@ public class InternalTaskController {
     @GetMapping("/summary/{workspaceId}")
     public ResponseEntity<WorkspaceSummaryDTO> getWorkspaceSummary(
             @PathVariable UUID workspaceId,
-            @RequestHeader(INTERNAL_SECRET_HEADER) String secret
+            @RequestHeader(value = INTERNAL_SECRET_HEADER, required = false) String secret
     ) {
         if (!hasValidSecret(secret)) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(workspaceSummaryService.getSummary(workspaceId));
     }
@@ -51,10 +54,10 @@ public class InternalTaskController {
     @PostMapping("/summaries")
     public ResponseEntity<List<WorkspaceSummaryDTO>> getBatchSummaries(
             @RequestBody List<UUID> workspaceIds,
-            @RequestHeader(INTERNAL_SECRET_HEADER) String secret
+            @RequestHeader(value = INTERNAL_SECRET_HEADER, required = false) String secret
     ) {
         if (!hasValidSecret(secret)) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(workspaceSummaryService.getSummaries(workspaceIds));
     }
@@ -62,15 +65,18 @@ public class InternalTaskController {
     @GetMapping("/{taskId}/context")
     public ResponseEntity<TaskCommentContextResponseDTO> getTaskCommentContext(
             @PathVariable UUID taskId,
-            @RequestHeader(INTERNAL_SECRET_HEADER) String secret
+            @RequestHeader(value = INTERNAL_SECRET_HEADER, required = false) String secret
     ) {
         if (!hasValidSecret(secret)) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(taskContextService.getTaskCommentContext(taskId));
     }
 
     private boolean hasValidSecret(String secret) {
-        return internalSecret.equals(secret);
+        return secret != null && MessageDigest.isEqual(
+                internalSecret.getBytes(StandardCharsets.UTF_8),
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
     }
 }

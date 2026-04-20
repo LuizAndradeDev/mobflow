@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.UUID;
 
 @RestController
@@ -33,9 +35,9 @@ public class InternalSocialController {
     public ResponseEntity<Void> validateFriendship(
             @PathVariable UUID authId,
             @PathVariable UUID targetAuthId,
-            @RequestHeader(INTERNAL_SECRET_HEADER) String secret
+            @RequestHeader(value = INTERNAL_SECRET_HEADER, required = false) String secret
     ) {
-        if (!internalSecret.equals(secret)) {
+        if (!hasValidSecret(secret)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -44,5 +46,12 @@ public class InternalSocialController {
         }
 
         return ResponseEntity.notFound().build();
+    }
+
+    private boolean hasValidSecret(String secret) {
+        return secret != null && MessageDigest.isEqual(
+                internalSecret.getBytes(StandardCharsets.UTF_8),
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
     }
 }

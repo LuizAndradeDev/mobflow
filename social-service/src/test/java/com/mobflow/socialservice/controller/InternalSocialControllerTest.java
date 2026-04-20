@@ -84,4 +84,11 @@ class InternalSocialControllerTest {
                         .header(INTERNAL_SECRET_HEADER, "wrong-secret"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void validateFriendship_missingSecret_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/social/internal/social/friendships/{authId}/friends/{targetAuthId}", UUID.randomUUID(), UUID.randomUUID())
+                        .contextPath("/social"))
+                .andExpect(status().isForbidden());
+    }
 }

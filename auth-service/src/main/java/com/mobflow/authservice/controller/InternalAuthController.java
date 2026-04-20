@@ -3,6 +3,7 @@ package com.mobflow.authservice.controller;
 import com.mobflow.authservice.model.dtos.response.InternalUserLookupResponseDTO;
 import com.mobflow.authservice.services.UserCredentialService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 
 @RestController
@@ -34,10 +37,10 @@ public class InternalAuthController {
     @GetMapping("/by-username/{username}")
     public ResponseEntity<InternalUserLookupResponseDTO> getByUsername(
             @PathVariable String username,
-            @RequestHeader(INTERNAL_SECRET_HEADER) String secret
+            @RequestHeader(value = INTERNAL_SECRET_HEADER, required = false) String secret
     ) {
         if (!hasValidSecret(secret)) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(userCredentialService.getUserByUsername(username));
     }
@@ -45,15 +48,18 @@ public class InternalAuthController {
     @PostMapping("/resolve")
     public ResponseEntity<List<InternalUserLookupResponseDTO>> resolveByUsernames(
             @RequestBody List<String> usernames,
-            @RequestHeader(INTERNAL_SECRET_HEADER) String secret
+            @RequestHeader(value = INTERNAL_SECRET_HEADER, required = false) String secret
     ) {
         if (!hasValidSecret(secret)) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(userCredentialService.resolveUsersByUsername(usernames));
     }
 
     private boolean hasValidSecret(String secret) {
-        return internalSecret.equals(secret);
+        return secret != null && MessageDigest.isEqual(
+                internalSecret.getBytes(StandardCharsets.UTF_8),
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
     }
 }
