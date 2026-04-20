@@ -19,6 +19,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ChatInboundChannelInterceptor implements ChannelInterceptor {
 
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String TOKEN_HEADER = "token";
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String CONVERSATION_TOPIC_PREFIX = "/topic/conversations/";
+    private static final String AUTH_ID_SESSION_KEY = "authId";
+    private static final String USERNAME_SESSION_KEY = "username";
+
     private final JwtService jwtService;
     private final ConversationGuardService conversationGuardService;
 
@@ -60,7 +67,7 @@ public class ChatInboundChannelInterceptor implements ChannelInterceptor {
             throw ChatServiceException.websocketAuthenticationRequired();
         }
 
-        String token = rawToken.startsWith("Bearer ") ? rawToken.substring(7) : rawToken;
+        String token = rawToken.startsWith(BEARER_PREFIX) ? rawToken.substring(BEARER_PREFIX.length()) : rawToken;
         String username = jwtService.extractUsername(token);
         UUID authId = jwtService.extractAuthId(token);
 
@@ -69,8 +76,8 @@ public class ChatInboundChannelInterceptor implements ChannelInterceptor {
         }
 
         accessor.setUser(new ChatPrincipal(authId, username));
-        accessor.getSessionAttributes().put("authId", authId.toString());
-        accessor.getSessionAttributes().put("username", username);
+        accessor.getSessionAttributes().put(AUTH_ID_SESSION_KEY, authId.toString());
+        accessor.getSessionAttributes().put(USERNAME_SESSION_KEY, username);
     }
 
     private void authorizeSubscription(StompHeaderAccessor accessor) {
@@ -81,11 +88,11 @@ public class ChatInboundChannelInterceptor implements ChannelInterceptor {
             throw ChatServiceException.invalidDestination();
         }
 
-        if (!destination.startsWith("/topic/conversations/")) {
+        if (!destination.startsWith(CONVERSATION_TOPIC_PREFIX)) {
             return;
         }
 
-        String conversationIdValue = destination.substring("/topic/conversations/".length());
+        String conversationIdValue = destination.substring(CONVERSATION_TOPIC_PREFIX.length());
         try {
             UUID conversationId = UUID.fromString(conversationIdValue);
             conversationGuardService.requireParticipant(conversationId, principal.getAuthId());
@@ -103,8 +110,8 @@ public class ChatInboundChannelInterceptor implements ChannelInterceptor {
             throw ChatServiceException.websocketAuthenticationRequired();
         }
 
-        Object authIdValue = accessor.getSessionAttributes().get("authId");
-        Object usernameValue = accessor.getSessionAttributes().get("username");
+        Object authIdValue = accessor.getSessionAttributes().get(AUTH_ID_SESSION_KEY);
+        Object usernameValue = accessor.getSessionAttributes().get(USERNAME_SESSION_KEY);
 
         if (authIdValue == null || usernameValue == null) {
             throw ChatServiceException.websocketAuthenticationRequired();
@@ -116,12 +123,12 @@ public class ChatInboundChannelInterceptor implements ChannelInterceptor {
     }
 
     private String resolveToken(StompHeaderAccessor accessor) {
-        List<String> authorizationHeaders = accessor.getNativeHeader("Authorization");
+        List<String> authorizationHeaders = accessor.getNativeHeader(AUTHORIZATION_HEADER);
         if (authorizationHeaders != null && !authorizationHeaders.isEmpty()) {
             return authorizationHeaders.getFirst();
         }
 
-        List<String> tokenHeaders = accessor.getNativeHeader("token");
+        List<String> tokenHeaders = accessor.getNativeHeader(TOKEN_HEADER);
         if (tokenHeaders != null && !tokenHeaders.isEmpty()) {
             return tokenHeaders.getFirst();
         }

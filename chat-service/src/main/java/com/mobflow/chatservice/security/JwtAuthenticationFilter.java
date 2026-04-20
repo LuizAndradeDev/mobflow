@@ -22,6 +22,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private final JwtService jwtService;
     private final HandlerExceptionResolver handlerExceptionResolver;
 
@@ -31,15 +34,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        String authHeader = request.getHeader("Authorization");
+        String authHeader = request.getHeader(AUTHORIZATION_HEADER);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            String jwt = authHeader.substring(7);
+            String jwt = authHeader.substring(BEARER_PREFIX.length());
             String username = jwtService.extractUsername(jwt);
             UUID authId = jwtService.extractAuthId(jwt);
 
