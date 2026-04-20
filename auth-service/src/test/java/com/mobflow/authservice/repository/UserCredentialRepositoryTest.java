@@ -31,7 +31,9 @@ class UserCredentialRepositoryTest extends AbstractPostgresIntegrationTest {
 
     @BeforeEach
     void cleanUp() {
-        userCredentialRepository.deleteAll();
+        userCredentialRepository.deleteAllInBatch();
+        entityManager.flush();
+        entityManager.clear();
     }
 
     @Test
