@@ -33,7 +33,8 @@ import static org.mockito.Mockito.when;
         "minio.root-user=minio",
         "minio.root-password=minio123",
         "minio.bucket=avatars",
-        "security.jwt.secret-key=c3VwZXItc2VjdXJlLXRlc3Qta2V5LWZvci11c2VyLXNlcnZpY2UtMTIzNDU2Nzg5MA=="
+        "security.jwt.secret-key=c3VwZXItc2VjdXJlLXRlc3Qta2V5LWZvci11c2VyLXNlcnZpY2UtMTIzNDU2Nzg5MA==",
+        "internal.secret=test-internal-secret"
 })
 class UserProfileIntegrationTest extends AbstractPostgresUserServiceTest {
 
