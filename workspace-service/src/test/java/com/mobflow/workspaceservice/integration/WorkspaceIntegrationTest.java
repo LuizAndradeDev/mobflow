@@ -29,7 +29,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(properties = {
-        "security.jwt.secret-key=c3VwZXItc2VjdXJlLXRlc3Qta2V5LWZvci13b3Jrc3BhY2Utc2VydmljZS0xMjM0NTY3ODkw"
+        "security.jwt.secret-key=c3VwZXItc2VjdXJlLXRlc3Qta2V5LWZvci13b3Jrc3BhY2Utc2VydmljZS0xMjM0NTY3ODkw",
+        "user.service.url=http://localhost:8081",
+        "internal.secret=test-internal-secret"
 })
 class WorkspaceIntegrationTest extends AbstractPostgresWorkspaceServiceTest {
 
