@@ -78,7 +78,7 @@ notification-service (8084)
 | --- | --- |
 | Backend | Java 21, Spring Boot 3.5.x, Spring Security, JJWT 0.11.5, Spring Data JPA, Spring Data MongoDB, Spring Kafka, Spring Cache, Flyway, Validation, Lombok, Actuator, Thymeleaf, Maven Wrapper |
 | Frontend | Angular 21, TypeScript 5.9 in strict mode, RxJS 7.8, Tailwind CSS 4 |
-| Infrastructure | Docker, Docker Compose, PostgreSQL 16, MongoDB, Redis 7 Alpine, MinIO, Apache Kafka (Confluent 7.6), Zookeeper |
+| Infrastructure | Docker, Docker Compose, PostgreSQL 16, MongoDB, Redis 7 Alpine, MinIO, Apache Kafka (Confluent 7.6), Zookeeper, Prometheus, Grafana |
 
 ## Repository Structure
 
@@ -93,6 +93,7 @@ mobflow/
 ├── notification-service/   # Kafka consumer, notification persistence, email delivery
 ├── web-app/                # Angular frontend source code
 ├── docker-compose.yaml     # Full local orchestration for infra and applications
+├── observability/          # Prometheus and Grafana provisioning
 ├── .env                    # Centralized runtime configuration for all containers
 ├── .env.example            # Reference template for the local runtime configuration
 ├── init-db.sql             # PostgreSQL initialization script for relational services
@@ -156,6 +157,10 @@ MONGO_PASSWORD=mongo-secret
 # Kafka bootstrap server used by event producers and consumers
 KAFKA_BOOTSTRAP_SERVERS=kafka:9092
 
+# Grafana local login used by Docker Compose
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=admin
+
 # Event topics used across the platform
 AUTH_EVENTS_TOPIC=auth-events
 TASK_EVENTS_TOPIC=task-events
@@ -216,7 +221,7 @@ git clone https://github.com/LuizAndradeDev/mobflow.git
 cd mobflow
 ```
 
-3. Ensure no other local application is using the ports required by Mobflow: `80`, `1025`, `5432`, `6379`, `8025`, `8080` to `8086`, `9000`, `9001`, `9092`, and `27017`.
+3. Ensure no other local application is using the ports required by Mobflow: `80`, `1025`, `3000`, `5432`, `6379`, `8025`, `8080` to `8086`, `9000`, `9001`, `9090`, `9092`, and `27017`.
 
 4. Create your local `.env` file from the committed template.
 
@@ -268,6 +273,37 @@ Supporting local tools are also exposed by Docker Compose:
 | --- | --- | --- |
 | MailHog | `http://localhost:8025` | Inspect local email delivery, including account confirmation emails. |
 | MinIO Console | `http://localhost:9001` | Inspect avatar objects stored by `user-service`. |
+| Prometheus | `http://localhost:9090` | Inspect scrape targets and query backend metrics. |
+| Grafana | `http://localhost:3000` | View the provisioned `Mobflow Backend Overview` dashboard. Default local login is `admin` / `admin` unless overridden in `.env`. |
+
+## Observability
+
+Every backend service exposes Spring Boot Actuator endpoints for health, liveness, readiness, info, metrics, and Prometheus scraping. Public operational endpoints are intentionally limited to the standard Actuator surface:
+
+| Service | Actuator Base URL |
+| --- | --- |
+| `auth-service` | `http://localhost:8080/actuator` |
+| `user-service` | `http://localhost:8081/actuator` |
+| `workspace-service` | `http://localhost:8082/actuator` |
+| `task-service` | `http://localhost:8083/tasks/actuator` |
+| `notification-service` | `http://localhost:8084/actuator` |
+| `social-service` | `http://localhost:8085/social/actuator` |
+| `chat-service` | `http://localhost:8086/chat/actuator` |
+
+Useful endpoints under each base URL:
+
+```text
+/health
+/health/liveness
+/health/readiness
+/info
+/metrics
+/prometheus
+```
+
+Prometheus is configured in `observability/prometheus/prometheus.yml` and scrapes all seven backend services. Grafana is provisioned from `observability/grafana/` with Prometheus as the default datasource and a starter backend dashboard.
+
+HTTP logs are emitted in a consistent key-value console format with service name, request method, path, status, and correlation ID. Incoming requests may pass `X-Correlation-ID`; when the header is missing or invalid, the service generates one and returns it in the response. Internal `RestClient` calls propagate the same header to downstream services.
 
 ## Account Creation
 
@@ -304,6 +340,8 @@ docker compose ps
 curl http://localhost/health
 curl http://localhost:8084/actuator/health
 curl http://localhost:8086/chat/actuator/health
+curl http://localhost:8080/actuator/prometheus
+curl -H 'X-Correlation-ID: demo-request-001' http://localhost:8080/actuator/health -i
 ```
 
 Use container logs when a service does not become ready:
@@ -346,6 +384,8 @@ The script runs `mvn test` for `auth-service`, `user-service`, `workspace-servic
 | `chat-service` | `8086` | MongoDB `chat` | Owns private conversations, paginated message history, read receipts, WebSocket delivery, and chat notification publication. |
 | `notification-service` | `8084` | MongoDB `notifications` | Persists in-app notifications, computes unread counters, marks notifications as read, and sends email notifications from Kafka events. |
 | `nginx` | `80` | Static Angular assets + reverse proxy | Serves the production Angular build, handles SPA route refreshes, and proxies HTTP/WebSocket traffic to backend services. |
+| `prometheus` | `9090` | Local time-series storage | Scrapes Micrometer metrics from every backend service. |
+| `grafana` | `3000` | Local dashboard storage | Provides the provisioned Mobflow backend observability dashboard. |
 | `web-app` | `n/a (built into nginx)` | Browser state | Angular client with landing, onboarding, workspace, task, analytics, profile, and settings flows. |
 
 ## Authentication Model
