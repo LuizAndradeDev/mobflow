@@ -1,0 +1,52 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - prometheus:9090
+
+  - job_name: auth-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - auth-service:8080
+
+  - job_name: user-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - user-service:8081
+
+  - job_name: workspace-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - workspace-service:8082
+
+  - job_name: task-service
+    metrics_path: /tasks/actuator/prometheus
+    static_configs:
+      - targets:
+          - task-service:8083
+
+  - job_name: notification-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - notification-service:8084
+
+  - job_name: social-service
+    metrics_path: /social/actuator/prometheus
+    static_configs:
+      - targets:
+          - social-service:8085
+
+  - job_name: chat-service
+    metrics_path: /chat/actuator/prometheus
+    static_configs:
+      - targets:
+          - chat-service:8086
