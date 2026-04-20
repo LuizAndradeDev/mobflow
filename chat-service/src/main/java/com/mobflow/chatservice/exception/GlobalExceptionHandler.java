@@ -3,6 +3,7 @@ package com.mobflow.chatservice.exception;
 import com.mobflow.chatservice.model.dto.response.ErrorResponseDTO;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.net.URI;
 import java.time.Instant;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -72,7 +74,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception exception) {
-        exception.printStackTrace();
+        log.error("Unhandled chat service exception", exception);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error");
         problem.setTitle("Internal Server Error");
         problem.setType(URI.create("https://api.mobflow.com/errors/internal-server-error"));
@@ -90,6 +92,7 @@ public class GlobalExceptionHandler {
     @MessageExceptionHandler(Exception.class)
     @SendToUser("/queue/errors")
     public ErrorResponseDTO handleWebSocketGenericException(Exception exception) {
-        return ErrorResponseDTO.of("INTERNAL_SERVER_ERROR", exception.getMessage());
+        log.error("Unhandled chat WebSocket exception", exception);
+        return ErrorResponseDTO.of("INTERNAL_SERVER_ERROR", "An unexpected error occurred. Please contact support.");
     }
 }

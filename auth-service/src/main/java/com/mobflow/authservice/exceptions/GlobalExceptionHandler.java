@@ -2,9 +2,10 @@ package com.mobflow.authservice.exceptions;
 
 import com.mobflow.authservice.model.dtos.response.ErrorResponseDTO;
 import com.mobflow.authservice.model.enums.ErrorTP;
+import io.jsonwebtoken.ExpiredJwtException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,6 +17,7 @@ import java.nio.file.AccessDeniedException;
 import java.security.SignatureException;
 import java.time.LocalDateTime;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -36,7 +38,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO> handleUniqueViolation(GenericAplicationException e) {
         ErrorTP errorTP = ErrorTP.valueOf(e.getMessage());
         ErrorResponseDTO error = ErrorResponseDTO.createErrorResponse(errorTP, LocalDateTime.now());
-        System.out.println("Error: " + errorTP);
+        log.warn("Handled authentication business error: {}", errorTP);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
@@ -67,8 +69,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneralException(Exception ex) {
-
-        ex.printStackTrace();
+        log.error("Unhandled authentication service exception", ex);
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error");
         problem.setProperty("description", "An unexpected error occurred. Please contact support.");
