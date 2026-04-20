@@ -14,6 +14,8 @@ import java.util.UUID;
         "security.jwt.secret-key=Y2hhdC1zZXJ2aWNlLXRlc3Qtc2VjcmV0LWtleS1jaGF0LXNlcnZpY2UtdGVzdA==",
         "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
         "spring.data.mongodb.auto-index-creation=true",
+        "social.service.url=http://localhost:8085",
+        "internal.secret=test-internal-secret",
         "app.kafka.topics.social-events=social.events"
 })
 @AutoConfigureMockMvc
