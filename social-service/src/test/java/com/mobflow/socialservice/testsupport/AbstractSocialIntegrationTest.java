@@ -14,6 +14,11 @@ import java.util.UUID;
         "security.jwt.secret-key=c29jaWFsLXNlcnZpY2UtdGVzdC1zZWNyZXQta2V5LXNvY2lhbC1zZXJ2aWNlLXRlc3Q=",
         "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
         "spring.data.mongodb.auto-index-creation=true",
+        "auth.service.url=http://localhost:8080",
+        "task.service.url=http://localhost:8083",
+        "user.service.url=http://localhost:8081",
+        "workspace.service.url=http://localhost:8082",
+        "internal.secret=test-internal-secret",
         "app.kafka.topics.social-comment=social-comment-events",
         "app.kafka.topics.social-friendship=social-friendship-events"
 })
