@@ -7,7 +7,10 @@
 
     <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
 
+    <logger name="kafka" level="WARN"/>
+    <logger name="state.change.logger" level="WARN"/>
     <logger name="org.apache.kafka" level="WARN"/>
+    <logger name="org.apache.zookeeper" level="WARN"/>
     <logger name="org.mongodb.driver" level="WARN"/>
 
     <root level="INFO">
