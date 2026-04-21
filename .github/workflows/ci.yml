@@ -1,0 +1,193 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "21"
+  NODE_VERSION: "24"
+
+jobs:
+  backend:
+    name: Backend / ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - auth-service
+          - user-service
+          - workspace-service
+          - task-service
+          - notification-service
+          - social-service
+          - chat-service
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          cache-dependency-path: |
+            auth-service/pom.xml
+            user-service/pom.xml
+            workspace-service/pom.xml
+            task-service/pom.xml
+            notification-service/pom.xml
+            social-service/pom.xml
+            chat-service/pom.xml
+
+      - name: Verify Docker availability
+        run: docker version
+
+      - name: Build and test service
+        working-directory: ${{ matrix.service }}
+        run: ./mvnw --batch-mode --no-transfer-progress verify
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-surefire-reports
+          path: ${{ matrix.service }}/target/surefire-reports/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  backend-quality:
+    name: Backend / Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          cache-dependency-path: |
+            auth-service/pom.xml
+            user-service/pom.xml
+            workspace-service/pom.xml
+            task-service/pom.xml
+            notification-service/pom.xml
+            social-service/pom.xml
+            chat-service/pom.xml
+
+      - name: Run Checkstyle
+        run: scripts/ci/check-backend-quality.sh
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web-app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web-app
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: web-app
+        run: npm run test:ci
+
+      - name: Build production frontend
+        working-directory: web-app
+        run: npm run build -- --configuration production
+
+      - name: Audit frontend dependencies
+        working-directory: web-app
+        run: npm run audit:ci
+
+  docker-build:
+    name: Docker / Build Images
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs:
+      - backend
+      - frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build all application images
+        run: scripts/ci/build-docker-images.sh
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Dependency review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+
+  smoke-compose:
+    name: Docker Compose / Smoke Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs:
+      - backend
+      - frontend
+      - docker-build
+      - backend-quality
+      - security
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Docker Compose smoke test
+        env:
+          COMPOSE_PROJECT_NAME: mobflow-ci-${{ github.run_id }}
+        run: scripts/ci/smoke-compose.sh

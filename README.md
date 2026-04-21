@@ -393,6 +393,24 @@ scripts/test-backend.sh
 
 The script runs `mvn test` for `auth-service`, `user-service`, `workspace-service`, `task-service`, `notification-service`, `social-service`, and `chat-service`. Running it outside Docker requires Java 21 and Maven locally. Docker must also be running because integration tests use Testcontainers and embedded infrastructure where appropriate.
 
+## Continuous Integration
+
+GitHub Actions validates the monorepo through a single CI workflow with focused jobs for backend, frontend, Docker, security, and full-stack startup checks.
+
+The backend job runs each Spring Boot service independently with a matrix and executes `mvn verify`, making service failures easy to identify. A separate quality job runs the shared Checkstyle policy from `config/checkstyle/checkstyle.xml` across all backend services.
+
+The frontend job installs dependencies with `npm ci`, runs the Angular unit tests in CI mode, builds the production bundle, and fails on high-severity dependency audit findings.
+
+Docker validation builds every backend image, the standalone frontend image, and the edge Nginx image. The smoke job then builds and starts the full Docker Compose stack with CI-safe environment values and verifies infrastructure health checks plus backend, frontend, Prometheus, and Grafana health endpoints.
+
+The same checks can be executed locally with:
+
+```bash
+scripts/ci/check-backend-quality.sh
+scripts/ci/build-docker-images.sh
+scripts/ci/smoke-compose.sh
+```
+
 ## Service Catalog
 
 | Service | Port | Database / State | Description |
