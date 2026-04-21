@@ -2,6 +2,8 @@ package com.mobflow.socialservice.service;
 
 import com.mobflow.socialservice.client.AuthServiceClient;
 import com.mobflow.socialservice.client.WorkspaceServiceClient;
+import com.mobflow.socialservice.exception.SocialErrorType;
+import com.mobflow.socialservice.exception.SocialServiceException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -38,11 +40,18 @@ public class MentionService {
                 authServiceClient.resolveByUsernames(new ArrayList<>(usernames));
 
         List<ResolvedMention> resolvedMentions = new ArrayList<>();
-        for (String username : usernames) {
-            AuthServiceClient.AuthUserSummaryResponse resolvedUser = resolvedUsers.get(username);
-            if (resolvedUser != null && workspaceServiceClient.isWorkspaceMember(workspaceId, resolvedUser.authId())) {
-                resolvedMentions.add(new ResolvedMention(resolvedUser.authId(), resolvedUser.username()));
+        try {
+            for (String username : usernames) {
+                AuthServiceClient.AuthUserSummaryResponse resolvedUser = resolvedUsers.get(username);
+                if (resolvedUser != null && workspaceServiceClient.isWorkspaceMember(workspaceId, resolvedUser.authId())) {
+                    resolvedMentions.add(new ResolvedMention(resolvedUser.authId(), resolvedUser.username()));
+                }
             }
+        } catch (SocialServiceException exception) {
+            if (exception.getErrorType() == SocialErrorType.UPSTREAM_SERVICE_ERROR) {
+                return List.of();
+            }
+            throw exception;
         }
         return resolvedMentions;
     }

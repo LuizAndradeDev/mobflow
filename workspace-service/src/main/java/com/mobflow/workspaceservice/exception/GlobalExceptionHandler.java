@@ -49,6 +49,12 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponseDTO.of(ErrorType.CANNOT_REMOVE_OWNER, LocalDateTime.now()));
     }
 
+    @ExceptionHandler(UserServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUserServiceUnavailable(UserServiceUnavailableException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ErrorResponseDTO.of(ErrorType.USER_SERVICE_UNAVAILABLE, LocalDateTime.now()));
+    }
+
     @ExceptionHandler({ExpiredJwtException.class, JwtException.class})
     public ProblemDetail handleJwtExceptions(Exception ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());

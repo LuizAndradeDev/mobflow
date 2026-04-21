@@ -1,8 +1,11 @@
 package com.mobflow.socialservice.client;
 
+import com.mobflow.socialservice.resilience.InternalCallPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -17,13 +20,21 @@ public class UserServiceClient {
 
     private final RestClient restClient;
     private final String internalSecret;
+    private final InternalCallPolicy profileLookupPolicy;
 
+    @Autowired
     public UserServiceClient(
             @Qualifier("userRestClient") RestClient restClient,
-            @Value("${internal.secret}") String internalSecret
+            @Value("${internal.secret}") String internalSecret,
+            @Qualifier("userProfileLookupPolicy") InternalCallPolicy profileLookupPolicy
     ) {
         this.restClient = restClient;
         this.internalSecret = internalSecret;
+        this.profileLookupPolicy = profileLookupPolicy;
+    }
+
+    public UserServiceClient(RestClient restClient, String internalSecret) {
+        this(restClient, internalSecret, InternalCallPolicy.noOp());
     }
 
     public List<UserProfileResponse> fetchProfiles(List<UUID> authIds) {
@@ -32,12 +43,13 @@ public class UserServiceClient {
         }
 
         try {
-            List<UserProfileResponse> result = restClient.post()
+            List<UserProfileResponse> result = profileLookupPolicy.execute(() -> restClient.post()
                     .uri("/internal/users/batch")
                     .header(INTERNAL_SECRET_HEADER, internalSecret)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(authIds)
                     .retrieve()
-                    .body(new ParameterizedTypeReference<>() {});
+                    .body(new ParameterizedTypeReference<>() {}));
             return result != null ? result : Collections.emptyList();
         } catch (Exception exception) {
             return Collections.emptyList();

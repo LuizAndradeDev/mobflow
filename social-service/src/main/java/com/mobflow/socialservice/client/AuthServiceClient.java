@@ -1,6 +1,9 @@
 package com.mobflow.socialservice.client;
 
 import com.mobflow.socialservice.exception.SocialServiceException;
+import com.mobflow.socialservice.resilience.InternalCallPolicy;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -24,22 +27,33 @@ public class AuthServiceClient {
 
     private final RestClient restClient;
     private final String internalSecret;
+    private final InternalCallPolicy userLookupPolicy;
+    private final InternalCallPolicy mentionLookupPolicy;
 
+    @Autowired
     public AuthServiceClient(
             @Qualifier("authRestClient") RestClient restClient,
-            @Value("${internal.secret}") String internalSecret
+            @Value("${internal.secret}") String internalSecret,
+            @Qualifier("authUserLookupPolicy") InternalCallPolicy userLookupPolicy,
+            @Qualifier("authMentionLookupPolicy") InternalCallPolicy mentionLookupPolicy
     ) {
         this.restClient = restClient;
         this.internalSecret = internalSecret;
+        this.userLookupPolicy = userLookupPolicy;
+        this.mentionLookupPolicy = mentionLookupPolicy;
+    }
+
+    public AuthServiceClient(RestClient restClient, String internalSecret) {
+        this(restClient, internalSecret, InternalCallPolicy.noOp(), InternalCallPolicy.noOp());
     }
 
     public AuthUserSummaryResponse resolveRequiredByUsername(String username) {
         try {
-            AuthUserSummaryResponse response = restClient.get()
+            AuthUserSummaryResponse response = userLookupPolicy.execute(() -> restClient.get()
                     .uri("/internal/auth/users/by-username/{username}", username)
                     .header(INTERNAL_SECRET_HEADER, internalSecret)
                     .retrieve()
-                    .body(AuthUserSummaryResponse.class);
+                    .body(AuthUserSummaryResponse.class));
 
             if (response == null) {
                 throw SocialServiceException.userNotFound();
@@ -47,6 +61,8 @@ public class AuthServiceClient {
             return response;
         } catch (HttpClientErrorException.NotFound exception) {
             throw SocialServiceException.userNotFound();
+        } catch (CallNotPermittedException exception) {
+            throw SocialServiceException.upstreamServiceError();
         } catch (RestClientException exception) {
             throw SocialServiceException.upstreamServiceError();
         }
@@ -58,13 +74,13 @@ public class AuthServiceClient {
         }
 
         try {
-            AuthUserSummaryResponse[] responses = restClient.post()
+            AuthUserSummaryResponse[] responses = mentionLookupPolicy.execute(() -> restClient.post()
                     .uri("/internal/auth/users/resolve")
                     .contentType(MediaType.APPLICATION_JSON)
                     .header(INTERNAL_SECRET_HEADER, internalSecret)
                     .body(usernames)
                     .retrieve()
-                    .body(AuthUserSummaryResponse[].class);
+                    .body(AuthUserSummaryResponse[].class));
 
             if (responses == null) {
                 return Collections.emptyMap();
@@ -77,7 +93,7 @@ public class AuthServiceClient {
                             (left, right) -> left,
                             LinkedHashMap::new
                     ));
-        } catch (RestClientException exception) {
+        } catch (Exception exception) {
             return Collections.emptyMap();
         }
     }

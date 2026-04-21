@@ -41,4 +41,8 @@ public class TaskServiceException extends RuntimeException {
     public static TaskServiceException memberNotFound() {
         return new TaskServiceException(ErrorType.WORKSPACE_MEMBER_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
+
+    public static TaskServiceException workspaceServiceUnavailable() {
+        return new TaskServiceException(ErrorType.WORKSPACE_SERVICE_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE);
+    }
 }

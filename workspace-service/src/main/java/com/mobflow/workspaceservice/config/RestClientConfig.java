@@ -1,8 +1,8 @@
-package com.mobflow.taskservice.config;
+package com.mobflow.workspaceservice.config;
 
-import com.mobflow.taskservice.observability.CorrelationIdClientHttpRequestInterceptor;
-import com.mobflow.taskservice.resilience.InternalCallPolicy;
-import com.mobflow.taskservice.resilience.InternalHttpClientSupport;
+import com.mobflow.workspaceservice.observability.CorrelationIdClientHttpRequestInterceptor;
+import com.mobflow.workspaceservice.resilience.InternalCallPolicy;
+import com.mobflow.workspaceservice.resilience.InternalHttpClientSupport;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,19 +22,6 @@ public class RestClientConfig {
         return InternalHttpClientSupport.requestFactory(connectTimeout, readTimeout);
     }
 
-    @Bean("workspaceRestClient")
-    public RestClient workspaceRestClient(
-            @Value("${workspace.service.url}") String baseUrl,
-            ClientHttpRequestFactory internalClientHttpRequestFactory,
-            CorrelationIdClientHttpRequestInterceptor correlationIdInterceptor
-    ) {
-        return RestClient.builder()
-                .baseUrl(baseUrl)
-                .requestFactory(internalClientHttpRequestFactory)
-                .requestInterceptor(correlationIdInterceptor)
-                .build();
-    }
-
     @Bean("userRestClient")
     public RestClient userRestClient(
             @Value("${user.service.url}") String baseUrl,
@@ -48,13 +35,13 @@ public class RestClientConfig {
                 .build();
     }
 
-    @Bean("workspaceMembershipPolicy")
-    public InternalCallPolicy workspaceMembershipPolicy() {
-        return InternalCallPolicy.critical("task-workspace-membership");
+    @Bean("userLookupPolicy")
+    public InternalCallPolicy userLookupPolicy() {
+        return InternalCallPolicy.critical("workspace-user-lookup");
     }
 
     @Bean("userProfileLookupPolicy")
     public InternalCallPolicy userProfileLookupPolicy() {
-        return InternalCallPolicy.retryOnly("task-user-profile-lookup");
+        return InternalCallPolicy.retryOnly("workspace-user-profile-lookup");
     }
 }

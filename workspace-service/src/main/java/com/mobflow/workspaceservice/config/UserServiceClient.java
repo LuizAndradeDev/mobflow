@@ -1,10 +1,15 @@
 package com.mobflow.workspaceservice.config;
 
-import com.mobflow.workspaceservice.observability.CorrelationIdClientHttpRequestInterceptor;
+import com.mobflow.workspaceservice.exception.UserServiceUnavailableException;
+import com.mobflow.workspaceservice.resilience.InternalCallPolicy;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,30 +22,34 @@ public class UserServiceClient {
 
     private final RestClient restClient;
     private final String internalSecret;
+    private final InternalCallPolicy userLookupPolicy;
+    private final InternalCallPolicy profileLookupPolicy;
 
     public UserServiceClient(
-            @Value("${user.service.url}") String userServiceUrl,
+            @Qualifier("userRestClient") RestClient restClient,
             @Value("${internal.secret}") String internalSecret,
-            CorrelationIdClientHttpRequestInterceptor correlationIdInterceptor
+            @Qualifier("userLookupPolicy") InternalCallPolicy userLookupPolicy,
+            @Qualifier("userProfileLookupPolicy") InternalCallPolicy profileLookupPolicy
     ) {
-        this.restClient = RestClient.builder()
-                .baseUrl(userServiceUrl)
-                .requestInterceptor(correlationIdInterceptor)
-                .build();
+        this.restClient = restClient;
         this.internalSecret = internalSecret;
+        this.userLookupPolicy = userLookupPolicy;
+        this.profileLookupPolicy = profileLookupPolicy;
     }
 
     public UUID resolveAuthIdByUsername(String username) {
         try {
-            UserProfileResponse response = restClient.get()
+            UserProfileResponse response = userLookupPolicy.execute(() -> restClient.get()
                     .uri("/internal/users/by-username/{username}", username)
                     .header("X-Internal-Secret", internalSecret)
                     .retrieve()
-                    .body(UserProfileResponse.class);
+                    .body(UserProfileResponse.class));
 
             return (response != null) ? response.authId() : null;
         } catch (HttpClientErrorException.NotFound e) {
             return null;
+        } catch (CallNotPermittedException | RestClientException e) {
+            throw new UserServiceUnavailableException();
         }
     }
 
@@ -49,13 +58,13 @@ public class UserServiceClient {
             return Collections.emptyMap();
         }
         try {
-            UserProfileResponse[] responses = restClient.post()
+            UserProfileResponse[] responses = profileLookupPolicy.execute(() -> restClient.post()
                     .uri("/internal/users/batch")
                     .header("X-Internal-Secret", internalSecret)
-                    .header("Content-Type", "application/json")
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(authIds)
                     .retrieve()
-                    .body(UserProfileResponse[].class);
+                    .body(UserProfileResponse[].class));
 
             if (responses == null) return Collections.emptyMap();
 
