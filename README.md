@@ -137,6 +137,10 @@ JWT_EXPIRATION=86400000
 # Shared secret for synchronous service-to-service /internal/** calls
 INTERNAL_SECRET=replace_with_internal_secret
 
+# Shared timeout defaults for synchronous internal HTTP clients
+INTERNAL_HTTP_CONNECT_TIMEOUT=500ms
+INTERNAL_HTTP_READ_TIMEOUT=2s
+
 # Redis cache used by user-service
 REDIS_HOST=redis
 REDIS_PORT=6379
@@ -304,6 +308,23 @@ Useful endpoints under each base URL:
 Prometheus is configured in `observability/prometheus/prometheus.yml` and scrapes all seven backend services. Grafana is provisioned from `observability/grafana/` with Prometheus as the default datasource and a starter backend dashboard.
 
 HTTP logs are emitted in a consistent key-value console format with service name, request method, path, status, and correlation ID. Incoming requests may pass `X-Correlation-ID`; when the header is missing or invalid, the service generates one and returns it in the response. Internal `RestClient` calls propagate the same header to downstream services.
+
+## Internal HTTP Resilience
+
+Synchronous service-to-service calls use explicit connect/read timeouts and Resilience4j policies in the services that consume internal HTTP APIs: `workspace-service`, `task-service`, `social-service`, and `chat-service`.
+
+The default timeout budget is controlled by `INTERNAL_HTTP_CONNECT_TIMEOUT` and `INTERNAL_HTTP_READ_TIMEOUT`, currently `500ms` and `2s`. Critical validation calls use bounded retry with exponential backoff and a circuit breaker, while optional enrichment calls use bounded retry and degrade to responses without profile or mention enrichment.
+
+Policies are intentionally scoped:
+
+| Caller | Dependency | Behavior |
+| --- | --- | --- |
+| `workspace-service` | `user-service` username lookup | Critical; retry + circuit breaker. User profile enrichment falls back to no profile metadata. |
+| `task-service` | `workspace-service` membership/role lookup | Critical authorization dependency; retry + circuit breaker. User profile enrichment falls back to task data without profile metadata. |
+| `social-service` | `auth-service`, `task-service`, `workspace-service` | Critical user, task, and membership validation uses retry + circuit breaker. Mention/profile enrichment degrades by omitting unresolved enrichment only. |
+| `chat-service` | `social-service` friendship validation | Critical messaging guard; retry + circuit breaker and returns service-unavailable when validation cannot be performed. |
+
+Client errors that represent domain decisions, such as `404` for missing users, memberships, tasks, or friendships, are not retried and are not recorded as circuit breaker failures.
 
 ## Account Creation
 
