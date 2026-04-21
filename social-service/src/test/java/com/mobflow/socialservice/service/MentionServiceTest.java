@@ -2,6 +2,7 @@ package com.mobflow.socialservice.service;
 
 import com.mobflow.socialservice.client.AuthServiceClient;
 import com.mobflow.socialservice.client.WorkspaceServiceClient;
+import com.mobflow.socialservice.exception.SocialServiceException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -116,5 +117,20 @@ class MentionServiceTest {
         );
 
         assertThat(mentions).containsExactly(new MentionService.ResolvedMention(anaId, "ana_dev"));
+    }
+
+    @Test
+    void resolveMentions_whenWorkspaceMembershipCheckIsUnavailable_skipsMentions() {
+        UUID workspaceId = UUID.randomUUID();
+        UUID anaId = UUID.randomUUID();
+
+        when(authServiceClient.resolveByUsernames(List.of("ana_dev")))
+                .thenReturn(Map.of("ana_dev", new AuthServiceClient.AuthUserSummaryResponse(anaId, "ana_dev")));
+        when(workspaceServiceClient.isWorkspaceMember(workspaceId, anaId))
+                .thenThrow(SocialServiceException.upstreamServiceError());
+
+        List<MentionService.ResolvedMention> mentions = mentionService.resolveMentions("@ana_dev", workspaceId);
+
+        assertThat(mentions).isEmpty();
     }
 }
