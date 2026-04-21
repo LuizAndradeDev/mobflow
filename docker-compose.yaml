@@ -1,7 +1,6 @@
 services:
   mongodb:
     image: mongo:latest
-    container_name: moblfow-mongo
     ports:
       - "27017:27017"
     environment:
@@ -20,7 +19,6 @@ services:
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
-    container_name: mobflow-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -34,7 +32,6 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: mobflow-kafka
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -60,7 +57,6 @@ services:
 
   mailhog:
     image: mailhog/mailhog:latest
-    container_name: mobflow-mailhog
     ports:
       - "1025:1025"
       - "8025:8025"
@@ -69,7 +65,6 @@ services:
 
   postgres:
     image: postgres:16
-    container_name: mobflow-postgres
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -89,7 +84,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: mobflow-redis
     ports:
       - "6379:6379"
     volumes:
@@ -104,7 +98,6 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: mobflow-minio
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -125,7 +118,6 @@ services:
 
   auth-service:
     build: ./auth-service
-    container_name: mobflow-auth
     ports:
       - "8080:8080"
     depends_on:
@@ -138,7 +130,6 @@ services:
 
   user-service:
     build: ./user-service
-    container_name: mobflow-user
     ports:
       - "8081:8081"
     depends_on:
@@ -155,7 +146,6 @@ services:
 
   workspace-service:
     build: ./workspace-service
-    container_name: mobflow-workspace
     ports:
       - "8082:8082"
     depends_on:
@@ -170,7 +160,6 @@ services:
 
   task-service:
     build: ./task-service
-    container_name: mobflow-task
     ports:
       - "8083:8083"
     depends_on:
@@ -189,7 +178,6 @@ services:
 
   notification-service:
     build: ./notification-service
-    container_name: mobflow-notification
     ports:
       - "8084:8084"
     depends_on:
@@ -206,7 +194,6 @@ services:
 
   social-service:
     build: ./social-service
-    container_name: mobflow-social
     ports:
       - "8085:8085"
     depends_on:
@@ -227,7 +214,6 @@ services:
 
   chat-service:
     build: ./chat-service
-    container_name: mobflow-chat
     ports:
       - "8086:8086"
     depends_on:
@@ -244,7 +230,6 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    container_name: mobflow-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -267,7 +252,6 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    container_name: mobflow-grafana
     ports:
       - "3000:3000"
     environment:
@@ -288,7 +272,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.nginx
-    container_name: mobflow-nginx
     ports:
       - "80:80"
     depends_on:
