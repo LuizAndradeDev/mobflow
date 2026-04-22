@@ -15,6 +15,12 @@ WORKDIR /app
 
 COPY --from=builder /app/target/*.jar app.jar
 
+RUN groupadd --system mobflow \
+    && useradd --system --gid mobflow --home-dir /app mobflow \
+    && chown -R mobflow:mobflow /app
+
 EXPOSE 8086
+
+USER mobflow
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
