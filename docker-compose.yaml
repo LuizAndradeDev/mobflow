@@ -116,6 +116,20 @@ services:
       retries: 10
 
 
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8087:8080"
+    depends_on:
+      - auth-service
+      - user-service
+      - workspace-service
+      - task-service
+    networks:
+      - mobflow-network
+    env_file:
+      - .env
+
   auth-service:
     build: ./auth-service
     ports:
@@ -240,6 +254,7 @@ services:
       - "--storage.tsdb.path=/prometheus"
       - "--web.enable-lifecycle"
     depends_on:
+      - api-gateway
       - auth-service
       - user-service
       - workspace-service
@@ -275,13 +290,7 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - auth-service
-      - user-service
-      - workspace-service
-      - task-service
-      - notification-service
-      - social-service
-      - chat-service
+      - api-gateway
     networks:
       - mobflow-network
     healthcheck:
