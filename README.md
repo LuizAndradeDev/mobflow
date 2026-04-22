@@ -16,21 +16,21 @@ nginx (80)
   |
   +--> static Angular web-app (Angular 21 production build)
   |
-  +--> auth-service (8080) --------> PostgreSQL: mobflow_auth
-  |
-  +--> user-service (8081) --------> PostgreSQL: mobflow_user
-  |                                   |
-  |                                   +--> Redis 7 (profile cache)
-  |                                   |
-  |                                   +--> MinIO (avatar objects)
-  |
-  +--> workspace-service (8082) ----> PostgreSQL: mobflow_workspace
-  |          |
-  |          +--> user-service /internal/users/by-username/{username}
-  |          +--> user-service /internal/users/batch
-  |          +--> Kafka topic: workspace-events
-  |
-  +--> task-service (8083, context-path /tasks) -> PostgreSQL: mobflow_task
+  +--> API Gateway (8080)
+  |    |
+  |    +--> auth-service (8080) --------> PostgreSQL: mobflow_auth
+  |    |
+  |    +--> user-service (8081) --------> PostgreSQL: mobflow_user
+  |    |                                   |
+  |    |                                   +--> Redis 7 (profile cache)
+  |    |                                   |
+  |    |                                   +--> MinIO (avatar objects)
+  |    |
+  |    +--> workspace-service (8082) ----> PostgreSQL: mobflow_workspace
+  |    |          |
+  |    |          +--> Kafka topic: workspace-events
+  |    |
+  |    +--> task-service (8083) -> PostgreSQL: mobflow_task
              |
              +--> workspace-service /internal/workspaces/{id}/members/{authId}/role
              +--> user-service /internal/users/batch
@@ -43,11 +43,10 @@ nginx (80)
   |          +--> workspace-service /internal/workspaces/{id}/members/{authId}/role
   |          +--> Kafka topics: social-comment-events, social-friendship-events
   |
-  +--> chat-service (8086, context-path /chat) -> MongoDB: chat
-             |
-             +--> social-service /social/internal/social/friendships/{authId}/friends/{targetAuthId}
-             +--> WebSocket endpoint: /chat/ws/chat
-             +--> Kafka topic: social.events
++--> chat-service (8086) -> MongoDB: chat
+              |
+              +--> WebSocket endpoint: /chat/ws/chat
+              +--> Kafka topic: social.events
 
 auth-service
   |
@@ -76,6 +75,7 @@ notification-service (8084)
 
 | Layer | Technologies |
 | --- | --- |
+| API Gateway | Java 21, Spring Cloud Gateway, Spring Security OAuth2, Spring Boot Actuator, Micrometer + Prometheus |
 | Backend | Java 21, Spring Boot 3.5.x, Spring Security, JJWT 0.11.5, Spring Data JPA, Spring Data MongoDB, Spring Kafka, Spring Cache, Flyway, Validation, Lombok, Actuator, Thymeleaf, Maven Wrapper |
 | Frontend | Angular 21, TypeScript 5.9 in strict mode, RxJS 7.8, Tailwind CSS 4 |
 | Infrastructure | Docker, Docker Compose, PostgreSQL 16, MongoDB, Redis 7 Alpine, MinIO, Apache Kafka (Confluent 7.6), Zookeeper, Prometheus, Grafana |
@@ -84,6 +84,7 @@ notification-service (8084)
 
 ```text
 mobflow/
+├── api-gateway/            # API Gateway (Spring Cloud Gateway) - centralized routing, auth, rate limiting
 ├── auth-service/           # Authentication, account confirmation, JWT issuance
 ├── user-service/           # User profiles, avatar upload, profile caching
 ├── workspace-service/      # Workspaces, membership, invite lifecycle, join codes
