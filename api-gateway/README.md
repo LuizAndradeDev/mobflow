@@ -17,7 +17,7 @@ The Mobflow API Gateway is a centralized entry point for all external requests t
 ```
 Client (Browser)
     → Nginx (port 80)
-    → API Gateway (port 8080)
+    → API Gateway (container 8080, host 8087)
     → Backend Microservices
         → auth-service (8080)
         → user-service (8081)
@@ -36,10 +36,11 @@ Client (Browser)
 | `/api/auth/**` | auth-service | 8080 |
 | `/api/users/**` | user-service | 8081 |
 | `/api/workspaces/**` | workspace-service | 8082 |
-| `/api/tasks/**` | task-service | 8083 |
+| `/api/tasks/**` | task-service (`/tasks/api/**`) | 8083 |
 | `/api/notifications/**` | notification-service | 8084 |
-| `/api/comments/**` | social-service | 8085 |
-| `/api/chat/**` | chat-service | 8086 |
+| `/api/social/**` | social-service (`/social/api/**`) | 8085 |
+| `/api/chat/**` | chat-service (`/chat/api/**`) | 8086 |
+| `/chat/ws/chat` | chat-service WebSocket | 8086 |
 
 ## Security
 
@@ -75,7 +76,7 @@ The gateway extracts Claims from JWT and propagates these headers:
 
 Key configuration sections:
 
-- `spring.cloud.gateway.routes`: Define service routing
+- `spring.cloud.gateway.server.webflux.routes`: Define service routing
 - `gateway.jwt`: JWT validation configuration
 - `rate-limit`: Rate limiting settings
 - `management.endpoints.web.exposure.include`: Exposes `/actuator/prometheus`
@@ -87,7 +88,8 @@ Key configuration sections:
 The gateway exposes metrics at `/actuator/prometheus`:
 
 ```bash
-curl http://localhost:8080/actuator/prometheus
+curl http://localhost:8087/actuator/prometheus
+curl http://localhost/actuator/prometheus
 ```
 
 Key metrics:
@@ -98,7 +100,8 @@ Key metrics:
 ### Health Check
 
 ```bash
-curl http://localhost:8080/actuator/health
+curl http://localhost:8087/actuator/health
+curl http://localhost/actuator/health
 ```
 
 ## Running
@@ -114,14 +117,16 @@ cd api-gateway
 
 ```bash
 docker build -t mobflow/api-gateway ./api-gateway
-docker run -p 8080:8080 mobflow/api-gateway
+docker run -p 8087:8080 mobflow/api-gateway
 ```
 
 ### Full Platform
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
+
+In Docker Compose, backend application containers stay on the internal `mobflow-network`. External browser traffic should go through Nginx on `http://localhost`, while direct gateway diagnostics remain available on `http://localhost:8087`.
 
 ## Testing
 

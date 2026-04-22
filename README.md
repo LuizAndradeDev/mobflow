@@ -226,7 +226,7 @@ git clone https://github.com/LuizAndradeDev/mobflow.git
 cd mobflow
 ```
 
-3. Ensure no other local application is using the ports required by Mobflow: `80`, `1025`, `3000`, `5432`, `6379`, `8025`, `8080` to `8086`, `9000`, `9001`, `9090`, `9092`, and `27017`.
+3. Ensure no other local application is using the ports required by Mobflow: `80`, `1025`, `3000`, `5432`, `6379`, `8025`, `8087`, `9000`, `9001`, `9090`, `9092`, and `27017`.
 
 4. Create your local `.env` file from the committed template.
 
@@ -270,7 +270,7 @@ If those databases are missing on a reused PostgreSQL volume, recreate the Postg
 docker compose up --build -d
 ```
 
-The platform is then available on `http://localhost`, served by the edge Nginx container. Nginx delivers the production Angular build, handles SPA route refreshes, and proxies HTTP and WebSocket traffic to the backend containers.
+The platform is then available on `http://localhost`, served by the edge Nginx container. Nginx delivers the production Angular build, handles SPA route refreshes, and proxies HTTP and WebSocket traffic to the API Gateway. The gateway is also exposed directly for diagnostics on `http://localhost:8087`, while backend application services remain internal-only on the Docker network.
 
 Supporting local tools are also exposed by Docker Compose:
 
@@ -283,17 +283,13 @@ Supporting local tools are also exposed by Docker Compose:
 
 ## Observability
 
-Every backend service exposes Spring Boot Actuator endpoints for health, liveness, readiness, info, metrics, and Prometheus scraping. Public operational endpoints are intentionally limited to the standard Actuator surface:
+Every backend service exposes Spring Boot Actuator endpoints for health, liveness, readiness, info, metrics, and Prometheus scraping. In Docker Compose, only the edge Nginx container and the API Gateway are exposed on the host. Backend application actuator endpoints stay internal to the Docker network, while Prometheus scrapes them directly by container name.
 
 | Service | Actuator Base URL |
 | --- | --- |
-| `auth-service` | `http://localhost:8080/actuator` |
-| `user-service` | `http://localhost:8081/actuator` |
-| `workspace-service` | `http://localhost:8082/actuator` |
-| `task-service` | `http://localhost:8083/tasks/actuator` |
-| `notification-service` | `http://localhost:8084/actuator` |
-| `social-service` | `http://localhost:8085/social/actuator` |
-| `chat-service` | `http://localhost:8086/chat/actuator` |
+| `nginx` | `http://localhost/health` |
+| `api-gateway` | `http://localhost:8087/actuator` |
+| internal backend services | internal-only via Docker network |
 
 Useful endpoints under each base URL:
 
@@ -360,10 +356,10 @@ Development mode is optional and intended only for frontend iteration. It is not
 ```bash
 docker compose ps
 curl http://localhost/health
-curl http://localhost:8084/actuator/health
-curl http://localhost:8086/chat/actuator/health
-curl http://localhost:8080/actuator/prometheus
-curl -H 'X-Correlation-ID: demo-request-001' http://localhost:8080/actuator/health -i
+curl http://localhost:8087/actuator/health
+curl http://localhost:8087/actuator/prometheus
+curl -H 'X-Correlation-ID: demo-request-001' http://localhost:8087/actuator/health -i
+curl http://localhost/api/auth/profile -i
 ```
 
 Use container logs when a service does not become ready:
@@ -398,11 +394,11 @@ The script runs `mvn test` for `auth-service`, `user-service`, `workspace-servic
 
 GitHub Actions validates the monorepo through a single CI workflow with focused jobs for backend, frontend, Docker, security, and full-stack startup checks.
 
-The backend job runs each Spring Boot service independently with a matrix and executes `mvn verify`, making service failures easy to identify. A separate quality job runs the shared Checkstyle policy from `config/checkstyle/checkstyle.xml` across all backend services.
+The backend job runs each Spring Boot service, including `api-gateway`, independently with a matrix and executes `mvn verify`, making service failures easy to identify. A separate quality job runs the shared Checkstyle policy from `config/checkstyle/checkstyle.xml` across all backend services.
 
 The frontend job installs dependencies with `npm ci`, runs the Angular unit tests in CI mode, builds the production bundle, and fails on high-severity dependency audit findings.
 
-Docker validation builds every backend image, the standalone frontend image, and the edge Nginx image. The smoke job then builds and starts the full Docker Compose stack with CI-safe environment values and verifies infrastructure health checks plus backend, frontend, Prometheus, and Grafana health endpoints.
+Docker validation builds every backend image, including `api-gateway`, the standalone frontend image, and the edge Nginx image. The smoke job then builds and starts the full Docker Compose stack with CI-safe environment values and verifies infrastructure health checks plus the gateway, frontend, Prometheus, and Grafana health endpoints.
 
 The same checks can be executed locally with:
 
@@ -423,7 +419,8 @@ scripts/ci/smoke-compose.sh
 | `social-service` | `8085` | MongoDB `social` | Owns friendships, friend requests, task comments, comment mentions, and social notification event publication. |
 | `chat-service` | `8086` | MongoDB `chat` | Owns private conversations, paginated message history, read receipts, WebSocket delivery, and chat notification publication. |
 | `notification-service` | `8084` | MongoDB `notifications` | Persists in-app notifications, computes unread counters, marks notifications as read, and sends email notifications from Kafka events. |
-| `nginx` | `80` | Static Angular assets + reverse proxy | Serves the production Angular build, handles SPA route refreshes, and proxies HTTP/WebSocket traffic to backend services. |
+| `api-gateway` | `8087 -> 8080` | Stateless edge service | Centralizes `/api/**` routing, JWT enforcement, header propagation, CORS, rate limiting, and WebSocket forwarding to `chat-service`. |
+| `nginx` | `80` | Static Angular assets + reverse proxy | Serves the production Angular build, handles SPA route refreshes, and proxies HTTP/WebSocket traffic to the API Gateway. |
 | `prometheus` | `9090` | Local time-series storage | Scrapes Micrometer metrics from every backend service. |
 | `grafana` | `3000` | Local dashboard storage | Provides the provisioned Mobflow backend observability dashboard. |
 | `web-app` | `n/a (built into nginx)` | Browser state | Angular client with landing, onboarding, workspace, task, analytics, profile, and settings flows. |
