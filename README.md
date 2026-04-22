@@ -1,347 +1,202 @@
-# Mobflow
+<p align="center">
+  <a href="https://www.linkedin.com/in/luizsouzandrade/">
+    <img src="https://img.shields.io/badge/LinkedIn-Luiz%20Souza%20Andrade-0A66C2?logo=linkedin&logoColor=white" alt="LinkedIn">
+  </a>
+  <a href="https://github.com/LuizAndradeDev/mobflow">
+    <img src="https://img.shields.io/github/commit-activity/t/LuizAndradeDev/mobflow?label=Total%20Commits" alt="Total commits">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-Attribution--NonCommercial-2ea44f" alt="License">
+  </a>
+</p>
+
+<p align="center">
+  <img src="content/mobflow_logo.png" alt="Mobflow logo" width="100" height="100">
+</p>
+
+<h1 align="center">Mobflow</h1>
+
+<p align="center"><strong>A collaborative platform for teams</strong></p>
+
+<p align="center">
+  Mobflow is a portfolio-grade SaaS simulation that explores modern collaboration workflows with microservices, event-driven communication, and production-style local orchestration.
+</p>
+
+<details>
+  <summary><strong>Table of Contents</strong></summary>
+
+  - [Overview](#overview)
+    - [Built With](#built-with)
+    - [Demonstration](#demonstration)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Environment Configuration](#environment-configuration)
+    - [Running the Platform](#running-the-platform)
+    - [Local Tools](#local-tools)
+    - [Account Creation](#account-creation)
+  - [Architecture & Technical Details](#architecture--technical-details)
+    - [System Flow](#system-flow)
+    - [Layer Responsibilities](#layer-responsibilities)
+    - [Service Catalog](#service-catalog)
+    - [Authentication and Internal Communication](#authentication-and-internal-communication)
+    - [Event-Driven Messaging](#event-driven-messaging)
+    - [Observability](#observability)
+    - [Validation Pipeline](#validation-pipeline)
+  - [Additional Documentation](#additional-documentation)
+  - [License](#license)
+</details>
 
 ## Overview
 
-Mobflow is a productivity and collaboration SaaS for teams that need a structured workspace model, task execution visibility, and event-driven notifications without collapsing all responsibilities into a single deployable unit. The project is implemented as a monorepo with independent Spring Boot microservices and an Angular frontend. It is designed to demonstrate production-grade engineering concerns: stateless authentication with JWT, asynchronous messaging with Kafka, polyglot persistence with PostgreSQL and MongoDB, Redis-backed caching, object storage with MinIO, and full containerized local orchestration with Docker Compose.
+Mobflow is a collaborative platform for teams that combines authentication, workspaces, task execution, social interactions, notifications, and realtime chat in a single product experience. It is built as a monorepo with independent backend services, an Angular frontend, and a Docker-based local platform that mirrors the concerns of a real SaaS system.
 
-The platform is intended for engineering teams, product teams, and portfolio reviewers who want to inspect a realistic microservice-based collaboration system rather than a simplified CRUD sample. Each service owns a bounded slice of the domain and persists its own data store, while the frontend consumes the public HTTP APIs with Bearer authentication.
+The project exists to understand and simulate how a production-oriented SaaS can be structured across multiple bounded contexts. Instead of presenting a simplified CRUD sample, Mobflow focuses on service boundaries, gateway routing, JWT-based security, asynchronous events with Kafka, polyglot persistence, local observability, and a developer workflow that reflects real platform engineering decisions.
 
-## Architecture
+### Built With
 
-```text
-Browser
-  |
-  v
-nginx (80)
-  |
-  +--> static Angular web-app (Angular 21 production build)
-  |
-  +--> API Gateway (8080)
-  |    |
-  |    +--> auth-service (8080) --------> PostgreSQL: mobflow_auth
-  |    |
-  |    +--> user-service (8081) --------> PostgreSQL: mobflow_user
-  |    |                                   |
-  |    |                                   +--> Redis 7 (profile cache)
-  |    |                                   |
-  |    |                                   +--> MinIO (avatar objects)
-  |    |
-  |    +--> workspace-service (8082) ----> PostgreSQL: mobflow_workspace
-  |    |          |
-  |    |          +--> Kafka topic: workspace-events
-  |    |
-  |    +--> task-service (8083) -> PostgreSQL: mobflow_task
-             |
-             +--> workspace-service /internal/workspaces/{id}/members/{authId}/role
-             +--> user-service /internal/users/batch
-             +--> Kafka topic: task-events
-  |
-  +--> social-service (8085, context-path /social) -> MongoDB: social
-  |          |
-  |          +--> task-service /tasks/internal/tasks/{taskId}
-  |          +--> user-service /internal/users/batch
-  |          +--> workspace-service /internal/workspaces/{id}/members/{authId}/role
-  |          +--> Kafka topics: social-comment-events, social-friendship-events
-  |
-+--> chat-service (8086) -> MongoDB: chat
-              |
-              +--> WebSocket endpoint: /chat/ws/chat
-              +--> Kafka topic: social.events
+![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.x-6DB33F?logo=springboot&logoColor=white)
+![Spring Cloud Gateway](https://img.shields.io/badge/Spring%20Cloud-Gateway-6DB33F?logo=spring&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Latest-47A248?logo=mongodb&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
+![Kafka](https://img.shields.io/badge/Apache%20Kafka-7.6-231F20?logo=apachekafka&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-Unprivileged-009639?logo=nginx&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-Observability-E6522C?logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=grafana&logoColor=white)
 
-auth-service
-  |
-  +--> Kafka topic: auth-events
+### Demonstration
 
-notification-service (8084)
-  |
-  +--> consumes task-events
-  +--> consumes workspace-events
-  +--> consumes auth-events
-  +--> consumes social-comment-events
-  +--> consumes social-friendship-events
-  +--> consumes social.events
-  +--> MongoDB database: notifications
-  +--> JavaMailSender + Thymeleaf
+#### 1. General Demonstration
+
+Mobflow supports the full core flow from account registration and email confirmation to login, workspace access, task management, comments, and notifications.
+
+Placeholder: add a walkthrough video showing account creation, authentication, task lifecycle, and notification flow.
+
+#### 2. Chat Demonstration
+
+The platform includes realtime private messaging with WebSocket delivery, conversation history, and read receipt support through the API Gateway and chat service.
+
+Placeholder: add a GIF or short video showing realtime chat updates.
+
+#### 3. Friendship System Demonstration
+
+Mobflow includes a social layer where users can send and accept friend requests before accessing collaboration features that depend on user relationships.
+
+Placeholder: add a short video showing the friendship request and acceptance flow.
+
+#### 4. Comments and Mentions Demonstration
+
+Task comments support collaborative discussion and `@mentions`, allowing users to trigger targeted notification events during task-related conversations.
+
+Placeholder: add a short video showing comment creation, mention resolution, and notification generation.
+
+## Getting Started
+
+### Prerequisites
+
+Required to run the full platform:
+
+- Docker Engine or Docker Desktop with Docker Compose V2
+
+Optional for local development outside containers:
+
+- Java 21
+- Maven 3.9+
+- Node.js 24
+- npm 11+
+- OpenSSL or another secure secret generator
+
+### Environment Configuration
+
+Mobflow uses the root `.env` file as the shared runtime configuration for Docker Compose and the backend services.
+
+1. Copy the reference file:
+
+```bash
+cp .env.example .env
 ```
 
-### Internal Communication Model
+2. Generate a Base64 JWT secret and place it in `JWT_SECRET`:
 
-- Frontend to services: JWT Bearer token on public `/api/**` endpoints.
-- Synchronous service-to-service calls: `/internal/**` endpoints protected by the `X-Internal-Secret` header.
-- Realtime browser communication: STOMP over WebSocket through `chat-service` on `/chat/ws/chat`.
-- Asynchronous service-to-service communication: Kafka topics `task-events`, `workspace-events`, `auth-events`, `social-comment-events`, `social-friendship-events`, and `social.events`.
-
-## Technology Stack
-
-| Layer | Technologies |
-| --- | --- |
-| API Gateway | Java 21, Spring Cloud Gateway, Spring Security OAuth2, Spring Boot Actuator, Micrometer + Prometheus |
-| Backend | Java 21, Spring Boot 3.5.x, Spring Security, JJWT 0.11.5, Spring Data JPA, Spring Data MongoDB, Spring Kafka, Spring Cache, Flyway, Validation, Lombok, Actuator, Thymeleaf, Maven Wrapper |
-| Frontend | Angular 21, TypeScript 5.9 in strict mode, RxJS 7.8, Tailwind CSS 4 |
-| Infrastructure | Docker, Docker Compose, PostgreSQL 16, MongoDB, Redis 7 Alpine, MinIO, Apache Kafka (Confluent 7.6), Zookeeper, Prometheus, Grafana |
-
-## Repository Structure
-
-```text
-mobflow/
-├── api-gateway/            # API Gateway (Spring Cloud Gateway) - centralized routing, auth, rate limiting
-├── auth-service/           # Authentication, account confirmation, JWT issuance
-├── user-service/           # User profiles, avatar upload, profile caching
-├── workspace-service/      # Workspaces, membership, invite lifecycle, join codes
-├── task-service/           # Boards, lists, tasks, drag-and-drop ordering, analytics
-├── social-service/         # Friend graph, social interactions, task comments
-├── chat-service/           # Private conversations, realtime messaging, read receipts
-├── notification-service/   # Kafka consumer, notification persistence, email delivery
-├── web-app/                # Angular frontend source code
-├── docker-compose.yaml     # Full local orchestration for infra and applications
-├── observability/          # Prometheus and Grafana provisioning
-├── .env                    # Centralized runtime configuration for all containers
-├── .env.example            # Reference template for the local runtime configuration
-├── init-db.sql             # PostgreSQL initialization script for relational services
-├── nginx.conf              # Shared Nginx configuration
-├── web-app.conf            # Frontend/static/proxy server block configuration
-└── Dockerfile.nginx        # Multi-stage Angular build + Nginx runtime image
+```bash
+openssl rand -base64 32
 ```
 
-## Prerequisites
+3. Generate the shared internal service secret and place it in `INTERNAL_SECRET`:
 
-- Docker Desktop `24+` or Docker Engine with Docker Compose V2
-
-Java, Maven, Node.js, and npm do not need to be installed locally to run the full platform. All application images, including the Angular frontend, are built inside Docker.
-
-If you want to work on the Angular frontend outside Docker, use Node.js `20.19+` and npm `11+`.
-
-OpenSSL is used in the setup steps below to generate local secrets. Use an equivalent secure generator if OpenSSL is not available on your machine.
-
-## Environment Configuration
-
-All containers use the root `.env` file. Start by copying `.env.example` to `.env`. The example file contains the complete set of variables required by Docker Compose and the application containers.
-
-```dotenv
-# PostgreSQL connection shared settings
-DB_HOST=postgres
-DB_PORT=5432
-DB_USER=mobflow
-DB_PASSWORD=mobflow_secret
-
-# Dedicated PostgreSQL databases, one per service
-AUTH_DB=mobflow_auth
-USER_DB=mobflow_user
-WORKSPACE_DB=mobflow_workspace
-TASK_DB=mobflow_task
-
-# Stateless JWT configuration shared by every service
-# JWT_SECRET must be a Base64-encoded 256-bit key
-JWT_SECRET=replace_with_base64_256_bit_secret
-JWT_EXPIRATION=86400000
-
-# Shared secret for synchronous service-to-service /internal/** calls
-INTERNAL_SECRET=replace_with_internal_secret
-
-# Shared timeout defaults for synchronous internal HTTP clients
-INTERNAL_HTTP_CONNECT_TIMEOUT=500ms
-INTERNAL_HTTP_READ_TIMEOUT=2s
-
-# Redis cache used by user-service
-REDIS_HOST=redis
-REDIS_PORT=6379
-
-# MinIO object storage used by user-service avatar uploads
-MINIO_ENDPOINT=http://minio:9000
-MINIO_PUBLIC_URL=http://localhost:9000
-MINIO_ROOT_USER=minio
-MINIO_ROOT_PASSWORD=minio123
-MINIO_BUCKET=mobflow-avatars
-
-# MongoDB shared settings used by Mongo-backed services
-MONGO_HOST=mongodb
-MONGO_PORT=27017
-MONGO_USER=mobflow-mongo
-MONGO_PASSWORD=mongo-secret
-
-# Kafka bootstrap server used by event producers and consumers
-KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-
-# Grafana local login used by Docker Compose
-GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin
-
-# Event topics used across the platform
-AUTH_EVENTS_TOPIC=auth-events
-TASK_EVENTS_TOPIC=task-events
-WORKSPACE_EVENTS_TOPIC=workspace-events
-SOCIAL_COMMENT_EVENTS_TOPIC=social-comment-events
-SOCIAL_FRIENDSHIP_EVENTS_TOPIC=social-friendship-events
-SOCIAL_EVENTS_TOPIC=social.events
-
-# Service base URLs used for synchronous internal requests
-AUTH_SERVICE_URL=http://auth-service:8080
-WORKSPACE_SERVICE_URL=http://workspace-service:8082
-USER_SERVICE_URL=http://user-service:8081
-TASK_SERVICE_URL=http://task-service:8083
-SOCIAL_SERVICE_URL=http://social-service:8085
-
-# SMTP configuration used by notification-service email delivery
-MAIL_HOST=mailhog
-MAIL_PORT=1025
-MAIL_USERNAME=no-reply@mobflow.dev
-MAIL_PASSWORD=
-MAIL_SMTP_AUTH=false
-MAIL_SMTP_STARTTLS=false
-
-# Shared application settings
-APP_BASE_URL=http://localhost
-APP_CORS_ALLOWED_ORIGINS=http://localhost
-APP_MAIL_MAX_ATTEMPTS=3
-TASK_DUE_SOON_CRON=0 0 8 * * *
+```bash
+openssl rand -hex 32
 ```
 
-## PostgreSQL Initialization
+Key points:
 
-`init-db.sql` must create the four isolated PostgreSQL databases used by the relational services.
+- `JWT_SECRET` is used by all services that validate access tokens.
+- `INTERNAL_SECRET` secures synchronous `/internal/**` calls between services through the `X-Internal-Secret` header.
+- `.env.example` is the reference template; `.env` is your local runtime file.
 
-```sql
-CREATE DATABASE mobflow_auth;
-CREATE DATABASE mobflow_user;
-CREATE DATABASE mobflow_workspace;
-CREATE DATABASE mobflow_task;
-```
+### Running the Platform
 
-This file is mounted into the PostgreSQL container during local startup so each relational service can run Flyway migrations against its own database boundary. The script is executed only when PostgreSQL initializes an empty data directory for the first time.
-
-## Running the Platform
-
-### Local Setup
-
-1. Verify that Docker is installed and running.
+1. Verify Docker is available:
 
 ```bash
 docker version
 ```
 
-2. Clone the repository and enter the project directory.
+2. Clone the repository and enter the project directory:
 
 ```bash
 git clone https://github.com/LuizAndradeDev/mobflow.git
 cd mobflow
 ```
 
-3. Ensure no other local application is using the ports required by Mobflow: `80`, `1025`, `3000`, `5432`, `6379`, `8025`, `8087`, `9000`, `9001`, `9090`, `9092`, and `27017`.
+3. Create and populate `.env` as described above.
 
-4. Create your local `.env` file from the committed template.
-
-```bash
-cp .env.example .env
-```
-
-5. Generate a value for `JWT_SECRET` and place it in the `.env` file.
-
-```bash
-openssl rand -base64 32
-```
-
-6. Generate a value for `INTERNAL_SECRET` and place it in the `.env` file.
-
-```bash
-openssl rand -hex 32
-```
-
-`INTERNAL_SECRET` must be the same for all backend services because synchronous `/internal/**` requests are authorized with the `X-Internal-Secret` header.
-
-7. Start PostgreSQL first.
+4. Start PostgreSQL first on a clean setup:
 
 ```bash
 docker compose up -d postgres
 ```
 
-8. Confirm that the databases defined in `init-db.sql` were created correctly.
+5. Verify that the isolated relational databases were created from `init-db.sql`:
 
 ```bash
 docker compose exec postgres sh -lc 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d postgres -c "\l"'
 ```
 
-The expected databases are `mobflow_auth`, `mobflow_user`, `mobflow_workspace`, and `mobflow_task`.
+Expected databases:
 
-If those databases are missing on a reused PostgreSQL volume, recreate the PostgreSQL data volume before retrying so `init-db.sql` is applied again.
+- `mobflow_auth`
+- `mobflow_user`
+- `mobflow_workspace`
+- `mobflow_task`
 
-9. Start the rest of the platform after PostgreSQL is ready. Docker Compose will build the application images and start the dependent infrastructure containers.
+6. Start the rest of the platform:
 
 ```bash
 docker compose up --build -d
 ```
 
-The platform is then available on `http://localhost`, served by the edge Nginx container. Nginx delivers the production Angular build, handles SPA route refreshes, and proxies HTTP and WebSocket traffic to the API Gateway. The gateway is also exposed directly for diagnostics on `http://localhost:8087`, while backend application services remain internal-only on the Docker network.
+7. Validate the main edge and gateway:
 
-Supporting local tools are also exposed by Docker Compose:
-
-| Tool | URL | Purpose |
-| --- | --- | --- |
-| MailHog | `http://localhost:8025` | Inspect local email delivery, including account confirmation emails. |
-| MinIO Console | `http://localhost:9001` | Inspect avatar objects stored by `user-service`. |
-| Prometheus | `http://localhost:9090` | Inspect scrape targets and query backend metrics. |
-| Grafana | `http://localhost:3000` | View the provisioned `Mobflow Backend Overview` dashboard. Default local login is `admin` / `admin` unless overridden in `.env`. |
-
-## Observability
-
-Every backend service exposes Spring Boot Actuator endpoints for health, liveness, readiness, info, metrics, and Prometheus scraping. In Docker Compose, only the edge Nginx container and the API Gateway are exposed on the host. Backend application actuator endpoints stay internal to the Docker network, while Prometheus scrapes them directly by container name.
-
-| Service | Actuator Base URL |
-| --- | --- |
-| `nginx` | `http://localhost/health` |
-| `api-gateway` | `http://localhost:8087/actuator` |
-| internal backend services | internal-only via Docker network |
-
-Useful endpoints under each base URL:
-
-```text
-/health
-/health/liveness
-/health/readiness
-/info
-/metrics
-/prometheus
+```bash
+docker compose ps
+curl http://localhost/health
+curl http://localhost:8087/actuator/health
 ```
 
-Prometheus is configured in `observability/prometheus/prometheus.yml` and scrapes all seven backend services. Grafana is provisioned from `observability/grafana/` with Prometheus as the default datasource and a starter backend dashboard.
+Useful maintenance commands:
 
-HTTP logs are emitted in a consistent key-value console format with service name, request method, path, status, and correlation ID. Incoming requests may pass `X-Correlation-ID`; when the header is missing or invalid, the service generates one and returns it in the response. Internal `RestClient` calls propagate the same header to downstream services.
+```bash
+docker compose down
+docker compose down -v
+docker compose logs -f <service-name>
+```
 
-## Internal HTTP Resilience
-
-Synchronous service-to-service calls use explicit connect/read timeouts and Resilience4j policies in the services that consume internal HTTP APIs: `workspace-service`, `task-service`, `social-service`, and `chat-service`.
-
-The default timeout budget is controlled by `INTERNAL_HTTP_CONNECT_TIMEOUT` and `INTERNAL_HTTP_READ_TIMEOUT`, currently `500ms` and `2s`. Critical validation calls use bounded retry with exponential backoff and a circuit breaker, while optional enrichment calls use bounded retry and degrade to responses without profile or mention enrichment.
-
-Policies are intentionally scoped:
-
-| Caller | Dependency | Behavior |
-| --- | --- | --- |
-| `workspace-service` | `user-service` username lookup | Critical; retry + circuit breaker. User profile enrichment falls back to no profile metadata. |
-| `task-service` | `workspace-service` membership/role lookup | Critical authorization dependency; retry + circuit breaker. User profile enrichment falls back to task data without profile metadata. |
-| `social-service` | `auth-service`, `task-service`, `workspace-service` | Critical user, task, and membership validation uses retry + circuit breaker. Mention/profile enrichment degrades by omitting unresolved enrichment only. |
-| `chat-service` | `social-service` friendship validation | Critical messaging guard; retry + circuit breaker and returns service-unavailable when validation cannot be performed. |
-
-Client errors that represent domain decisions, such as `404` for missing users, memberships, tasks, or friendships, are not retried and are not recorded as circuit breaker failures.
-
-## Account Creation
-
-1. Open the application in a browser at `http://localhost`.
-
-2. Go to the register page.
-
-3. Fill in the registration form with a `username`, `email`, and `password`.
-
-4. Submit the form.
-
-5. After submission, the application displays a notice indicating that the email address must be confirmed.
-
-6. Open MailHog at `http://localhost:8025`.
-
-7. Open the received confirmation email and click the confirmation link.
-
-8. After the account is confirmed, return to the application and log in normally.
-
-### Optional: Start the Frontend in Development Mode
+Optional frontend development outside Docker:
 
 ```bash
 cd web-app
@@ -349,116 +204,163 @@ npm install
 npm start
 ```
 
-Development mode is optional and intended only for frontend iteration. It is not required to run Mobflow locally.
+### Local Tools
 
-### Verification Commands
+The following local tools are exposed by Docker Compose:
 
-```bash
-docker compose ps
-curl http://localhost/health
-curl http://localhost:8087/actuator/health
-curl http://localhost:8087/actuator/prometheus
-curl -H 'X-Correlation-ID: demo-request-001' http://localhost:8087/actuator/health -i
-curl http://localhost/api/auth/profile -i
+| Tool | URL | Purpose |
+| --- | --- | --- |
+| API Gateway Actuator | `http://localhost:8087/actuator/health` | Direct gateway diagnostics without going through the edge Nginx layer. |
+| MailHog | `http://localhost:8025` | Email inspection for account confirmation and notification delivery. |
+| MinIO API | `http://localhost:9000` | Object storage endpoint used by avatar upload flows. |
+| MinIO Console | `http://localhost:9001` | Storage inspection and bucket management. |
+| Prometheus | `http://localhost:9090` | Metrics querying and scrape target inspection. |
+| Grafana | `http://localhost:3000` | Pre-provisioned dashboards for local observability. |
+
+### Account Creation
+
+1. Open the application in the browser.
+2. Register with username, email, and password.
+3. After registration, wait for the confirmation message.
+4. Open MailHog at `http://localhost:8025`.
+5. Open the confirmation email and follow the confirmation link.
+6. Return to the application and log in with the confirmed account.
+
+## Architecture & Technical Details
+
+### System Flow
+
+Mobflow currently follows this request and integration path:
+
+```text
+Client
+  -> Nginx
+    -> API Gateway
+      -> Microservices
+        -> Kafka
+        -> PostgreSQL / MongoDB / Redis / MinIO
 ```
 
-Use container logs when a service does not become ready:
+In practice:
 
-```bash
-docker compose logs -f <service-name>
-```
+- the browser loads the Angular application from Nginx;
+- Nginx forwards `/api` HTTP traffic and chat WebSocket traffic to the API Gateway;
+- the API Gateway centralizes external routing, JWT enforcement, and header propagation;
+- backend services handle their bounded contexts and publish/consume Kafka events where asynchronous communication is required.
 
-To stop the platform while keeping local volumes:
+### Layer Responsibilities
 
-```bash
-docker compose down
-```
+#### Client and Edge
 
-To remove local volumes and force PostgreSQL to run `init-db.sql` again on the next startup:
+- `web-app` is the Angular client used by end users.
+- `nginx` serves the production Angular bundle, handles SPA refreshes, and proxies API and WebSocket traffic.
 
-```bash
-docker compose down -v
-```
+#### Gateway Layer
 
-### Backend Test Suite
+- `api-gateway` is the single public backend entry point.
+- It routes `/api/**` traffic to the appropriate services, validates JWT-based access, and propagates request context headers.
 
-The repository includes a backend-only test runner for the seven Spring Boot services:
+#### Core Domain Services
+
+- `auth-service` handles registration, login, account confirmation, and token issuance.
+- `user-service` manages profile data, avatars, caching, and profile reads.
+- `workspace-service` owns workspaces, invites, membership, and roles.
+- `task-service` owns boards, lists, tasks, ordering, and task analytics.
+
+#### Collaboration Services
+
+- `social-service` manages friendships, comments, and mentions.
+- `chat-service` manages private messaging and realtime chat delivery.
+- `notification-service` consumes platform events and delivers in-app and email notifications.
+
+#### Messaging and Storage
+
+- Kafka is the event backbone for cross-service notification flows.
+- PostgreSQL is used for transactional relational domains.
+- MongoDB is used for social, chat, and notification document models.
+- Redis is used for caching.
+- MinIO is used for object storage.
+
+#### Observability
+
+- Prometheus scrapes service metrics.
+- Grafana exposes dashboards for local inspection.
+
+### Service Catalog
+
+| Service | Runtime Role | Primary State |
+| --- | --- | --- |
+| `api-gateway` | Public backend entry point, routing, auth enforcement, header propagation | Stateless |
+| `auth-service` | Authentication, account confirmation, JWT issuance | PostgreSQL |
+| `user-service` | Profiles, avatars, cached reads | PostgreSQL, Redis, MinIO |
+| `workspace-service` | Workspaces, membership, invites, roles | PostgreSQL |
+| `task-service` | Boards, lists, tasks, analytics | PostgreSQL |
+| `social-service` | Friendships, comments, mentions | MongoDB |
+| `chat-service` | Private chat, message history, WebSocket delivery | MongoDB |
+| `notification-service` | Event consumption, notifications, email delivery | MongoDB |
+
+### Authentication and Internal Communication
+
+Mobflow uses stateless JWT authentication. The `auth-service` signs tokens, and the downstream services validate them independently using the shared JWT secret.
+
+Internal synchronous service-to-service communication uses `/internal/**` endpoints protected by `X-Internal-Secret`. This keeps external access centralized through the API Gateway while preserving explicit service boundaries for internal validation and enrichment calls.
+
+### Event-Driven Messaging
+
+Kafka supports asynchronous communication between services. Current topics include:
+
+- `auth-events`
+- `task-events`
+- `workspace-events`
+- `social-comment-events`
+- `social-friendship-events`
+- `social.events`
+
+These events drive notification workflows and decouple services that do not need synchronous orchestration for every user action.
+
+### Observability
+
+Mobflow exposes local observability through:
+
+- Spring Boot Actuator endpoints on backend services
+- Prometheus scraping for metrics collection
+- Grafana dashboards for service visibility
+- Correlation ID propagation across HTTP requests
+
+The edge health endpoint is available at `http://localhost/health`, and the API Gateway actuator is available at `http://localhost:8087/actuator`.
+
+### Validation Pipeline
+
+The CI workflow is intentionally focused on validation rather than deployment. It currently covers:
+
+- backend build and tests per service
+- backend quality checks
+- frontend tests and production build
+- Docker image build validation
+- repository security scanning
+
+Docker image publishing is not part of the workflow, and Docker Compose startup is kept as a local validation concern instead of a CI requirement at this stage.
+
+Useful local validation commands:
 
 ```bash
 scripts/test-backend.sh
-```
-
-The script runs `mvn test` for `auth-service`, `user-service`, `workspace-service`, `task-service`, `notification-service`, `social-service`, and `chat-service`. Running it outside Docker requires Java 21 and Maven locally. Docker must also be running because integration tests use Testcontainers and embedded infrastructure where appropriate.
-
-## Continuous Integration
-
-GitHub Actions validates the monorepo through a single CI workflow with focused jobs for backend, frontend, Docker, security, and full-stack startup checks.
-
-The backend job runs each Spring Boot service, including `api-gateway`, independently with a matrix and executes `mvn verify`, making service failures easy to identify. A separate quality job runs the shared Checkstyle policy from `config/checkstyle/checkstyle.xml` across all backend services.
-
-The frontend job installs dependencies with `npm ci`, runs the Angular unit tests in CI mode, builds the production bundle, and fails on high-severity dependency audit findings.
-
-Docker validation builds every backend image, including `api-gateway`, the standalone frontend image, and the edge Nginx image. The smoke job then builds and starts the full Docker Compose stack with CI-safe environment values and verifies infrastructure health checks plus the gateway, frontend, Prometheus, and Grafana health endpoints.
-
-The same checks can be executed locally with:
-
-```bash
 scripts/ci/check-backend-quality.sh
 scripts/ci/build-docker-images.sh
 scripts/ci/smoke-compose.sh
 ```
 
-## Service Catalog
+## Additional Documentation
 
-| Service | Port | Database / State | Description |
-| --- | --- | --- | --- |
-| `auth-service` | `8080` | PostgreSQL `mobflow_auth` | Issues JWTs, stores credentials, confirms accounts by token, and exposes the authenticated profile identity. |
-| `user-service` | `8081` | PostgreSQL `mobflow_user`, Redis, MinIO | Manages profile metadata, avatar uploads, and cached profile reads consumed by both frontend and internal services. |
-| `workspace-service` | `8082` | PostgreSQL `mobflow_workspace` | Owns workspace creation, member roles, invite lifecycle, and public join-code access. |
-| `task-service` | `8083` | PostgreSQL `mobflow_task` | Owns boards, task lists, tasks, drag-and-drop ordering, workspace summaries, and authenticated analytics endpoints. |
-| `social-service` | `8085` | MongoDB `social` | Owns friendships, friend requests, task comments, comment mentions, and social notification event publication. |
-| `chat-service` | `8086` | MongoDB `chat` | Owns private conversations, paginated message history, read receipts, WebSocket delivery, and chat notification publication. |
-| `notification-service` | `8084` | MongoDB `notifications` | Persists in-app notifications, computes unread counters, marks notifications as read, and sends email notifications from Kafka events. |
-| `api-gateway` | `8087 -> 8080` | Stateless edge service | Centralizes `/api/**` routing, JWT enforcement, header propagation, CORS, rate limiting, and WebSocket forwarding to `chat-service`. |
-| `nginx` | `80` | Static Angular assets + reverse proxy | Serves the production Angular build, handles SPA route refreshes, and proxies HTTP/WebSocket traffic to the API Gateway. |
-| `prometheus` | `9090` | Local time-series storage | Scrapes Micrometer metrics from every backend service. |
-| `grafana` | `3000` | Local dashboard storage | Provides the provisioned Mobflow backend observability dashboard. |
-| `web-app` | `n/a (built into nginx)` | Browser state | Angular client with landing, onboarding, workspace, task, analytics, profile, and settings flows. |
+- [API Gateway](api-gateway/README.md)
+- [Auth Service](auth-service/README.md)
+- [User Service](user-service/README.md)
+- [Workspace Service](workspace-service/README.md)
+- [Task Service](task-service/README.md)
+- [Social Service](social-service/README.md)
+- [Chat Service](chat-service/README.md)
+- [Notification Service](notification-service/README.md)
 
-## Authentication Model
+## License
 
-Mobflow uses stateless JWT authentication. The `auth-service` authenticates credentials and signs a token whose standard subject is the username and whose custom `authId` claim is the canonical user identifier shared across the platform. Every backend service validates the token independently using the same `JWT_SECRET`, extracts `authId`, and uses that value as the actor identity for authorization decisions and data ownership.
-
-Account creation is a confirmation-gated flow:
-
-1. A new account is created in `auth-service` with `enabled=false`.
-2. A UUID confirmation token with a 24-hour expiration window is generated and published as an `EMAIL_CONFIRMATION` event.
-3. The `notification-service` sends the confirmation email.
-4. Once the confirmation endpoint is called with the token, the account is enabled and can authenticate normally.
-
-## Event-Driven Messaging
-
-Kafka is used for cross-service notifications. Producers serialize self-contained event payloads with `KafkaTemplate<String, String>` and `ObjectMapper`. The `notification-service` consumes `String` payloads, deserializes them manually, and discards malformed events after logging them instead of rethrowing.
-
-### Topics and Event Types
-
-| Topic | Produced By | Event Types |
-| --- | --- | --- |
-| `task-events` | `task-service` | `TASK_CREATED`, `TASK_ASSIGNED`, `TASK_UPDATED`, `TASK_DELETED`, `TASK_COMPLETED`, `TASK_DUE_SOON` |
-| `workspace-events` | `workspace-service` | `WORKSPACE_INVITE`, `WORKSPACE_INVITE_ACCEPTED`, `WORKSPACE_INVITE_DECLINED`, `WORKSPACE_MEMBER_ADDED`, `WORKSPACE_MEMBER_REMOVED`, `WORKSPACE_ROLE_CHANGED` |
-| `auth-events` | `auth-service` | `EMAIL_CONFIRMATION` |
-| `social-comment-events` | `social-service` | `COMMENT_CREATED`, `USER_MENTIONED` |
-| `social-friendship-events` | `social-service` | `FRIEND_REQUEST_SENT` |
-| `social.events` | `chat-service` | `CHAT_MESSAGE_RECEIVED` |
-
-All event payloads are self-contained. The `notification-service` does not call upstream services to enrich notification content after consuming an event.
-
-## Service Documentation
-
-- [auth-service README](auth-service/README.md)
-- [user-service README](user-service/README.md)
-- [workspace-service README](workspace-service/README.md)
-- [task-service README](task-service/README.md)
-- [social-service README](social-service/README.md)
-- [chat-service README](chat-service/README.md)
-- [notification-service README](notification-service/README.md)
+This project is licensed under the [Mobflow Attribution-NonCommercial License 1.0](LICENSE).
