@@ -10,7 +10,6 @@ FROM nginx:1.27-alpine
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY web-app.conf /etc/nginx/conf.d/default.conf
-COPY mobflow-services.conf /etc/nginx/conf.d/services.conf
 RUN rm -rf /usr/share/nginx/html/*
 COPY --from=web-app-builder /app/dist/web-app/browser/browser/. /usr/share/nginx/html/
 
