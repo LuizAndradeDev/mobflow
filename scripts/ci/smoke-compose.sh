@@ -205,6 +205,7 @@ wait_for_healthcheck minio 180
 wait_for_healthcheck kafka 240
 
 wait_for_url "auth-service" "http://auth-service:8080/actuator/health" "UP"
+wait_for_url "api-gateway" "http://api-gateway:8080/actuator/health" "UP"
 wait_for_url "user-service" "http://user-service:8081/actuator/health" "UP"
 wait_for_url "workspace-service" "http://workspace-service:8082/actuator/health" "UP"
 wait_for_url "task-service" "http://task-service:8083/tasks/actuator/health" "UP"

@@ -4,6 +4,7 @@ set -euo pipefail
 root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 images=(
+  "api-gateway:api-gateway/Dockerfile:api-gateway"
   "auth-service:auth-service/Dockerfile:auth-service"
   "user-service:user-service/Dockerfile:user-service"
   "workspace-service:workspace-service/Dockerfile:workspace-service"
