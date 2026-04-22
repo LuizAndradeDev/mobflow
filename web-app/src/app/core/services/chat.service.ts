@@ -11,7 +11,7 @@ import { PageResponse } from '../models/social.model';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
-  private readonly apiPath = '/chat/api/conversations';
+  private readonly apiPath = '/api/chat/conversations';
 
   constructor(private readonly http: HttpClient) {}
 

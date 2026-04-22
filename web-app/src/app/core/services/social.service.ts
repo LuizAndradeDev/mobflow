@@ -13,7 +13,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class SocialService {
-  private readonly apiPath = '/social/api';
+  private readonly apiPath = '/api/social';
 
   constructor(private readonly http: HttpClient) {}
 

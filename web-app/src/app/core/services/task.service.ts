@@ -19,7 +19,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
-  private readonly apiPath = '/tasks/api';
+  private readonly apiPath = '/api/tasks';
 
   constructor(private readonly http: HttpClient) {}
 
