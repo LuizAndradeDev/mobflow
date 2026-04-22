@@ -2,7 +2,8 @@ FROM eclipse-temurin:21-jdk-alpine AS build
 
 WORKDIR /build
 
-COPY mvnw .mvn/wrapper/maven-wrapper.jar .mvn/wrapper/maven-wrapper.properties ./
+COPY mvnw ./
+COPY .mvn/ .mvn/
 COPY pom.xml ./
 RUN apk add --no-cache curl
 RUN ./mvnw dependency:go-offline -B
