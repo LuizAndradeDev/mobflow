@@ -5,6 +5,8 @@ root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 project_name="${COMPOSE_PROJECT_NAME:-mobflow-ci}"
 env_file="$(mktemp)"
 override_file="$(mktemp)"
+compose_env_file="$root_dir/.env"
+compose_env_backup=""
 failed=0
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
@@ -25,6 +27,11 @@ cleanup() {
     compose logs --tail=200 || true
   fi
   compose down -v --remove-orphans || true
+  if [[ -n "$compose_env_backup" && -f "$compose_env_backup" ]]; then
+    mv "$compose_env_backup" "$compose_env_file"
+  else
+    rm -f "$compose_env_file"
+  fi
   rm -f "$env_file" "$override_file"
 }
 trap cleanup EXIT
@@ -79,6 +86,12 @@ APP_CORS_ALLOWED_ORIGINS=http://localhost
 APP_MAIL_MAX_ATTEMPTS=3
 TASK_DUE_SOON_CRON='0 0 8 * * *'
 EOF
+
+if [[ -f "$compose_env_file" ]]; then
+  compose_env_backup="$(mktemp)"
+  cp "$compose_env_file" "$compose_env_backup"
+fi
+cp "$env_file" "$compose_env_file"
 
 cat > "$override_file" <<EOF
 services:
