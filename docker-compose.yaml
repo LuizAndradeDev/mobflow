@@ -274,13 +274,13 @@ services:
       context: .
       dockerfile: Dockerfile.nginx
     ports:
-      - "80:80"
+      - "80:8080"
     depends_on:
       - api-gateway
     networks:
       - mobflow-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/health >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
