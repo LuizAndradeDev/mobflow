@@ -132,8 +132,6 @@ services:
 
   auth-service:
     build: ./auth-service
-    ports:
-      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -144,8 +142,6 @@ services:
 
   user-service:
     build: ./user-service
-    ports:
-      - "8081:8081"
     depends_on:
       postgres:
         condition: service_healthy
@@ -160,8 +156,6 @@ services:
 
   workspace-service:
     build: ./workspace-service
-    ports:
-      - "8082:8082"
     depends_on:
       postgres:
         condition: service_healthy
@@ -174,8 +168,6 @@ services:
 
   task-service:
     build: ./task-service
-    ports:
-      - "8083:8083"
     depends_on:
       postgres:
         condition: service_healthy
@@ -192,8 +184,6 @@ services:
 
   notification-service:
     build: ./notification-service
-    ports:
-      - "8084:8084"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -208,8 +198,6 @@ services:
 
   social-service:
     build: ./social-service
-    ports:
-      - "8085:8085"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -228,8 +216,6 @@ services:
 
   chat-service:
     build: ./chat-service
-    ports:
-      - "8086:8086"
     depends_on:
       mongodb:
         condition: service_healthy
