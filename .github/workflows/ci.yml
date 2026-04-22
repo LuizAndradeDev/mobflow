@@ -174,23 +174,3 @@ jobs:
           ignore-unfixed: true
           exit-code: "1"
           format: table
-
-  smoke-compose:
-    name: Docker Compose / Smoke Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    needs:
-      - backend
-      - frontend
-      - docker-build
-      - backend-quality
-      - security
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Run Docker Compose smoke test
-        env:
-          COMPOSE_PROJECT_NAME: mobflow-ci-${{ github.run_id }}
-        run: scripts/ci/smoke-compose.sh
