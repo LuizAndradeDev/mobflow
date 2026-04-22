@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: http://auth-service:8080
+          predicates:
+            - Path=/api/auth/**
+
+        - id: user-service
+          uri: http://user-service:8081
+          predicates:
+            - Path=/api/users/**
+
+        - id: workspace-service
+          uri: http://workspace-service:8082
+          predicates:
+            - Path=/api/workspaces/**
+
+        - id: task-service
+          uri: http://task-service:8083
+          predicates:
+            - Path=/api/tasks/**
+
+        - id: notification-service
+          uri: http://notification-service:8084
+          predicates:
+            - Path=/api/notifications/**
+
+        - id: social-service
+          uri: http://social-service:8085
+          predicates:
+            - Path=/api/comments/**
+
+        - id: chat-service
+          uri: http://chat-service:8086
+          predicates:
+            - Path=/api/chat/**
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  info:
+    env:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+gateway:
+  jwt:
+    secret-key: ${JWT_SECRET:ZHVtbXlfc2VjcmV0X3JlcGxhY2Vfd2l0aF9hX3JlYWxfc2VjdXJlX2tleQ==}
+
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:*}
+
+rate-limit:
+  requests-per-minute: 100
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: API Gateway for Mobflow microservices platform
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    reactor.netty: WARN
