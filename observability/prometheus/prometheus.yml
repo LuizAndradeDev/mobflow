@@ -9,6 +9,12 @@ scrape_configs:
       - targets:
           - prometheus:9090
 
+  - job_name: api-gateway
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - api-gateway:8080
+
   - job_name: auth-service
     metrics_path: /actuator/prometheus
     static_configs:
