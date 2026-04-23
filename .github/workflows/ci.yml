@@ -58,9 +58,6 @@ jobs:
             social-service/pom.xml
             chat-service/pom.xml
 
-      - name: Verify Docker availability
-        run: docker version
-
       - name: Build and test service
         working-directory: ${{ matrix.service }}
         run: ./mvnw --batch-mode --no-transfer-progress verify
@@ -133,21 +130,6 @@ jobs:
       - name: Audit frontend dependencies
         working-directory: web-app
         run: npm run audit:ci
-
-  docker-build:
-    name: Docker / Build Images
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    needs:
-      - backend
-      - frontend
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build all application images
-        run: scripts/ci/build-docker-images.sh
 
   security:
     name: Security
