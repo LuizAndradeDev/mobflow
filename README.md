@@ -290,18 +290,15 @@ The CI workflow is intentionally focused on validation rather than deployment. I
 - backend build and tests per service
 - backend quality checks
 - frontend tests and production build
-- Docker image build validation
 - repository security scanning
 
-Docker image publishing is not part of the workflow, and Docker Compose startup is kept as a local validation concern instead of a CI requirement at this stage.
+Docker Compose remains a local runtime tool for bootstrapping the full platform, but it is not part of the CI pipeline.
 
 Useful local validation commands:
 
 ```bash
 scripts/test-backend.sh
 scripts/ci/check-backend-quality.sh
-scripts/ci/build-docker-images.sh
-scripts/ci/smoke-compose.sh
 ```
 
 ## Additional Documentation
