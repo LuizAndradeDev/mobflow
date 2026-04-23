@@ -229,56 +229,6 @@ Mobflow follows a simple request path:
 
 In production-style local runs, the browser loads the Angular app from `nginx`, external API traffic is routed through `api-gateway`, and each backend service owns its own domain logic and persistence. Kafka is used when a workflow benefits from asynchronous processing instead of synchronous orchestration.
 
-### Visual Architecture
-
-```text
-Client (browser)
-       |
-       v
-+-----------------------------------------------+
-| Nginx :80 -> :8080                            |
-| - serves Angular production build             |
-| - proxies /api/**                             |
-| - proxies /chat/ws/chat (WebSocket upgrade)   |
-+----------------------+------------------------+
-                       |
-                       v
-+-------------------------------------------------------------+
-| API Gateway :8087 -> :8080                                  |
-| - single public backend entry point                         |
-| - routing, JWT enforcement, correlation/header propagation  |
-+----+------------+------------+------------+-----------+------+------+
-     |            |            |            |           |             |
-     v            v            v            v           v             v
-+-----------+ +-----------+ +------------+ +------------+ +------------+ +------------------+ +-----------+
-| auth      | | user      | | workspace  | | task       | | social     | | notification     | | chat      |
-| :8080     | | :8081     | | :8082      | | :8083      | | :8085      | | :8084            | | :8086     |
-|           | |           | |            | | /tasks     | | /social    | |                  | | /chat     |
-| PostgreSQL| | PostgreSQL| | PostgreSQL | | PostgreSQL | | MongoDB    | | MongoDB          | | MongoDB   |
-| auth_db   | | user_db   | | workspace  | | task_db    | | social     | | notifications    | | chat      |
-| Kafka pub | | Redis     | | Kafka pub  | | Redis      | | Kafka pub  | | Kafka consumer   | | WebSocket |
-|           | | MinIO     | |            | | Kafka pub  | |            | | Mail delivery    | | Kafka pub |
-+-----------+ +-----------+ +------------+ +------------+ +------------+ +------------------+ +-----------+
-                                      \            |            /                    ^
-                                       \           |           /                     |
-                                        +----------+----------+---------------------+
-                                                   |
-                                                   v
-                                            +-------------+
-                                            | Kafka :9092 |
-                                            | auth/work-  |
-                                            | space/task/ |
-                                            | social/chat |
-                                            | events      |
-                                            +-------------+
-
-Internal HTTP (trusted endpoints with X-Internal-Secret)
-  workspace-service -> user-service
-  task-service      -> workspace-service, user-service
-  social-service    -> auth-service, workspace-service, task-service, user-service
-  chat-service      -> social-service
-```
-
 ### Layered View
 
 #### Edge Layer
