@@ -74,25 +74,18 @@ The project exists to understand and simulate how a production-oriented SaaS can
 
 Mobflow supports the full core flow from account registration and email confirmation to login, workspace access, task management, comments, and notifications.
 
-Placeholder: add a walkthrough video showing account creation, authentication, task lifecycle, and notification flow.
-
-#### 2. Chat Demonstration
+[![Mobflow Demo](https://img.youtube.com/vi/8tesylC7Epo/maxresdefault.jpg)](https://youtu.be/8tesylC7Epo?si=5IB_TcI1BV1dVHhS)
+#### 2. Friendship Demonstration
 
 The platform includes realtime private messaging with WebSocket delivery, conversation history, and read receipt support through the API Gateway and chat service.
 
-Placeholder: add a GIF or short video showing realtime chat updates.
+![Chat Demo](content/chat_demo.GIF)
 
-#### 3. Friendship System Demonstration
-
-Mobflow includes a social layer where users can send and accept friend requests before accessing collaboration features that depend on user relationships.
-
-Placeholder: add a short video showing the friendship request and acceptance flow.
-
-#### 4. Comments and Mentions Demonstration
+#### 3. Comments and Mentions Demonstration
 
 Task comments support collaborative discussion and `@mentions`, allowing users to trigger targeted notification events during task-related conversations.
 
-Placeholder: add a short video showing comment creation, mention resolution, and notification generation.
+![Chat Demo](content/mention_demo.GIF)
 
 ## Getting Started
 
@@ -228,108 +221,119 @@ The following local tools are exposed by Docker Compose:
 
 ## Architecture & Technical Details
 
-### System Flow
+### High-Level System Flow
 
-Mobflow currently follows this request and integration path:
+Mobflow follows a simple request path:
+
+`Client -> Nginx -> API Gateway -> Services -> Data Stores / Kafka`
+
+In production-style local runs, the browser loads the Angular app from `nginx`, external API traffic is routed through `api-gateway`, and each backend service owns its own domain logic and persistence. Kafka is used when a workflow benefits from asynchronous processing instead of synchronous orchestration.
+
+### Visual Architecture
 
 ```text
-Client
-  -> Nginx
-    -> API Gateway
-      -> Microservices
-        -> Kafka
-        -> PostgreSQL / MongoDB / Redis / MinIO
+Client (browser)
+       |
+       v
++-----------------------------------------------+
+| Nginx :80 -> :8080                            |
+| - serves Angular production build             |
+| - proxies /api/**                             |
+| - proxies /chat/ws/chat (WebSocket upgrade)   |
++----------------------+------------------------+
+                       |
+                       v
++-------------------------------------------------------------+
+| API Gateway :8087 -> :8080                                  |
+| - single public backend entry point                         |
+| - routing, JWT enforcement, correlation/header propagation  |
++----+------------+------------+------------+-----------+------+------+
+     |            |            |            |           |             |
+     v            v            v            v           v             v
++-----------+ +-----------+ +------------+ +------------+ +------------+ +------------------+ +-----------+
+| auth      | | user      | | workspace  | | task       | | social     | | notification     | | chat      |
+| :8080     | | :8081     | | :8082      | | :8083      | | :8085      | | :8084            | | :8086     |
+|           | |           | |            | | /tasks     | | /social    | |                  | | /chat     |
+| PostgreSQL| | PostgreSQL| | PostgreSQL | | PostgreSQL | | MongoDB    | | MongoDB          | | MongoDB   |
+| auth_db   | | user_db   | | workspace  | | task_db    | | social     | | notifications    | | chat      |
+| Kafka pub | | Redis     | | Kafka pub  | | Redis      | | Kafka pub  | | Kafka consumer   | | WebSocket |
+|           | | MinIO     | |            | | Kafka pub  | |            | | Mail delivery    | | Kafka pub |
++-----------+ +-----------+ +------------+ +------------+ +------------+ +------------------+ +-----------+
+                                      \            |            /                    ^
+                                       \           |           /                     |
+                                        +----------+----------+---------------------+
+                                                   |
+                                                   v
+                                            +-------------+
+                                            | Kafka :9092 |
+                                            | auth/work-  |
+                                            | space/task/ |
+                                            | social/chat |
+                                            | events      |
+                                            +-------------+
+
+Internal HTTP (trusted endpoints with X-Internal-Secret)
+  workspace-service -> user-service
+  task-service      -> workspace-service, user-service
+  social-service    -> auth-service, workspace-service, task-service, user-service
+  chat-service      -> social-service
 ```
 
-In practice:
+### Layered View
 
-- the browser loads the Angular application from Nginx;
-- Nginx forwards `/api` HTTP traffic and chat WebSocket traffic to the API Gateway;
-- the API Gateway centralizes external routing, JWT enforcement, and header propagation;
-- backend services handle their bounded contexts and publish/consume Kafka events where asynchronous communication is required.
+#### Edge Layer
 
-### Layer Responsibilities
-
-#### Client and Edge
-
-- `web-app` is the Angular client used by end users.
-- `nginx` serves the production Angular bundle, handles SPA refreshes, and proxies API and WebSocket traffic.
+`nginx` is the public entry point. It serves the Angular bundle, handles SPA refreshes, proxies `/api/**`, and upgrades `/chat/ws/chat` for realtime chat connections.
 
 #### Gateway Layer
 
-- `api-gateway` is the single public backend entry point.
-- It routes `/api/**` traffic to the appropriate services, validates JWT-based access, and propagates request context headers.
+`api-gateway` is the single public backend router. It maps external paths to the correct service, enforces JWT authentication on protected routes, and propagates request context headers such as the correlation ID.
 
-#### Core Domain Services
+#### Core Services
 
-- `auth-service` handles registration, login, account confirmation, and token issuance.
-- `user-service` manages profile data, avatars, caching, and profile reads.
-- `workspace-service` owns workspaces, invites, membership, and roles.
-- `task-service` owns boards, lists, tasks, ordering, and task analytics.
+`auth-service`, `user-service`, `workspace-service`, and `task-service` cover identity, profiles, workspaces, and task management. These services use PostgreSQL for transactional data, with Redis and MinIO added where caching or object storage is needed.
 
 #### Collaboration Services
 
-- `social-service` manages friendships, comments, and mentions.
-- `chat-service` manages private messaging and realtime chat delivery.
-- `notification-service` consumes platform events and delivers in-app and email notifications.
+`social-service`, `chat-service`, and `notification-service` cover comments, friendships, messaging, and notification delivery. They use MongoDB for document-style data and Kafka for asynchronous cross-service workflows.
 
 #### Messaging and Storage
 
-- Kafka is the event backbone for cross-service notification flows.
-- PostgreSQL is used for transactional relational domains.
-- MongoDB is used for social, chat, and notification document models.
-- Redis is used for caching.
-- MinIO is used for object storage.
+Kafka is used for domain events that should not block the request path, especially notification flows. Storage stays service-owned even when services share the same PostgreSQL, MongoDB, Redis, or MinIO infrastructure.
 
-#### Observability
+### Service Responsibilities
 
-- Prometheus scrapes service metrics.
-- Grafana exposes dashboards for local inspection.
+Core services:
 
-### Service Catalog
+- `auth-service`: registration, login, email confirmation, JWT issuance, and trusted user lookup by username.
+- `user-service`: user profiles, avatar storage, and batch profile lookups for other services.
+- `workspace-service`: workspace lifecycle, membership, invites, and role checks.
+- `task-service`: boards, task lists, tasks, workspace summaries, and analytics.
 
-| Service | Runtime Role | Primary State |
-| --- | --- | --- |
-| `api-gateway` | Public backend entry point, routing, auth enforcement, header propagation | Stateless |
-| `auth-service` | Authentication, account confirmation, JWT issuance | PostgreSQL |
-| `user-service` | Profiles, avatars, cached reads | PostgreSQL, Redis, MinIO |
-| `workspace-service` | Workspaces, membership, invites, roles | PostgreSQL |
-| `task-service` | Boards, lists, tasks, analytics | PostgreSQL |
-| `social-service` | Friendships, comments, mentions | MongoDB |
-| `chat-service` | Private chat, message history, WebSocket delivery | MongoDB |
-| `notification-service` | Event consumption, notifications, email delivery | MongoDB |
+Collaboration services:
+
+- `social-service`: friendships, friend requests, task comments, mentions, and related enrichment.
+- `chat-service`: conversations, message history, realtime delivery, and friendship validation before direct chat.
+- `notification-service`: consumes platform events and stores or delivers in-app and email notifications.
+
+### Communication Patterns
+
+Mobflow uses two communication styles:
+
+- **Synchronous HTTP**: browser requests enter through `nginx` and `api-gateway`, then reach the target service over REST. Services also call trusted internal endpoints when they need validation or enrichment data owned by another service.
+- **Asynchronous Kafka**: `auth-service`, `workspace-service`, `task-service`, `social-service`, and `chat-service` publish domain events. Current topics include `auth-events`, `workspace-events`, `task-events`, `social-comment-events`, `social-friendship-events`, and `social.events`. `notification-service` consumes those events to generate notifications without adding tight coupling to the main request flow.
 
 ### Authentication and Internal Communication
 
-Mobflow uses stateless JWT authentication. The `auth-service` signs tokens, and the downstream services validate them independently using the shared JWT secret.
+Authentication is stateless and JWT-based. `auth-service` issues tokens, `api-gateway` validates them at the edge, and downstream services validate them again with the shared JWT secret. This keeps authorization decisions close to the service that owns the business rule.
 
-Internal synchronous service-to-service communication uses `/internal/**` endpoints protected by `X-Internal-Secret`. This keeps external access centralized through the API Gateway while preserving explicit service boundaries for internal validation and enrichment calls.
-
-### Event-Driven Messaging
-
-Kafka supports asynchronous communication between services. Current topics include:
-
-- `auth-events`
-- `task-events`
-- `workspace-events`
-- `social-comment-events`
-- `social-friendship-events`
-- `social.events`
-
-These events drive notification workflows and decouple services that do not need synchronous orchestration for every user action.
+Trusted backend-to-backend calls use `X-Internal-Secret` on dedicated internal endpoints such as `/internal/**` and `auth-service`'s `/internal/auth/**`. In practice, Mobflow uses this for membership checks, user/profile enrichment, task context lookups, and friendship validation. The combination of gateway validation, per-service JWT validation, and internal-secret protection gives the system a straightforward defense-in-depth model.
 
 ### Observability
 
-Mobflow exposes local observability through:
+Each backend service exposes Spring Boot Actuator health and Prometheus metrics endpoints. Prometheus scrapes those endpoints, Grafana provides local dashboards, and `X-Correlation-Id` is propagated across HTTP calls for request tracing through the gateway and internal service calls.
 
-- Spring Boot Actuator endpoints on backend services
-- Prometheus scraping for metrics collection
-- Grafana dashboards for service visibility
-- Correlation ID propagation across HTTP requests
-
-The edge health endpoint is available at `http://localhost/health`, and the API Gateway actuator is available at `http://localhost:8087/actuator`.
-
-### Validation Pipeline
+## Validation Pipeline
 
 The CI workflow is intentionally focused on validation rather than deployment. It currently covers:
 
