@@ -158,7 +158,7 @@ docker compose up -d postgres
 5. Verify that the isolated relational databases were created from `init-db.sql`:
 
 ```bash
-docker compose exec postgres sh -lc 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d postgres -c "\l"'
+docker compose exec postgres sh -lc 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d postgres -c "\\l"'
 ```
 
 Expected databases:
