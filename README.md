@@ -79,13 +79,13 @@ Mobflow supports the full core flow from account registration and email confirma
 
 The platform includes realtime private messaging with WebSocket delivery, conversation history, and read receipt support through the API Gateway and chat service.
 
-![Chat Demo](content/chat_demo.GIF)
+[![Mobflow Demo](https://img.youtube.com/vi/IZXBm-hCL4w/maxresdefault.jpg)](https://youtu.be/IZXBm-hCL4w)
 
 #### 3. Comments and Mentions Demonstration
 
 Task comments support collaborative discussion and `@mentions`, allowing users to trigger targeted notification events during task-related conversations.
 
-![Chat Demo](content/mention_demo.GIF)
+[![Mobflow Demo](https://img.youtube.com/vi/ltjC_LCeW3Y/maxresdefault.jpg)](https://youtu.be/ltjC_LCeW3Y)
 
 ## Getting Started
 
