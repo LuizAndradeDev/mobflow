@@ -36,8 +36,6 @@
     - [Account Creation](#account-creation)
   - [Architecture & Technical Details](#architecture--technical-details)
     - [High-Level System Flow](#high-level-system-flow)
-    - [Visual Architecture](#visual-architecture)
-    - [Layered View](#layered-view)
     - [Service Catalog](#service-catalog)
     - [Service Responsibilities](#service-responsibilities)
     - [Communication Patterns](#communication-patterns)
@@ -241,68 +239,6 @@ The system has three dominant interaction patterns:
 2. Internal synchronous flow: services call dedicated internal endpoints when they need request-scoped authorization or enrichment data that must stay owned by another service.
 3. Event-driven flow: services publish domain events to Kafka, and `notification-service` consumes them to create in-app notifications and email deliveries without blocking the original user request.
 
-### Visual Architecture
-
-```text
-Client (browser)
-      |
-      v
-+-----------------------------------------------+
-| Nginx :80 -> :8080                            |
-| - serves Angular production bundle            |
-| - proxies /api/**                             |
-| - proxies /chat/ws/chat                       |
-+--------------------------+--------------------+
-                           |
-                           v
-+--------------------------------------------------------------+
-| API Gateway :8087 -> :8080                                   |
-| - public backend entry point                                 |
-| - JWT validation, rate limiting, header propagation          |
-| - rewrites task/social/chat routes to service context paths  |
-+--------------------------+-----------------------------------+
-                           |
-                           v
-  Core services
-  +----------------------+  +----------------------+  +----------------------+
-  | auth-service :8080   |  | user-service :8081   |  | workspace-service    |
-  | /api/auth/**         |  | /api/users/**        |  | :8082                |
-  | PostgreSQL           |  | PostgreSQL           |  | /api/workspaces/**   |
-  | mobflow_auth         |  | mobflow_user         |  | PostgreSQL           |
-  | Kafka producer       |  | Redis + MinIO        |  | mobflow_workspace    |
-  +----------------------+  +----------------------+  | Kafka producer       |
-                                                      +----------------------+
-
-  +----------------------+
-  | task-service :8083   |
-  | /tasks/api/**        |
-  | PostgreSQL           |
-  | mobflow_task         |
-  | Redis + Kafka prod   |
-  +----------------------+
-
-  Collaboration services
-  +----------------------+  +----------------------+  +----------------------+
-  | social-service :8085 |  | chat-service :8086   |  | notification-service |
-  | /social/api/**       |  | /chat/api/**         |  | :8084                |
-  | MongoDB social       |  | /chat/ws/chat        |  | /api/notifications/**|
-  | Kafka producer       |  | MongoDB chat         |  | MongoDB notifications|
-  +----------------------+  | Kafka producer       |  | Kafka consumer       |
-                            +----------------------+  | MailHog integration  |
-                                                      +----------------------+
-
-Internal HTTP (trusted endpoints with X-Internal-Secret)
-  workspace-service -> user-service
-  task-service      -> workspace-service, user-service
-  social-service    -> auth-service, workspace-service, task-service, user-service
-  chat-service      -> social-service
-
-Kafka topics
-  auth-events | workspace-events | task-events
-  social-comment-events | social-friendship-events | social.events
-```
-
-### Layered View
 
 #### Edge Layer
 
