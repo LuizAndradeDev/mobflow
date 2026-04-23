@@ -141,12 +141,3 @@ In Docker Compose, backend application containers stay on the internal `mobflow-
 3. **In-Memory Rate Limiting**: Simple implementation suitable for development; production should use Redis
 4. **No Business Logic**: Gateway only handles cross-cutting concerns
 5. **Defense in Depth**: Backend services continue enforcing their own security
-
-## Future Improvements
-
-- Redis-based rate limiting for distributed deployments
-- Circuit breaker pattern (Resilience4j)
-- Request/response transformation
-- API key management
-- Bot detection
-- DDOS protection
